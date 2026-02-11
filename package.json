@@ -1,0 +1,32 @@
+{
+  "name": "muninsbok",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Open source bokföringswebbapp för småföretag och föreningar i Sverige",
+  "license": "AGPL-3.0-or-later",
+  "author": "Munins bok contributors",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/muninsbok/muninsbok"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm -r --parallel dev",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "clean": "pnpm -r clean",
+    "db:generate": "pnpm --filter @muninsbok/db generate",
+    "db:migrate": "pnpm --filter @muninsbok/db migrate",
+    "db:push": "pnpm --filter @muninsbok/db push"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
+}
