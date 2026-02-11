@@ -1,0 +1,49 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: muninsbok-db
+    environment:
+      POSTGRES_USER: muninsbok
+      POSTGRES_PASSWORD: muninsbok
+      POSTGRES_DB: muninsbok
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U muninsbok"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: muninsbok-api
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://muninsbok:muninsbok@postgres:5432/muninsbok
+      HOST: 0.0.0.0
+      PORT: 3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: muninsbok-web
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
