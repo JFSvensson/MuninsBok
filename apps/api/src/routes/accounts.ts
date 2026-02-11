@@ -1,0 +1,78 @@
+import type { FastifyInstance } from "fastify";
+import { z } from "zod";
+import { prisma, AccountRepository } from "@muninsbok/db";
+
+const createAccountSchema = z.object({
+  number: z.string().regex(/^[1-8]\d{3}$/),
+  name: z.string().min(1).max(255),
+  type: z.enum(["ASSET", "LIABILITY", "EQUITY", "REVENUE", "EXPENSE"]),
+  isVatAccount: z.boolean().optional(),
+});
+
+export async function accountRoutes(fastify: FastifyInstance) {
+  const accountRepo = new AccountRepository(prisma);
+
+  // List accounts for organization
+  fastify.get<{
+    Params: { orgId: string };
+    Querystring: { active?: string };
+  }>("/:orgId/accounts", async (request) => {
+    const { orgId } = request.params;
+    const activeOnly = request.query.active === "true";
+
+    const accounts = activeOnly
+      ? await accountRepo.findActive(orgId)
+      : await accountRepo.findByOrganization(orgId);
+
+    return { data: accounts };
+  });
+
+  // Get single account
+  fastify.get<{ Params: { orgId: string; accountNumber: string } }>(
+    "/:orgId/accounts/:accountNumber",
+    async (request, reply) => {
+      const account = await accountRepo.findByNumber(
+        request.params.orgId,
+        request.params.accountNumber
+      );
+      if (!account) {
+        return reply.status(404).send({ error: "Account not found" });
+      }
+      return { data: account };
+    }
+  );
+
+  // Create account
+  fastify.post<{ Params: { orgId: string } }>(
+    "/:orgId/accounts",
+    async (request, reply) => {
+      const parsed = createAccountSchema.safeParse(request.body);
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues });
+      }
+
+      const result = await accountRepo.create(request.params.orgId, parsed.data);
+
+      if (!result.ok) {
+        return reply.status(400).send({ error: result.error });
+      }
+
+      return reply.status(201).send({ data: result.value });
+    }
+  );
+
+  // Deactivate account
+  fastify.delete<{ Params: { orgId: string; accountNumber: string } }>(
+    "/:orgId/accounts/:accountNumber",
+    async (request, reply) => {
+      const deactivated = await accountRepo.deactivate(
+        request.params.orgId,
+        request.params.accountNumber
+      );
+      if (!deactivated) {
+        return reply.status(404).send({ error: "Account not found" });
+      }
+      return reply.status(204).send();
+    }
+  );
+}
