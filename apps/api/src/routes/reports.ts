@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import { prisma, VoucherRepository, AccountRepository } from "@muninsbok/db";
 import {
   calculateTrialBalance,
   calculateIncomeStatement,
@@ -7,8 +6,8 @@ import {
 } from "@muninsbok/core";
 
 export async function reportRoutes(fastify: FastifyInstance) {
-  const voucherRepo = new VoucherRepository(prisma);
-  const accountRepo = new AccountRepository(prisma);
+  const voucherRepo = fastify.repos.vouchers;
+  const accountRepo = fastify.repos.accounts;
 
   // Trial Balance (Råbalans)
   fastify.get<{
