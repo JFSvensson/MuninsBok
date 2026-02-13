@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useOrganization } from "../context/OrganizationContext";
 import { api } from "../api";
+import { formatAmount, amountClassName } from "../utils/formatting";
 
 export function TrialBalance() {
   const { organization, fiscalYear } = useOrganization();
@@ -30,9 +31,6 @@ export function TrialBalance() {
     );
   }
 
-  const formatAmount = (amount: number) =>
-    amount.toLocaleString("sv-SE", { minimumFractionDigits: 2 });
-
   return (
     <div className="card">
       <h2>Råbalans</h2>
@@ -53,9 +51,7 @@ export function TrialBalance() {
               <td>{row.accountName}</td>
               <td className="text-right amount">{formatAmount(row.debit)}</td>
               <td className="text-right amount">{formatAmount(row.credit)}</td>
-              <td
-                className={`text-right amount ${row.balance >= 0 ? "positive" : "negative"}`}
-              >
+              <td className={amountClassName(row.balance)}>
                 {formatAmount(row.balance)}
               </td>
             </tr>
