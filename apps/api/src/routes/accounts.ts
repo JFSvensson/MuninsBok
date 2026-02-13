@@ -1,6 +1,5 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { prisma, AccountRepository } from "@muninsbok/db";
 import { ACCOUNT_NUMBER_PATTERN } from "@muninsbok/core";
 
 const createAccountSchema = z.object({
@@ -11,7 +10,7 @@ const createAccountSchema = z.object({
 });
 
 export async function accountRoutes(fastify: FastifyInstance) {
-  const accountRepo = new AccountRepository(prisma);
+  const accountRepo = fastify.repos.accounts;
 
   // List accounts for organization
   fastify.get<{
