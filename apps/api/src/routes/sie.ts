@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { prisma, VoucherRepository, AccountRepository, toFiscalYear } from "@muninsbok/db";
-import { parseSie, exportSie } from "@muninsbok/core";
+import { parseSie, exportSie, getAccountTypeFromNumber } from "@muninsbok/core";
 
 export async function sieRoutes(fastify: FastifyInstance) {
   const voucherRepo = new VoucherRepository(prisma);
@@ -100,7 +100,7 @@ export async function sieRoutes(fastify: FastifyInstance) {
         newAccounts.map((a) => ({
           number: a.number,
           name: a.name,
-          type: "EXPENSE" as const, // Default, will be corrected based on number
+          type: getAccountTypeFromNumber(a.number),
         }))
       );
     }
