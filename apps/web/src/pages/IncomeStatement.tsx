@@ -1,11 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useOrganization } from "../context/OrganizationContext";
 import { api, type ReportSection } from "../api";
+import { formatAmount, amountClassName } from "../utils/formatting";
 
 function Section({ section }: { section: ReportSection }) {
-  const formatAmount = (amount: number) =>
-    amount.toLocaleString("sv-SE", { minimumFractionDigits: 2 });
-
   if (section.rows.length === 0) {
     return null;
   }
@@ -62,9 +60,6 @@ export function IncomeStatement() {
     );
   }
 
-  const formatAmount = (amount: number) =>
-    amount.toLocaleString("sv-SE", { minimumFractionDigits: 2 });
-
   return (
     <div className="card">
       <h2>Resultaträkning</h2>
@@ -82,9 +77,7 @@ export function IncomeStatement() {
 
           <tr style={{ fontWeight: "bold", borderTop: "2px solid #333" }}>
             <td colSpan={2}>Rörelseresultat</td>
-            <td
-              className={`text-right amount ${report.operatingResult >= 0 ? "positive" : "negative"}`}
-            >
+            <td className={amountClassName(report.operatingResult)}>
               {formatAmount(report.operatingResult)}
             </td>
           </tr>
@@ -100,9 +93,7 @@ export function IncomeStatement() {
             }}
           >
             <td colSpan={2}>Årets resultat</td>
-            <td
-              className={`text-right amount ${report.netResult >= 0 ? "positive" : "negative"}`}
-            >
+            <td className={amountClassName(report.netResult)}>
               {formatAmount(report.netResult)}
             </td>
           </tr>
