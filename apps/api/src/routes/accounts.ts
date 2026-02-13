@@ -1,9 +1,10 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { prisma, AccountRepository } from "@muninsbok/db";
+import { ACCOUNT_NUMBER_PATTERN } from "@muninsbok/core";
 
 const createAccountSchema = z.object({
-  number: z.string().regex(/^[1-8]\d{3}$/),
+  number: z.string().regex(ACCOUNT_NUMBER_PATTERN, "Kontonummer måste vara 4 siffror (1000-8999)"),
   name: z.string().min(1).max(255),
   type: z.enum(["ASSET", "LIABILITY", "EQUITY", "REVENUE", "EXPENSE"]),
   isVatAccount: z.boolean().optional(),
