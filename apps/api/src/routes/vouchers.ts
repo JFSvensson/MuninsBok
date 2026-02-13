@@ -1,6 +1,5 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { prisma, VoucherRepository } from "@muninsbok/db";
 
 const createVoucherLineSchema = z.object({
   accountNumber: z.string().regex(/^[1-8]\d{3}$/),
@@ -18,7 +17,7 @@ const createVoucherSchema = z.object({
 });
 
 export async function voucherRoutes(fastify: FastifyInstance) {
-  const voucherRepo = new VoucherRepository(prisma);
+  const voucherRepo = fastify.repos.vouchers;
 
   // List vouchers for a fiscal year
   fastify.get<{
