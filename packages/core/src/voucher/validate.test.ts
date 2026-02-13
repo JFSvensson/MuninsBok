@@ -101,7 +101,7 @@ describe("validateVoucher", () => {
       description: "Okänt konto",
       lines: [
         { accountNumber: "1910", debit: 10000, credit: 0 },
-        { accountNumber: "9999", debit: 0, credit: 10000 },
+        { accountNumber: "1999", debit: 0, credit: 10000 }, // Valid format but not in accounts list
       ],
     };
 
