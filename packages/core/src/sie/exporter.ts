@@ -91,7 +91,7 @@ export function toSieVouchers(vouchers: readonly Voucher[]): SieVoucher[] {
     transactions: v.lines.map((line) => ({
       accountNumber: line.accountNumber,
       amount: line.debit > 0 ? line.debit : -line.credit,
-      description: line.description,
+      ...(line.description !== undefined && { description: line.description }),
     })),
   }));
 }
