@@ -10,6 +10,11 @@ export type AccountType =
   | "REVENUE" // Intäkter (3xxx)
   | "EXPENSE"; // Kostnader (4xxx-7xxx, 8xxx)
 
+/** Account number validation constants (BAS standard) */
+export const ACCOUNT_NUMBER_PATTERN = /^[1-8]\d{3}$/;
+export const ACCOUNT_NUMBER_MIN = 1000;
+export const ACCOUNT_NUMBER_MAX = 8999;
+
 export interface Account {
   readonly number: string; // 4-siffrig kontokod
   readonly name: string;
