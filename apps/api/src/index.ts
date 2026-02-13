@@ -1,30 +1,13 @@
-import Fastify from "fastify";
-import cors from "@fastify/cors";
-import { organizationRoutes } from "./routes/organizations.js";
-import { voucherRoutes } from "./routes/vouchers.js";
-import { reportRoutes } from "./routes/reports.js";
-import { sieRoutes } from "./routes/sie.js";
-import { accountRoutes } from "./routes/accounts.js";
+import { prisma } from "@muninsbok/db";
+import { buildApp } from "./app.js";
+import { createRepositories } from "./repositories.js";
 
-const fastify = Fastify({
-  logger: true,
-});
+const repos = createRepositories(prisma);
 
-// Plugins
-await fastify.register(cors, {
-  origin: process.env["CORS_ORIGIN"] ?? "http://localhost:5173",
-});
-
-// Routes
-await fastify.register(organizationRoutes, { prefix: "/api/organizations" });
-await fastify.register(voucherRoutes, { prefix: "/api/organizations" });
-await fastify.register(reportRoutes, { prefix: "/api/organizations" });
-await fastify.register(sieRoutes, { prefix: "/api/organizations" });
-await fastify.register(accountRoutes, { prefix: "/api/organizations" });
-
-// Health check
-fastify.get("/health", async () => {
-  return { status: "ok", timestamp: new Date().toISOString() };
+const fastify = await buildApp({
+  repos,
+  corsOrigin: process.env["CORS_ORIGIN"] ?? "http://localhost:5173",
+  fastifyOptions: { logger: true },
 });
 
 // Start server
