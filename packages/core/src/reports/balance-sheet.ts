@@ -32,9 +32,13 @@ export interface BalanceSheet {
   readonly generatedAt: Date;
 }
 
-/** Account ranges */
+/** 
+ * Account ranges (BAS standard)
+ * Note: EQUITY_RANGE is a subset of 2xxx accounts.
+ * The buildSection function uses excludeRange to prevent double-counting.
+ */
 const ASSET_RANGE = { start: 1000, end: 1999 };
-const LIABILITY_RANGE = { start: 2000, end: 2799 }; // Skulder
+const LIABILITY_RANGE = { start: 2000, end: 2799 }; // Full 2xxx range (equity excluded via buildSection)
 const EQUITY_RANGE = { start: 2080, end: 2099 }; // Eget kapital (subset of 2xxx)
 
 // For year result calculation
