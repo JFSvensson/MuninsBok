@@ -57,11 +57,14 @@ Se `LICENSE`.
 
 ## Tech stack
 
-- **Frontend:** React + Vite + TypeScript
-- **Backend:** Node.js + TypeScript (Fastify)
-- **DB:** PostgreSQL (Prisma)
-- **Monorepo:** pnpm workspaces
-- **Deploy:** Docker Compose
+| Lager | Teknik |
+|-------|--------|
+| **Frontend** | React 18 + Vite 5 + TypeScript 5.3 |
+| **Backend** | Node.js 20 + Fastify 4 + TypeScript |
+| **Databas** | PostgreSQL 14+ (Prisma 5) |
+| **Monorepo** | pnpm workspaces |
+| **Test** | Vitest |
+| **Deploy** | Docker Compose |
 
 ---
 
@@ -102,6 +105,22 @@ pnpm dev
 Frontend: http://localhost:5173  
 API: http://localhost:3000
 
+### Kör tester
+
+```bash
+# Alla tester i alla paket
+pnpm test
+
+# Enbart core-domänlogik
+pnpm --filter @muninsbok/core test
+
+# Enbart API-validering
+pnpm --filter @muninsbok/api test
+
+# Enbart web-utilities
+pnpm --filter @muninsbok/web test
+```
+
 ### Docker
 
 Kör hela stacken med Docker Compose:
@@ -117,15 +136,47 @@ docker compose up --build
 ```txt
 muninsbok/
   apps/
-    web/                  # React UI
-    api/                  # Node API server
+    web/                  # React UI (Vite + React Router)
+    api/                  # REST API (Fastify + Zod-validering)
   packages/
     core/                 # Ren bokföringslogik (ingen DB, ingen HTTP)
-    db/                   # Prisma schema + migrations
-    config/               # ESLint/TSConfig/Prettier
-  docs/
-    architecture.md
-  scripts/
-  docker/
+    db/                   # Prisma schema + repositories + mappers
   LICENSE
   README.md
+```
+
+---
+
+## Teststatus
+
+**219 tester** fördelade på 14 testfiler:
+
+| Paket | Testfiler | Tester | Vad som testas |
+|-------|-----------|--------|----------------|
+| `@muninsbok/core` | 12 | 176 | Result-typer, organisationsnummer (Luhn), kontotyper, kontoplan (BAS), räkenskapsår, verifikatrader, verifikatvalidering, dokument-MIME, rapporter, SIE-import/export |
+| `@muninsbok/api` | 1 | 20 | Zod-schemavalidering för konton och verifikat |
+| `@muninsbok/web` | 1 | 23 | Beloppsformatering, datumformat, öre↔kronor-konvertering |
+
+---
+
+## Arkitektur
+
+### Designprinciper
+
+- **Ren domänlogik**: All bokföringslogik lever i `packages/core` utan beroenden till databas eller HTTP. Det gör den enkel att testa och resonera kring.
+- **Result-typer**: Funktionell felhantering med `Result<T, E>` — aldrig exceptions för affärslogik.
+- **Belopp i ören**: Alla belopp lagras som heltal (öre) för att undvika flyttalsproblem.
+- **Verifikat måste balansera**: Debet = kredit, alltid.
+
+### Dataflöde
+
+```
+Webbläsare (React) → REST API (Fastify) → Core-logik (validering) → Databas (Prisma/PostgreSQL)
+```
+
+### Paketberoenden
+
+```
+apps/web  →  (HTTP)  →  apps/api  →  packages/core
+                                  →  packages/db  →  packages/core
+```
