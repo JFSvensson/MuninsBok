@@ -1,10 +1,10 @@
 import type { FastifyInstance } from "fastify";
-import { prisma, VoucherRepository, AccountRepository, toFiscalYear } from "@muninsbok/db";
+import { toFiscalYear } from "@muninsbok/db";
 import { parseSie, exportSie, getAccountTypeFromNumber } from "@muninsbok/core";
 
 export async function sieRoutes(fastify: FastifyInstance) {
-  const voucherRepo = new VoucherRepository(prisma);
-  const accountRepo = new AccountRepository(prisma);
+  const voucherRepo = fastify.repos.vouchers;
+  const accountRepo = fastify.repos.accounts;
 
   // Export SIE4
   fastify.get<{
@@ -19,9 +19,10 @@ export async function sieRoutes(fastify: FastifyInstance) {
     }
 
     // Get organization, fiscal year, accounts, and vouchers
+    const db = fastify.repos.prisma;
     const [org, fiscalYear, accounts, vouchers] = await Promise.all([
-      prisma.organization.findUnique({ where: { id: orgId } }),
-      prisma.fiscalYear.findFirst({ where: { id: fiscalYearId, organizationId: orgId } }),
+      db.organization.findUnique({ where: { id: orgId } }),
+      db.fiscalYear.findFirst({ where: { id: fiscalYearId, organizationId: orgId } }),
       accountRepo.findByOrganization(orgId),
       voucherRepo.findByFiscalYear(fiscalYearId, orgId),
     ]);
