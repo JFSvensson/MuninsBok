@@ -149,13 +149,14 @@ muninsbok/
 
 ## Teststatus
 
-**219 tester** fördelade på 14 testfiler:
+**296 tester** fördelade på 21 testfiler:
 
 | Paket | Testfiler | Tester | Vad som testas |
 |-------|-----------|--------|----------------|
 | `@muninsbok/core` | 12 | 176 | Result-typer, organisationsnummer (Luhn), kontotyper, kontoplan (BAS), räkenskapsår, verifikatrader, verifikatvalidering, dokument-MIME, rapporter, SIE-import/export |
-| `@muninsbok/api` | 1 | 20 | Zod-schemavalidering för konton och verifikat |
-| `@muninsbok/web` | 1 | 23 | Beloppsformatering, datumformat, öre↔kronor-konvertering |
+| `@muninsbok/db` | 1 | 17 | Prisma→domän-mappers (organisation, räkenskapsår, konto, verifikat, verifikatrad, dokument) |
+| `@muninsbok/api` | 5 | 57 | Zod-schemavalidering, CRUD-endpoints (organisationer, konton, verifikat), rapporter, health check |
+| `@muninsbok/web` | 3 | 46 | ApiError-klass, fetchJson, verifikatformulär (beräkningar, radhantering, öre-konvertering), beloppsformatering |
 
 ---
 
@@ -167,6 +168,7 @@ muninsbok/
 - **Result-typer**: Funktionell felhantering med `Result<T, E>` — aldrig exceptions för affärslogik.
 - **Belopp i ören**: Alla belopp lagras som heltal (öre) för att undvika flyttalsproblem.
 - **Verifikat måste balansera**: Debet = kredit, alltid.
+- **DI via Fastify decorate**: API-routes injiceras med repositories via `fastify.repos`, vilket möjliggör isolerade integrationstester med mockade beroenden.
 
 ### Dataflöde
 
