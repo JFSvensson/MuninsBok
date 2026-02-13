@@ -95,6 +95,32 @@ interface ApiResponse<T> {
   data: T;
 }
 
+/**
+ * Structured API error with status code and optional error code
+ */
+export class ApiError extends Error {
+  constructor(
+    public readonly status: number,
+    public readonly code: string,
+    message: string
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+
+  get isNotFound(): boolean {
+    return this.status === 404;
+  }
+
+  get isValidationError(): boolean {
+    return this.status === 400;
+  }
+
+  get isServerError(): boolean {
+    return this.status >= 500;
+  }
+}
+
 async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, {
     ...options,
@@ -105,8 +131,12 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Unknown error" }));
-    throw new Error(error.error?.message ?? error.error ?? "Request failed");
+    const errorBody = await response.json().catch(() => ({}));
+    throw new ApiError(
+      response.status,
+      errorBody.code ?? "UNKNOWN",
+      errorBody.error?.message ?? errorBody.error ?? "Ett fel uppstod"
+    );
   }
 
   return response.json();
