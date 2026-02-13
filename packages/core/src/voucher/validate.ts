@@ -128,7 +128,7 @@ export function createVoucherFromInput(
       accountNumber: line.accountNumber,
       debit: line.debit,
       credit: line.credit,
-      description: line.description,
+      ...(line.description !== undefined && { description: line.description }),
     })),
     documentIds: input.documentIds ?? [],
     createdAt: now,
