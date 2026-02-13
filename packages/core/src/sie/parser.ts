@@ -151,8 +151,8 @@ export function parseSie(content: string): Result<SieFile, SieParseError> {
             currentVoucher.transactions.push({
               accountNumber,
               amount: Math.round(amount * 100), // Convert to ören
-              date: transDate ?? undefined,
-              description,
+              ...(transDate != null && { date: transDate }),
+              ...(description !== undefined && { description }),
             });
           }
           break;
@@ -193,9 +193,9 @@ export function parseSie(content: string): Result<SieFile, SieParseError> {
     format,
     sieType,
     program: { name: programName, version: programVersion },
-    generated: { date: genDate, signature: genSignature },
+    generated: { date: genDate, ...(genSignature !== undefined && { signature: genSignature }) },
     companyName,
-    orgNumber,
+    ...(orgNumber !== undefined && { orgNumber }),
     fiscalYears,
     accounts,
     openingBalances,
