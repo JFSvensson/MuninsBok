@@ -117,7 +117,7 @@ export function createEmptySieFile(options: SieExportOptions): SieFile {
       date: new Date(),
     },
     companyName: options.companyName,
-    orgNumber: options.orgNumber,
+    ...(options.orgNumber !== undefined && { orgNumber: options.orgNumber }),
     fiscalYears: [],
     accounts: [],
     openingBalances: [],
