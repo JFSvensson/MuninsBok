@@ -1,8 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { prisma, OrganizationRepository } from "@muninsbok/db";
 import { BAS_SIMPLIFIED } from "@muninsbok/core";
-import { AccountRepository } from "@muninsbok/db";
 
 const createOrganizationSchema = z.object({
   orgNumber: z.string().min(10).max(12),
@@ -11,8 +9,8 @@ const createOrganizationSchema = z.object({
 });
 
 export async function organizationRoutes(fastify: FastifyInstance) {
-  const orgRepo = new OrganizationRepository(prisma);
-  const accountRepo = new AccountRepository(prisma);
+  const orgRepo = fastify.repos.organizations;
+  const accountRepo = fastify.repos.accounts;
 
   // List all organizations
   fastify.get("/", async () => {
