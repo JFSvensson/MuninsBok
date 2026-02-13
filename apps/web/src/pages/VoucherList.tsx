@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useOrganization } from "../context/OrganizationContext";
 import { api } from "../api";
+import { formatAmount, formatDate, oreToKronor } from "../utils/formatting";
 
 export function VoucherList() {
   const { organization, fiscalYear } = useOrganization();
@@ -43,17 +44,14 @@ export function VoucherList() {
         </thead>
         <tbody>
           {vouchers.map((voucher) => {
-            const total = voucher.lines.reduce((sum, l) => sum + l.debit, 0);
+            const totalOre = voucher.lines.reduce((sum, l) => sum + l.debit, 0);
             return (
               <tr key={voucher.id}>
                 <td>{voucher.number}</td>
-                <td>{new Date(voucher.date).toLocaleDateString("sv-SE")}</td>
+                <td>{formatDate(voucher.date)}</td>
                 <td>{voucher.description}</td>
                 <td className="text-right amount">
-                  {(total / 100).toLocaleString("sv-SE", {
-                    minimumFractionDigits: 2,
-                  })}{" "}
-                  kr
+                  {formatAmount(oreToKronor(totalOre))} kr
                 </td>
               </tr>
             );
