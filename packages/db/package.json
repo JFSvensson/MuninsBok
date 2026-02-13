@@ -25,7 +25,8 @@
     "push": "prisma db push",
     "studio": "prisma studio",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "test": "vitest run"
   },
   "dependencies": {
     "@prisma/client": "^5.9.0"
@@ -34,6 +35,7 @@
     "@muninsbok/core": "workspace:*",
     "prisma": "^5.9.0",
     "rimraf": "^5.0.5",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
   }
 }
