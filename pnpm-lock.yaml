@@ -48,6 +48,9 @@ importers:
       typescript:
         specifier: ^5.3.3
         version: 5.9.3
+      vitest:
+        specifier: ^1.2.0
+        version: 1.6.1(@types/node@20.19.33)
 
   apps/web:
     dependencies:
@@ -79,6 +82,9 @@ importers:
       vite:
         specifier: ^5.0.12
         version: 5.4.21(@types/node@20.19.33)
+      vitest:
+        specifier: ^1.2.0
+        version: 1.6.1(@types/node@20.19.33)
 
   packages/core:
     devDependencies:
