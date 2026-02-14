@@ -48,14 +48,15 @@ export function getAccountTypeFromNumber(accountNumber: string): AccountType {
   switch (firstDigit) {
     case "1":
       return "ASSET";
-    case "2":
-      // 2xxx is typically liabilities, but some are equity
-      // 2080-2099 are equity accounts (eget kapital)
+    case "2": {
+      // 20xx (2000-2099) are equity accounts (eget kapital)
+      // 21xx-29xx are liabilities
       const num = parseInt(accountNumber, 10);
-      if (num >= 2080 && num <= 2099) {
+      if (num >= 2000 && num <= 2099) {
         return "EQUITY";
       }
       return "LIABILITY";
+    }
     case "3":
       return "REVENUE";
     case "4":
