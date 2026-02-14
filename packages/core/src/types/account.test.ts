@@ -16,13 +16,10 @@ describe("getAccountTypeFromNumber", () => {
   });
 
   describe("LIABILITY and EQUITY accounts (2xxx)", () => {
-    it("should return LIABILITY for 2000-2079", () => {
-      expect(getAccountTypeFromNumber("2000")).toBe("LIABILITY");
-      expect(getAccountTypeFromNumber("2010")).toBe("LIABILITY");
-      expect(getAccountTypeFromNumber("2079")).toBe("LIABILITY");
-    });
-
-    it("should return EQUITY for 2080-2099", () => {
+    it("should return EQUITY for 2000-2099 (BAS kontoklass 20)", () => {
+      expect(getAccountTypeFromNumber("2000")).toBe("EQUITY");
+      expect(getAccountTypeFromNumber("2010")).toBe("EQUITY"); // Eget kapital
+      expect(getAccountTypeFromNumber("2019")).toBe("EQUITY");
       expect(getAccountTypeFromNumber("2080")).toBe("EQUITY");
       expect(getAccountTypeFromNumber("2081")).toBe("EQUITY"); // Aktiekapital
       expect(getAccountTypeFromNumber("2091")).toBe("EQUITY"); // Balanserad vinst
