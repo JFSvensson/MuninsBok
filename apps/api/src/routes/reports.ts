@@ -3,6 +3,7 @@ import {
   calculateTrialBalance,
   calculateIncomeStatement,
   calculateBalanceSheet,
+  calculateVatReport,
 } from "@muninsbok/core";
 
 export async function reportRoutes(fastify: FastifyInstance) {
@@ -125,6 +126,43 @@ export async function reportRoutes(fastify: FastifyInstance) {
         totalLiabilitiesAndEquity: report.totalLiabilitiesAndEquity / 100,
         difference: report.difference / 100,
         yearResult: report.yearResult / 100,
+        generatedAt: report.generatedAt,
+      },
+    };
+  });
+
+  // VAT Report (Momsrapport)
+  fastify.get<{
+    Params: { orgId: string };
+    Querystring: { fiscalYearId: string };
+  }>("/:orgId/reports/vat", async (request, reply) => {
+    const { orgId } = request.params;
+    const { fiscalYearId } = request.query;
+
+    if (!fiscalYearId) {
+      return reply.status(400).send({ error: "fiscalYearId is required" });
+    }
+
+    const [vouchers, accounts] = await Promise.all([
+      voucherRepo.findByFiscalYear(fiscalYearId, orgId),
+      accountRepo.findByOrganization(orgId),
+    ]);
+
+    const report = calculateVatReport(vouchers, accounts);
+
+    const convertRows = (rows: typeof report.outputVat) =>
+      rows.map((row) => ({
+        ...row,
+        amount: row.amount / 100,
+      }));
+
+    return {
+      data: {
+        outputVat: convertRows(report.outputVat),
+        totalOutputVat: report.totalOutputVat / 100,
+        inputVat: convertRows(report.inputVat),
+        totalInputVat: report.totalInputVat / 100,
+        vatPayable: report.vatPayable / 100,
         generatedAt: report.generatedAt,
       },
     };
