@@ -14,13 +14,19 @@ import {
 } from "@muninsbok/core";
 import { toVoucher, toAccount, toFiscalYear } from "../mappers.js";
 
+const voucherInclude = {
+  lines: true,
+  documents: true,
+  correctedByVoucher: true,
+} as const;
+
 export class VoucherRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
   async findById(id: string, organizationId: string): Promise<Voucher | null> {
     const voucher = await this.prisma.voucher.findFirst({
       where: { id, organizationId },
-      include: { lines: true, documents: true },
+      include: voucherInclude,
     });
     return voucher ? toVoucher(voucher) : null;
   }
@@ -31,7 +37,7 @@ export class VoucherRepository {
   ): Promise<Voucher[]> {
     const vouchers = await this.prisma.voucher.findMany({
       where: { fiscalYearId, organizationId },
-      include: { lines: true, documents: true },
+      include: voucherInclude,
       orderBy: [{ number: "asc" }],
     });
     return vouchers.map(toVoucher);
@@ -50,7 +56,7 @@ export class VoucherRepository {
           lte: endDate,
         },
       },
-      include: { lines: true, documents: true },
+      include: voucherInclude,
       orderBy: [{ date: "asc" }, { number: "asc" }],
     });
     return vouchers.map(toVoucher);
@@ -93,12 +99,7 @@ export class VoucherRepository {
     }
 
     // Get next voucher number
-    const lastVoucher = await this.prisma.voucher.findFirst({
-      where: { fiscalYearId: input.fiscalYearId },
-      orderBy: { number: "desc" },
-      select: { number: true },
-    });
-    const nextNumber = (lastVoucher?.number ?? 0) + 1;
+    const nextNumber = await this.getNextVoucherNumber(input.fiscalYearId);
 
     // Build account lookup for IDs
     const accountMap = new Map(accounts.map((a) => [a.number, a.id]));
@@ -126,21 +127,63 @@ export class VoucherRepository {
             }
           : {},
       },
-      include: { lines: true, documents: true },
+      include: voucherInclude,
     });
 
-    return ok(toVoucher(voucher as any));
+    return ok(toVoucher(voucher));
   }
 
-  async delete(id: string, organizationId: string): Promise<boolean> {
-    try {
-      await this.prisma.voucher.deleteMany({
-        where: { id, organizationId },
-      });
-      return true;
-    } catch {
-      return false;
+  /**
+   * Create a correction voucher (rättelseverifikat) that reverses
+   * all lines of the original voucher (BFL 5:5).
+   */
+  async createCorrection(
+    voucherId: string,
+    organizationId: string
+  ): Promise<Result<Voucher, VoucherError>> {
+    // Find the original voucher
+    const original = await this.prisma.voucher.findFirst({
+      where: { id: voucherId, organizationId },
+      include: { lines: true, documents: true, correctedByVoucher: true },
+    });
+
+    if (!original) {
+      return err({ code: "NOT_FOUND", message: "Verifikatet hittades inte" });
     }
+
+    // Check if already corrected
+    if (original.correctedByVoucher) {
+      return err({
+        code: "ALREADY_CORRECTED",
+        message: "Verifikatet har redan rättats",
+      });
+    }
+
+    // Get next voucher number
+    const nextNumber = await this.getNextVoucherNumber(original.fiscalYearId);
+
+    // Create correction voucher with reversed lines
+    const correction = await this.prisma.voucher.create({
+      data: {
+        organizationId,
+        fiscalYearId: original.fiscalYearId,
+        number: nextNumber,
+        date: new Date(),
+        description: `Rättelse av verifikat #${original.number}`,
+        correctsVoucherId: original.id,
+        lines: {
+          create: original.lines.map((line) => ({
+            accountId: line.accountId,
+            accountNumber: line.accountNumber,
+            debit: line.credit,   // Swap debit/credit
+            credit: line.debit,
+          })),
+        },
+      },
+      include: voucherInclude,
+    });
+
+    return ok(toVoucher(correction));
   }
 
   async getNextVoucherNumber(fiscalYearId: string): Promise<number> {
