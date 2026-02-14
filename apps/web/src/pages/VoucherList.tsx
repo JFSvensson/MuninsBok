@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { useOrganization } from "../context/OrganizationContext";
 import { api } from "../api";
 import { formatAmount, formatDate, oreToKronor } from "../utils/formatting";
 
 export function VoucherList() {
   const { organization, fiscalYear } = useOrganization();
+  const navigate = useNavigate();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["vouchers", organization?.id, fiscalYear?.id],
@@ -25,6 +27,10 @@ export function VoucherList() {
   if (vouchers.length === 0) {
     return (
       <div className="card">
+        <div className="flex justify-between items-center mb-2">
+          <h2>Verifikat</h2>
+          <button onClick={() => navigate("/vouchers/new")}>+ Nytt verifikat</button>
+        </div>
         <div className="empty">Inga verifikat ännu. Skapa ditt första verifikat!</div>
       </div>
     );
@@ -32,7 +38,10 @@ export function VoucherList() {
 
   return (
     <div className="card">
-      <h2>Verifikat</h2>
+      <div className="flex justify-between items-center mb-2">
+        <h2>Verifikat</h2>
+        <button onClick={() => navigate("/vouchers/new")}>+ Nytt verifikat</button>
+      </div>
       <table>
         <thead>
           <tr>
@@ -46,7 +55,11 @@ export function VoucherList() {
           {vouchers.map((voucher) => {
             const totalOre = voucher.lines.reduce((sum, l) => sum + l.debit, 0);
             return (
-              <tr key={voucher.id}>
+              <tr
+                key={voucher.id}
+                className="clickable-row"
+                onClick={() => navigate(`/vouchers/${voucher.id}`)}
+              >
                 <td>{voucher.number}</td>
                 <td>{formatDate(voucher.date)}</td>
                 <td>{voucher.description}</td>
