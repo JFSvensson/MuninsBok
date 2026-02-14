@@ -331,3 +331,75 @@ button.danger:disabled {
   margin: 0 0.5rem;
   align-self: stretch;
 }
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 0.15em 0.55em;
+  border-radius: 3px;
+  font-size: 0.8em;
+  font-weight: 600;
+  line-height: 1.4;
+  vertical-align: middle;
+}
+
+.badge-warning {
+  background-color: #fff3e0;
+  color: #e65100;
+  border: 1px solid #ffb74d;
+}
+
+.badge-info {
+  background-color: #e3f2fd;
+  color: #1565c0;
+  border: 1px solid #90caf9;
+}
+
+.badge-success {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+
+/* Corrected voucher row */
+.clickable-row.corrected {
+  opacity: 0.6;
+  text-decoration: line-through;
+  color: #999;
+}
+
+/* Warning box */
+.warning {
+  color: #e65100;
+}
+
+/* Info box */
+.info-box {
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.info-box a {
+  color: #1976d2;
+  font-weight: 500;
+}
+
+/* Document section */
+.document-list {
+  list-style: none;
+  padding: 0;
+}
+
+.document-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.document-list li:last-child {
+  border-bottom: none;
+}
