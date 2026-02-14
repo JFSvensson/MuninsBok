@@ -73,8 +73,8 @@ export class OrganizationRepository {
       const org = await this.prisma.organization.update({
         where: { id },
         data: {
-          name: data.name,
-          fiscalYearStartMonth: data.fiscalYearStartMonth,
+          ...(data.name != null && { name: data.name }),
+          ...(data.fiscalYearStartMonth != null && { fiscalYearStartMonth: data.fiscalYearStartMonth }),
         },
       });
       return toOrganization(org);
