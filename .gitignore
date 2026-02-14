@@ -140,6 +140,7 @@ vite.config.ts.timestamp-*
 # Prisma
 packages/db/prisma/*.db
 packages/db/prisma/migrations/*.sql.backup
+packages/db/src/generated/
 
 # Docker
 docker-compose.override.yml
