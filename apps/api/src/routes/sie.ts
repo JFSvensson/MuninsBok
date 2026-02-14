@@ -116,7 +116,7 @@ export async function sieRoutes(fastify: FastifyInstance) {
         accountNumber: t.accountNumber,
         debit: t.amount > 0 ? t.amount : 0,
         credit: t.amount < 0 ? -t.amount : 0,
-        description: t.description,
+        ...(t.description != null && { description: t.description }),
       }));
 
       const result = await voucherRepo.create({
