@@ -117,6 +117,58 @@ describe("Organization routes", () => {
       expect(res.statusCode).toBe(404);
     });
   });
+
+  describe("PATCH /api/organizations/:orgId", () => {
+    it("updates organization name", async () => {
+      const org = { id: "1", orgNumber: "5561234567", name: "Uppdaterat AB", fiscalYearStartMonth: 1 };
+      repos.organizations.update.mockResolvedValue(org);
+
+      const res = await app.inject({
+        method: "PATCH",
+        url: "/api/organizations/1",
+        payload: { name: "Uppdaterat AB" },
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(JSON.parse(res.body).data.name).toBe("Uppdaterat AB");
+    });
+
+    it("updates fiscal year start month", async () => {
+      const org = { id: "1", orgNumber: "5561234567", name: "Test AB", fiscalYearStartMonth: 7 };
+      repos.organizations.update.mockResolvedValue(org);
+
+      const res = await app.inject({
+        method: "PATCH",
+        url: "/api/organizations/1",
+        payload: { fiscalYearStartMonth: 7 },
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(JSON.parse(res.body).data.fiscalYearStartMonth).toBe(7);
+    });
+
+    it("returns 404 for non-existing organization", async () => {
+      repos.organizations.update.mockResolvedValue(null);
+
+      const res = await app.inject({
+        method: "PATCH",
+        url: "/api/organizations/unknown",
+        payload: { name: "Ny" },
+      });
+
+      expect(res.statusCode).toBe(404);
+    });
+
+    it("returns 400 for invalid input", async () => {
+      const res = await app.inject({
+        method: "PATCH",
+        url: "/api/organizations/1",
+        payload: { fiscalYearStartMonth: 13 },
+      });
+
+      expect(res.statusCode).toBe(400);
+    });
+  });
 });
 
 describe("Health check", () => {
