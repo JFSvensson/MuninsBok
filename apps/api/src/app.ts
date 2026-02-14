@@ -10,6 +10,7 @@ import { reportRoutes } from "./routes/reports.js";
 import { sieRoutes } from "./routes/sie.js";
 import { accountRoutes } from "./routes/accounts.js";
 import { fiscalYearRoutes } from "./routes/fiscal-years.js";
+import { documentRoutes } from "./routes/documents.js";
 import type { Repositories } from "./repositories.js";
 
 export interface BuildAppOptions {
@@ -36,6 +37,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   await fastify.register(sieRoutes, { prefix: "/api/organizations" });
   await fastify.register(accountRoutes, { prefix: "/api/organizations" });
   await fastify.register(fiscalYearRoutes, { prefix: "/api/organizations" });
+  await fastify.register(documentRoutes, { prefix: "/api/organizations" });
 
   // Health check
   fastify.get("/health", async () => {
