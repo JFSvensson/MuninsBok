@@ -45,6 +45,9 @@ export interface Voucher {
   description: string;
   lines: VoucherLine[];
   documentIds: string[];
+  createdBy?: string;
+  correctsVoucherId?: string;
+  correctedByVoucherId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -89,6 +92,17 @@ export interface BalanceSheet {
   difference: number;
   yearResult: number;
   generatedAt: string;
+}
+
+export interface DocumentMeta {
+  id: string;
+  organizationId: string;
+  voucherId?: string;
+  filename: string;
+  mimeType: string;
+  storageKey: string;
+  size: number;
+  createdAt: string;
 }
 
 interface ApiResponse<T> {
@@ -244,10 +258,11 @@ export const api = {
       }
     ),
 
-  deleteVoucher: (orgId: string, voucherId: string) =>
-    fetch(`${API_BASE}/organizations/${orgId}/vouchers/${voucherId}`, { method: "DELETE" }).then((res) => {
-      if (!res.ok) throw new ApiError(res.status, "DELETE_FAILED", "Kunde inte radera verifikatet");
-    }),
+  correctVoucher: (orgId: string, voucherId: string) =>
+    fetchJson<ApiResponse<Voucher>>(
+      `${API_BASE}/organizations/${orgId}/vouchers/${voucherId}/correct`,
+      { method: "POST" }
+    ),
 
   // Reports
   getTrialBalance: (orgId: string, fiscalYearId: string) =>
@@ -278,4 +293,36 @@ export const api = {
         headers: { "Content-Type": "text/plain" },
       }
     ),
+
+  // Documents
+  getVoucherDocuments: (orgId: string, voucherId: string) =>
+    fetchJson<ApiResponse<DocumentMeta[]>>(
+      `${API_BASE}/organizations/${orgId}/vouchers/${voucherId}/documents`
+    ),
+
+  uploadDocument: async (orgId: string, voucherId: string, file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await fetch(
+      `${API_BASE}/organizations/${orgId}/vouchers/${voucherId}/documents`,
+      { method: "POST", body: formData }
+    );
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      throw new ApiError(
+        response.status,
+        errorBody.code ?? "UPLOAD_FAILED",
+        errorBody.error?.message ?? errorBody.error ?? "Kunde inte ladda upp fil"
+      );
+    }
+    return response.json() as Promise<ApiResponse<DocumentMeta>>;
+  },
+
+  downloadDocumentUrl: (orgId: string, documentId: string) =>
+    `${API_BASE}/organizations/${orgId}/documents/${documentId}/download`,
+
+  deleteDocument: (orgId: string, documentId: string) =>
+    fetch(`${API_BASE}/organizations/${orgId}/documents/${documentId}`, { method: "DELETE" }).then((res) => {
+      if (!res.ok) throw new ApiError(res.status, "DELETE_FAILED", "Kunde inte radera dokumentet");
+    }),
 };
