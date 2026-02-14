@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { calculateTrialBalance } from "./trial-balance.js";
 import { calculateIncomeStatement } from "./income-statement.js";
 import { calculateBalanceSheet } from "./balance-sheet.js";
+import { calculateVatReport } from "./vat-report.js";
 import type { Voucher } from "../types/voucher.js";
 import type { Account } from "../types/account.js";
 
@@ -110,5 +111,109 @@ describe("calculateBalanceSheet", () => {
     // Total liabilities + equity + year result should equal assets
     expect(result.totalLiabilitiesAndEquity).toBe(4500);
     expect(result.difference).toBe(0);
+  });
+});
+
+describe("calculateVatReport", () => {
+  const vatAccounts: Account[] = [
+    { number: "1910", name: "Kassa", type: "ASSET", isVatAccount: false, isActive: true },
+    { number: "3000", name: "Försäljning 25%", type: "REVENUE", isVatAccount: false, isActive: true },
+    { number: "3100", name: "Försäljning 12%", type: "REVENUE", isVatAccount: false, isActive: true },
+    { number: "2610", name: "Utgående moms 25%", type: "LIABILITY", isVatAccount: true, isActive: true },
+    { number: "2620", name: "Utgående moms 12%", type: "LIABILITY", isVatAccount: true, isActive: true },
+    { number: "2640", name: "Ingående moms", type: "LIABILITY", isVatAccount: true, isActive: true },
+    { number: "4000", name: "Inköp", type: "EXPENSE", isVatAccount: false, isActive: true },
+    { number: "2440", name: "Leverantörsskulder", type: "LIABILITY", isVatAccount: false, isActive: true },
+  ];
+
+  const vatVouchers: Voucher[] = [
+    {
+      id: "vv1",
+      fiscalYearId: "fy-2025",
+      organizationId: "org-1",
+      number: 1,
+      date: new Date("2025-01-15"),
+      description: "Försäljning 25% moms",
+      lines: [
+        { id: "vl1", voucherId: "vv1", accountNumber: "1910", debit: 12500, credit: 0 },
+        { id: "vl2", voucherId: "vv1", accountNumber: "3000", debit: 0, credit: 10000 },
+        { id: "vl3", voucherId: "vv1", accountNumber: "2610", debit: 0, credit: 2500 },
+      ],
+      documentIds: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: "vv2",
+      fiscalYearId: "fy-2025",
+      organizationId: "org-1",
+      number: 2,
+      date: new Date("2025-01-20"),
+      description: "Försäljning 12% moms",
+      lines: [
+        { id: "vl4", voucherId: "vv2", accountNumber: "1910", debit: 11200, credit: 0 },
+        { id: "vl5", voucherId: "vv2", accountNumber: "3100", debit: 0, credit: 10000 },
+        { id: "vl6", voucherId: "vv2", accountNumber: "2620", debit: 0, credit: 1200 },
+      ],
+      documentIds: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: "vv3",
+      fiscalYearId: "fy-2025",
+      organizationId: "org-1",
+      number: 3,
+      date: new Date("2025-01-25"),
+      description: "Inköp med moms",
+      lines: [
+        { id: "vl7", voucherId: "vv3", accountNumber: "4000", debit: 8000, credit: 0 },
+        { id: "vl8", voucherId: "vv3", accountNumber: "2640", debit: 2000, credit: 0 },
+        { id: "vl9", voucherId: "vv3", accountNumber: "2440", debit: 0, credit: 10000 },
+      ],
+      documentIds: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  ];
+
+  it("should calculate output VAT correctly", () => {
+    const result = calculateVatReport(vatVouchers, vatAccounts);
+
+    expect(result.outputVat).toHaveLength(2);
+    expect(result.outputVat[0]).toEqual(
+      expect.objectContaining({ accountNumber: "2610", amount: 2500 })
+    );
+    expect(result.outputVat[1]).toEqual(
+      expect.objectContaining({ accountNumber: "2620", amount: 1200 })
+    );
+    expect(result.totalOutputVat).toBe(3700);
+  });
+
+  it("should calculate input VAT correctly", () => {
+    const result = calculateVatReport(vatVouchers, vatAccounts);
+
+    expect(result.inputVat).toHaveLength(1);
+    expect(result.inputVat[0]).toEqual(
+      expect.objectContaining({ accountNumber: "2640", amount: 2000 })
+    );
+    expect(result.totalInputVat).toBe(2000);
+  });
+
+  it("should calculate VAT payable correctly", () => {
+    const result = calculateVatReport(vatVouchers, vatAccounts);
+
+    // 3700 utgående - 2000 ingående = 1700 att betala
+    expect(result.vatPayable).toBe(1700);
+  });
+
+  it("should return empty report for no vouchers", () => {
+    const result = calculateVatReport([], vatAccounts);
+
+    expect(result.outputVat).toHaveLength(0);
+    expect(result.inputVat).toHaveLength(0);
+    expect(result.totalOutputVat).toBe(0);
+    expect(result.totalInputVat).toBe(0);
+    expect(result.vatPayable).toBe(0);
   });
 });
