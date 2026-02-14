@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { BAS_SIMPLIFIED } from "@muninsbok/core";
+import { BAS_SIMPLIFIED, isValidOrgNumber } from "@muninsbok/core";
 
 const createOrganizationSchema = z.object({
   orgNumber: z.string().min(10).max(12),
@@ -40,6 +40,13 @@ export async function organizationRoutes(fastify: FastifyInstance) {
     }
 
     const { fiscalYearStartMonth, ...rest } = parsed.data;
+
+    if (!isValidOrgNumber(rest.orgNumber)) {
+      return reply.status(400).send({
+        error: "Ogiltigt organisationsnummer (kontrollsiffran stämmer inte)",
+      });
+    }
+
     const result = await orgRepo.create({
       ...rest,
       ...(fiscalYearStartMonth != null && { fiscalYearStartMonth }),
