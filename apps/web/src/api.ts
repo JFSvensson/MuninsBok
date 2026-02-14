@@ -157,6 +157,17 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
+  updateOrganization: (orgId: string, data: { name?: string; fiscalYearStartMonth?: number }) =>
+    fetchJson<ApiResponse<Organization>>(`${API_BASE}/organizations/${orgId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  deleteOrganization: (orgId: string) =>
+    fetch(`${API_BASE}/organizations/${orgId}`, { method: "DELETE" }).then((res) => {
+      if (!res.ok) throw new ApiError(res.status, "DELETE_FAILED", "Kunde inte radera organisationen");
+    }),
+
   // Fiscal Years
   getFiscalYears: (orgId: string) =>
     fetchJson<ApiResponse<FiscalYear[]>>(
@@ -172,16 +183,48 @@ export const api = {
       }
     ),
 
-  // Accounts
-  getAccounts: (orgId: string) =>
-    fetchJson<ApiResponse<Account[]>>(
-      `${API_BASE}/organizations/${orgId}/accounts?active=true`
+  closeFiscalYear: (orgId: string, fyId: string) =>
+    fetchJson<ApiResponse<FiscalYear>>(
+      `${API_BASE}/organizations/${orgId}/fiscal-years/${fyId}/close`,
+      { method: "PATCH" }
     ),
+
+  // Accounts
+  getAccounts: (orgId: string, activeOnly = true) =>
+    fetchJson<ApiResponse<Account[]>>(
+      `${API_BASE}/organizations/${orgId}/accounts${activeOnly ? "?active=true" : ""}`
+    ),
+
+  getAccount: (orgId: string, accountNumber: string) =>
+    fetchJson<ApiResponse<Account>>(
+      `${API_BASE}/organizations/${orgId}/accounts/${accountNumber}`
+    ),
+
+  createAccount: (orgId: string, data: {
+    number: string;
+    name: string;
+    type: Account["type"];
+    isVatAccount?: boolean;
+  }) =>
+    fetchJson<ApiResponse<Account>>(
+      `${API_BASE}/organizations/${orgId}/accounts`,
+      { method: "POST", body: JSON.stringify(data) }
+    ),
+
+  deactivateAccount: (orgId: string, accountNumber: string) =>
+    fetch(`${API_BASE}/organizations/${orgId}/accounts/${accountNumber}`, { method: "DELETE" }).then((res) => {
+      if (!res.ok) throw new ApiError(res.status, "DELETE_FAILED", "Kunde inte inaktivera kontot");
+    }),
 
   // Vouchers
   getVouchers: (orgId: string, fiscalYearId: string) =>
     fetchJson<ApiResponse<Voucher[]>>(
       `${API_BASE}/organizations/${orgId}/vouchers?fiscalYearId=${fiscalYearId}`
+    ),
+
+  getVoucher: (orgId: string, voucherId: string) =>
+    fetchJson<ApiResponse<Voucher>>(
+      `${API_BASE}/organizations/${orgId}/vouchers/${voucherId}`
     ),
 
   createVoucher: (
@@ -200,6 +243,11 @@ export const api = {
         body: JSON.stringify(data),
       }
     ),
+
+  deleteVoucher: (orgId: string, voucherId: string) =>
+    fetch(`${API_BASE}/organizations/${orgId}/vouchers/${voucherId}`, { method: "DELETE" }).then((res) => {
+      if (!res.ok) throw new ApiError(res.status, "DELETE_FAILED", "Kunde inte radera verifikatet");
+    }),
 
   // Reports
   getTrialBalance: (orgId: string, fiscalYearId: string) =>
