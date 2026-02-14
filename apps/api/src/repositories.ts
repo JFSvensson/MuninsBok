@@ -8,6 +8,7 @@ import {
   AccountRepository,
   VoucherRepository,
   FiscalYearRepository,
+  DocumentRepository,
 } from "@muninsbok/db";
 
 export interface Repositories {
@@ -15,6 +16,7 @@ export interface Repositories {
   readonly accounts: AccountRepository;
   readonly vouchers: VoucherRepository;
   readonly fiscalYears: FiscalYearRepository;
+  readonly documents: DocumentRepository;
   readonly prisma: PrismaClient;
 }
 
@@ -25,6 +27,7 @@ export function createRepositories(prisma: PrismaClient): Repositories {
     accounts: new AccountRepository(prisma),
     vouchers: new VoucherRepository(prisma),
     fiscalYears: new FiscalYearRepository(prisma),
+    documents: new DocumentRepository(prisma),
     prisma,
   };
 }
