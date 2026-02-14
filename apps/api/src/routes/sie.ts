@@ -35,6 +35,60 @@ export async function sieRoutes(fastify: FastifyInstance) {
       return reply.status(404).send({ error: "Fiscal year not found" });
     }
 
+    // Calculate opening balances from previous fiscal year
+    const openingBalances = new Map<string, number>();
+    const previousFy = await db.fiscalYear.findFirst({
+      where: {
+        organizationId: orgId,
+        endDate: { lt: fiscalYear.startDate },
+      },
+      orderBy: { endDate: "desc" },
+    });
+
+    if (previousFy) {
+      const prevVouchers = await db.voucher.findMany({
+        where: { fiscalYearId: previousFy.id, organizationId: orgId },
+        include: { lines: true },
+      });
+
+      for (const v of prevVouchers) {
+        for (const line of v.lines) {
+          const num = parseInt(line.accountNumber, 10);
+          if (num >= 1000 && num <= 2999) {
+            const existing = openingBalances.get(line.accountNumber) ?? 0;
+            openingBalances.set(line.accountNumber, existing + line.debit - line.credit);
+          }
+        }
+      }
+    }
+
+    // Calculate closing balances (UB) and result balances (RES) from current year
+    const closingBalances = new Map<string, number>();
+    const resultBalances = new Map<string, number>();
+
+    // Start with opening balances for closing balances
+    for (const [accountNumber, balance] of openingBalances) {
+      closingBalances.set(accountNumber, balance);
+    }
+
+    // Add current year transactions
+    for (const voucher of vouchers) {
+      for (const line of voucher.lines) {
+        const num = parseInt(line.accountNumber, 10);
+        const net = line.debit - line.credit;
+
+        if (num >= 1000 && num <= 2999) {
+          // Balance sheet accounts → UB
+          const existing = closingBalances.get(line.accountNumber) ?? 0;
+          closingBalances.set(line.accountNumber, existing + net);
+        } else if (num >= 3000 && num <= 8999) {
+          // P&L accounts → RES
+          const existing = resultBalances.get(line.accountNumber) ?? 0;
+          resultBalances.set(line.accountNumber, existing + net);
+        }
+      }
+    }
+
     const sieContent = exportSie({
       companyName: org.name,
       orgNumber: org.orgNumber,
@@ -43,6 +97,9 @@ export async function sieRoutes(fastify: FastifyInstance) {
       fiscalYear: toFiscalYear(fiscalYear),
       accounts,
       vouchers,
+      openingBalances,
+      closingBalances,
+      resultBalances,
     });
 
     // Return as SIE file
