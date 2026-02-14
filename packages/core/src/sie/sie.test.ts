@@ -149,4 +149,72 @@ describe("exportSie", () => {
       expect(parsed.value.vouchers).toHaveLength(1);
     }
   });
+
+  it("should include opening balances (#IB)", () => {
+    const ib = new Map<string, number>();
+    ib.set("1910", 50000); // 500 kr
+
+    const result = exportSie({
+      companyName: "Testförening",
+      fiscalYear,
+      accounts,
+      vouchers,
+      openingBalances: ib,
+    });
+
+    expect(result).toContain("#IB 0 1910 500,00");
+  });
+
+  it("should include closing balances (#UB)", () => {
+    const ub = new Map<string, number>();
+    ub.set("1910", 60000); // 600 kr
+
+    const result = exportSie({
+      companyName: "Testförening",
+      fiscalYear,
+      accounts,
+      vouchers,
+      closingBalances: ub,
+    });
+
+    expect(result).toContain("#UB 0 1910 600,00");
+  });
+
+  it("should include result balances (#RES)", () => {
+    const res = new Map<string, number>();
+    res.set("3000", -10000); // -100 kr (revenue is credit = negative)
+
+    const result = exportSie({
+      companyName: "Testförening",
+      fiscalYear,
+      accounts,
+      vouchers,
+      resultBalances: res,
+    });
+
+    expect(result).toContain("#RES 0 3000 -100,00");
+  });
+
+  it("should skip zero balances in IB/UB/RES", () => {
+    const ib = new Map<string, number>();
+    ib.set("1910", 0);
+    const ub = new Map<string, number>();
+    ub.set("1910", 0);
+    const res = new Map<string, number>();
+    res.set("3000", 0);
+
+    const result = exportSie({
+      companyName: "Testförening",
+      fiscalYear,
+      accounts,
+      vouchers,
+      openingBalances: ib,
+      closingBalances: ub,
+      resultBalances: res,
+    });
+
+    expect(result).not.toContain("#IB");
+    expect(result).not.toContain("#UB");
+    expect(result).not.toContain("#RES");
+  });
 });
