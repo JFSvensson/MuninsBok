@@ -17,6 +17,12 @@ export interface Voucher {
   readonly lines: readonly VoucherLine[];
   /** Kopplade dokument-ID:n */
   readonly documentIds: readonly string[];
+  /** Vem som skapade verifikatet */
+  readonly createdBy?: string;
+  /** ID på verifikatet som detta verifikat rättar */
+  readonly correctsVoucherId?: string;
+  /** ID på verifikatet som rättar detta verifikat */
+  readonly correctedByVoucherId?: string;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
@@ -37,7 +43,8 @@ export type VoucherErrorCode =
   | "FISCAL_YEAR_CLOSED"
   | "INVALID_LINE"
   | "ACCOUNT_NOT_FOUND"
-  | "NOT_FOUND";
+  | "NOT_FOUND"
+  | "ALREADY_CORRECTED";
 
 export interface VoucherError {
   readonly code: VoucherErrorCode;
