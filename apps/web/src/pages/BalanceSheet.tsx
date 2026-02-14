@@ -19,7 +19,7 @@ function Section({ section }: { section: ReportSection }) {
         <tr key={row.accountNumber}>
           <td style={{ paddingLeft: "1rem" }}>{row.accountNumber}</td>
           <td>{row.accountName}</td>
-          <td className="text-right amount">{formatAmount(row.balance)}</td>
+          <td className="text-right amount">{formatAmount(row.amount)}</td>
         </tr>
       ))}
       <tr style={{ fontWeight: "bold" }}>
