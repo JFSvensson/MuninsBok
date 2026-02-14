@@ -1,17 +1,18 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useOrganization } from "../context/OrganizationContext";
 import { api } from "../api";
 import { formatAmount, formatDate, oreToKronor } from "../utils/formatting";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { DocumentSection } from "../components/DocumentSection";
 
 export function VoucherDetail() {
   const { voucherId } = useParams<{ voucherId: string }>();
   const { organization, fiscalYear } = useOrganization();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [showDelete, setShowDelete] = useState(false);
+  const [showCorrect, setShowCorrect] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["voucher", organization?.id, voucherId],
@@ -19,11 +20,12 @@ export function VoucherDetail() {
     enabled: !!organization && !!voucherId,
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: () => api.deleteVoucher(organization!.id, voucherId!),
-    onSuccess: () => {
+  const correctMutation = useMutation({
+    mutationFn: () => api.correctVoucher(organization!.id, voucherId!),
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["vouchers", organization?.id, fiscalYear?.id] });
-      navigate("/vouchers");
+      queryClient.invalidateQueries({ queryKey: ["voucher", organization?.id, voucherId] });
+      navigate(`/vouchers/${result.data.id}`);
     },
   });
 
@@ -35,20 +37,41 @@ export function VoucherDetail() {
 
   const totalDebit = voucher.lines.reduce((sum, l) => sum + l.debit, 0);
   const totalCredit = voucher.lines.reduce((sum, l) => sum + l.credit, 0);
+  const isCorrected = !!voucher.correctedByVoucherId;
+  const isCorrection = !!voucher.correctsVoucherId;
 
   return (
     <div className="card">
       <div className="flex justify-between items-center mb-2">
-        <h2>Verifikat #{voucher.number}</h2>
+        <h2>
+          Verifikat #{voucher.number}
+          {isCorrected && <span className="badge badge-warning" style={{ marginLeft: 8 }}>Rättat</span>}
+          {isCorrection && <span className="badge badge-info" style={{ marginLeft: 8 }}>Rättelseverifikat</span>}
+        </h2>
         <div className="flex gap-1">
           <button className="secondary" onClick={() => navigate("/vouchers")}>
             ← Tillbaka
           </button>
-          <button className="danger" onClick={() => setShowDelete(true)}>
-            Radera
-          </button>
+          {!isCorrected && !isCorrection && (
+            <button className="danger" onClick={() => setShowCorrect(true)}>
+              Rätta
+            </button>
+          )}
         </div>
       </div>
+
+      {isCorrected && (
+        <div className="info-box mb-2">
+          Detta verifikat har rättats.
+          <Link to={`/vouchers/${voucher.correctedByVoucherId}`}> Visa rättelseverifikat →</Link>
+        </div>
+      )}
+      {isCorrection && (
+        <div className="info-box mb-2">
+          Detta är en rättelse av verifikat.
+          <Link to={`/vouchers/${voucher.correctsVoucherId}`}> Visa originalverifikat →</Link>
+        </div>
+      )}
 
       <div className="flex gap-2 mb-2">
         <div>
@@ -92,14 +115,16 @@ export function VoucherDetail() {
         </tbody>
       </table>
 
+      <DocumentSection organizationId={organization!.id} voucherId={voucher.id} />
+
       <ConfirmDialog
-        open={showDelete}
-        title="Radera verifikat"
-        message={`Vill du verkligen radera verifikat #${voucher.number}? Detta kan inte ångras.`}
-        confirmLabel="Radera"
-        onConfirm={() => deleteMutation.mutate()}
-        onCancel={() => setShowDelete(false)}
-        isPending={deleteMutation.isPending}
+        open={showCorrect}
+        title="Rätta verifikat"
+        message={`Vill du skapa ett rättelseverifikat för verifikat #${voucher.number}? Ett nytt verifikat med omvända belopp skapas.`}
+        confirmLabel="Skapa rättelse"
+        onConfirm={() => correctMutation.mutate()}
+        onCancel={() => setShowCorrect(false)}
+        isPending={correctMutation.isPending}
       />
     </div>
   );
