@@ -5,7 +5,7 @@
 import { vi } from "vitest";
 import { buildApp } from "../app.js";
 import type { Repositories } from "../repositories.js";
-import type { OrganizationRepository, AccountRepository, VoucherRepository } from "@muninsbok/db";
+import type { OrganizationRepository, AccountRepository, VoucherRepository, FiscalYearRepository } from "@muninsbok/db";
 
 type MockedRepo<T> = {
   [K in keyof T]: T[K] extends (...args: any[]) => any ? ReturnType<typeof vi.fn> : T[K];
@@ -43,10 +43,20 @@ export function createMockVoucherRepo(): MockedRepo<VoucherRepository> {
   } as any;
 }
 
+export function createMockFiscalYearRepo(): MockedRepo<FiscalYearRepository> {
+  return {
+    findByOrganization: vi.fn(),
+    findById: vi.fn(),
+    create: vi.fn(),
+    close: vi.fn(),
+  } as any;
+}
+
 export interface MockRepos {
   organizations: MockedRepo<OrganizationRepository>;
   accounts: MockedRepo<AccountRepository>;
   vouchers: MockedRepo<VoucherRepository>;
+  fiscalYears: MockedRepo<FiscalYearRepository>;
   prisma: any;
 }
 
@@ -55,6 +65,7 @@ export function createMockRepos(): MockRepos {
     organizations: createMockOrganizationRepo(),
     accounts: createMockAccountRepo(),
     vouchers: createMockVoucherRepo(),
+    fiscalYears: createMockFiscalYearRepo(),
     prisma: {
       organization: { findUnique: vi.fn() },
       fiscalYear: { findFirst: vi.fn() },
