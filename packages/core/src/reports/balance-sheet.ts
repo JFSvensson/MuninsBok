@@ -39,7 +39,7 @@ export interface BalanceSheet {
  */
 const ASSET_RANGE = { start: 1000, end: 1999 };
 const LIABILITY_RANGE = { start: 2000, end: 2799 }; // Full 2xxx range (equity excluded via buildSection)
-const EQUITY_RANGE = { start: 2080, end: 2099 }; // Eget kapital (subset of 2xxx)
+const EQUITY_RANGE = { start: 2000, end: 2099 }; // Eget kapital (BAS 20xx)
 
 // For year result calculation
 const INCOME_STATEMENT_RANGE = { start: 3000, end: 8999 };
