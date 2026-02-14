@@ -29,11 +29,15 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@prisma/client": "^5.9.0"
+    "@prisma/adapter-pg": "^7.4.0",
+    "@prisma/client": "^7.4.0",
+    "dotenv": "^17.3.1",
+    "pg": "^8.18.0"
   },
   "devDependencies": {
     "@muninsbok/core": "workspace:*",
-    "prisma": "^5.9.0",
+    "@types/pg": "^8.16.0",
+    "prisma": "^7.4.0",
     "rimraf": "^5.0.5",
     "typescript": "^5.3.3",
     "vitest": "^1.2.0"
