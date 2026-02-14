@@ -8,6 +8,11 @@ const createOrganizationSchema = z.object({
   fiscalYearStartMonth: z.number().int().min(1).max(12).optional(),
 });
 
+const updateOrganizationSchema = z.object({
+  name: z.string().min(1).max(255).optional(),
+  fiscalYearStartMonth: z.number().int().min(1).max(12).optional(),
+});
+
 export async function organizationRoutes(fastify: FastifyInstance) {
   const orgRepo = fastify.repos.organizations;
   const accountRepo = fastify.repos.accounts;
@@ -52,6 +57,20 @@ export async function organizationRoutes(fastify: FastifyInstance) {
     );
 
     return reply.status(201).send({ data: org });
+  });
+
+  // Update organization
+  fastify.patch<{ Params: { orgId: string } }>("/:orgId", async (request, reply) => {
+    const parsed = updateOrganizationSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: parsed.error.issues });
+    }
+
+    const org = await orgRepo.update(request.params.orgId, parsed.data);
+    if (!org) {
+      return reply.status(404).send({ error: "Organization not found" });
+    }
+    return { data: org };
   });
 
   // Delete organization
