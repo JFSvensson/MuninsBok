@@ -62,7 +62,7 @@ export function toAccount(
  */
 export function toVoucher(
   voucher: Prisma.VoucherGetPayload<{
-    include: { lines: true; documents: true };
+    include: { lines: true; documents: true; correctedByVoucher: true };
   }>
 ): CoreVoucher {
   return {
@@ -74,6 +74,9 @@ export function toVoucher(
     description: voucher.description,
     lines: voucher.lines.map(toVoucherLine),
     documentIds: voucher.documents.map((d) => d.id),
+    ...(voucher.createdBy != null && { createdBy: voucher.createdBy }),
+    ...(voucher.correctsVoucherId != null && { correctsVoucherId: voucher.correctsVoucherId }),
+    ...(voucher.correctedByVoucher != null && { correctedByVoucherId: voucher.correctedByVoucher.id }),
     createdAt: voucher.createdAt,
     updatedAt: voucher.updatedAt,
   };
