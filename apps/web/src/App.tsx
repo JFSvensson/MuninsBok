@@ -9,6 +9,9 @@ import { TrialBalance } from "./pages/TrialBalance";
 import { IncomeStatement } from "./pages/IncomeStatement";
 import { BalanceSheet } from "./pages/BalanceSheet";
 import { VatReport } from "./pages/VatReport";
+import { Journal } from "./pages/Journal";
+import { GeneralLedger } from "./pages/GeneralLedger";
+import { VoucherListReport } from "./pages/VoucherListReport";
 import { SieExport } from "./pages/SieExport";
 import { useState } from "react";
 import { CreateOrganizationDialog } from "./components/CreateOrganizationDialog";
@@ -60,6 +63,12 @@ function AppContent() {
               <NavLink to="/reports/vat">Moms</NavLink>
             </span>
             <span className="nav-separator" />
+            <span className="nav-group">
+              <NavLink to="/reports/journal">Grundbok</NavLink>
+              <NavLink to="/reports/general-ledger">Huvudbok</NavLink>
+              <NavLink to="/reports/voucher-list">Verifikationslista</NavLink>
+            </span>
+            <span className="nav-separator" />
             <NavLink to="/sie">SIE</NavLink>
           </nav>
 
@@ -73,6 +82,9 @@ function AppContent() {
             <Route path="/reports/income-statement" element={<IncomeStatement />} />
             <Route path="/reports/balance-sheet" element={<BalanceSheet />} />
             <Route path="/reports/vat" element={<VatReport />} />
+            <Route path="/reports/journal" element={<Journal />} />
+            <Route path="/reports/general-ledger" element={<GeneralLedger />} />
+            <Route path="/reports/voucher-list" element={<VoucherListReport />} />
             <Route path="/sie" element={<SieExport />} />
           </Routes>
         </>
