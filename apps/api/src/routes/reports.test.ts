@@ -17,9 +17,9 @@ describe("Report routes", () => {
   const fyId = "fy-1";
 
   const accounts: Account[] = [
-    { id: "a1", organizationId: orgId, number: "1930", name: "Bank", type: "ASSET", isVatAccount: false, isActive: true },
-    { id: "a2", organizationId: orgId, number: "3000", name: "Intäkter", type: "REVENUE", isVatAccount: false, isActive: true },
-    { id: "a3", organizationId: orgId, number: "5010", name: "Lokalkostnad", type: "EXPENSE", isVatAccount: false, isActive: true },
+    { number: "1930", name: "Bank", type: "ASSET", isVatAccount: false, isActive: true },
+    { number: "3000", name: "Intäkter", type: "REVENUE", isVatAccount: false, isActive: true },
+    { number: "5010", name: "Lokalkostnad", type: "EXPENSE", isVatAccount: false, isActive: true },
   ];
 
   const vouchers: Voucher[] = [
@@ -34,8 +34,9 @@ describe("Report routes", () => {
         { id: "l1", voucherId: "v1", accountNumber: "1930", debit: 50000, credit: 0 },
         { id: "l2", voucherId: "v1", accountNumber: "3000", debit: 0, credit: 50000 },
       ],
-      documents: [],
+      documentIds: [],
       createdAt: new Date(),
+      updatedAt: new Date(),
     },
     {
       id: "v2",
@@ -48,8 +49,9 @@ describe("Report routes", () => {
         { id: "l3", voucherId: "v2", accountNumber: "5010", debit: 20000, credit: 0 },
         { id: "l4", voucherId: "v2", accountNumber: "1930", debit: 0, credit: 20000 },
       ],
-      documents: [],
+      documentIds: [],
       createdAt: new Date(),
+      updatedAt: new Date(),
     },
   ];
 
