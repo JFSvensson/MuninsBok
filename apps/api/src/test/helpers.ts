@@ -40,6 +40,7 @@ export function createMockVoucherRepo(): MockedRepo<VoucherRepository> {
     findByDateRange: vi.fn(),
     create: vi.fn(),
     createCorrection: vi.fn(),
+    findNumberGaps: vi.fn(),
   } as any;
 }
 
@@ -49,6 +50,7 @@ export function createMockFiscalYearRepo(): MockedRepo<FiscalYearRepository> {
     findById: vi.fn(),
     create: vi.fn(),
     close: vi.fn(),
+    createOpeningBalances: vi.fn(),
   } as any;
 }
 
