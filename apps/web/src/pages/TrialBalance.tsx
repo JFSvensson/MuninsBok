@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useOrganization } from "../context/OrganizationContext";
 import { api } from "../api";
 import { formatAmount, amountClassName } from "../utils/formatting";
+import { toCsv, downloadCsv, csvAmount } from "../utils/csv";
 
 export function TrialBalance() {
   const { organization, fiscalYear } = useOrganization();
@@ -33,7 +34,27 @@ export function TrialBalance() {
 
   return (
     <div className="card">
-      <h2>Råbalans</h2>
+      <div className="flex justify-between items-center mb-2">
+        <h2>Råbalans</h2>
+        <button
+          className="secondary"
+          onClick={() => {
+            const csv = toCsv(
+              ["Konto", "Namn", "Debet", "Kredit", "Saldo"],
+              report.rows.map((r) => [
+                r.accountNumber,
+                r.accountName,
+                csvAmount(r.debit),
+                csvAmount(r.credit),
+                csvAmount(r.balance),
+              ])
+            );
+            downloadCsv(csv, "rabalans.csv");
+          }}
+        >
+          Exportera CSV
+        </button>
+      </div>
       <table>
         <thead>
           <tr>
