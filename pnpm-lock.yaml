@@ -29,6 +29,9 @@ importers:
       '@muninsbok/db':
         specifier: workspace:*
         version: link:../../packages/db
+      dotenv:
+        specifier: ^17.3.1
+        version: 17.3.1
       fastify:
         specifier: ^4.26.0
         version: 4.29.1
