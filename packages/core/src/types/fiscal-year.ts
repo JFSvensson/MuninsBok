@@ -23,7 +23,8 @@ export interface FiscalYearError {
     | "INVALID_DATE_RANGE"
     | "OVERLAPPING_YEAR"
     | "YEAR_CLOSED"
-    | "NOT_FOUND";
+    | "NOT_FOUND"
+    | "INVALID_LENGTH";
   readonly message: string;
 }
 
