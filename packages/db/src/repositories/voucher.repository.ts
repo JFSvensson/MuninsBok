@@ -194,4 +194,33 @@ export class VoucherRepository {
     });
     return (lastVoucher?.number ?? 0) + 1;
   }
+
+  /**
+   * Find gaps in the voucher number sequence for a fiscal year.
+   * Returns an array of missing voucher numbers (BFL 5:6 – löpnumrering).
+   */
+  async findNumberGaps(
+    fiscalYearId: string,
+    organizationId: string
+  ): Promise<number[]> {
+    const vouchers = await this.prisma.voucher.findMany({
+      where: { fiscalYearId, organizationId },
+      orderBy: { number: "asc" },
+      select: { number: true },
+    });
+
+    if (vouchers.length === 0) return [];
+
+    const numbers = new Set(vouchers.map((v) => v.number));
+    const max = Math.max(...numbers);
+    const gaps: number[] = [];
+
+    for (let i = 1; i <= max; i++) {
+      if (!numbers.has(i)) {
+        gaps.push(i);
+      }
+    }
+
+    return gaps;
+  }
 }
