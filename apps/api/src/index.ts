@@ -1,3 +1,10 @@
+import { config } from "dotenv";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+// Load .env from monorepo root (3 levels up from apps/api/src/)
+config({ path: resolve(dirname(fileURLToPath(import.meta.url)), "../../../.env") });
+
 import { prisma } from "@muninsbok/db";
 import { buildApp } from "./app.js";
 import { createRepositories } from "./repositories.js";
