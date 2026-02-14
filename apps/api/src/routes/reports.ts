@@ -4,6 +4,9 @@ import {
   calculateIncomeStatement,
   calculateBalanceSheet,
   calculateVatReport,
+  generateJournal,
+  generateGeneralLedger,
+  generateVoucherListReport,
 } from "@muninsbok/core";
 
 export async function reportRoutes(fastify: FastifyInstance) {
@@ -163,6 +166,121 @@ export async function reportRoutes(fastify: FastifyInstance) {
         inputVat: convertRows(report.inputVat),
         totalInputVat: report.totalInputVat / 100,
         vatPayable: report.vatPayable / 100,
+        generatedAt: report.generatedAt,
+      },
+    };
+  });
+
+  // Journal (Grundbok)
+  fastify.get<{
+    Params: { orgId: string };
+    Querystring: { fiscalYearId: string };
+  }>("/:orgId/reports/journal", async (request, reply) => {
+    const { orgId } = request.params;
+    const { fiscalYearId } = request.query;
+
+    if (!fiscalYearId) {
+      return reply.status(400).send({ error: "fiscalYearId is required" });
+    }
+
+    const [vouchers, accounts] = await Promise.all([
+      voucherRepo.findByFiscalYear(fiscalYearId, orgId),
+      accountRepo.findByOrganization(orgId),
+    ]);
+
+    const report = generateJournal(vouchers, accounts);
+
+    return {
+      data: {
+        entries: report.entries.map((entry) => ({
+          ...entry,
+          lines: entry.lines.map((line) => ({
+            ...line,
+            debit: line.debit / 100,
+            credit: line.credit / 100,
+          })),
+          totalDebit: entry.totalDebit / 100,
+          totalCredit: entry.totalCredit / 100,
+        })),
+        totalDebit: report.totalDebit / 100,
+        totalCredit: report.totalCredit / 100,
+        generatedAt: report.generatedAt,
+      },
+    };
+  });
+
+  // General Ledger (Huvudbok)
+  fastify.get<{
+    Params: { orgId: string };
+    Querystring: { fiscalYearId: string };
+  }>("/:orgId/reports/general-ledger", async (request, reply) => {
+    const { orgId } = request.params;
+    const { fiscalYearId } = request.query;
+
+    if (!fiscalYearId) {
+      return reply.status(400).send({ error: "fiscalYearId is required" });
+    }
+
+    const [vouchers, accounts] = await Promise.all([
+      voucherRepo.findByFiscalYear(fiscalYearId, orgId),
+      accountRepo.findByOrganization(orgId),
+    ]);
+
+    const report = generateGeneralLedger(vouchers, accounts);
+
+    return {
+      data: {
+        accounts: report.accounts.map((account) => ({
+          ...account,
+          transactions: account.transactions.map((txn) => ({
+            ...txn,
+            debit: txn.debit / 100,
+            credit: txn.credit / 100,
+            balance: txn.balance / 100,
+          })),
+          totalDebit: account.totalDebit / 100,
+          totalCredit: account.totalCredit / 100,
+          closingBalance: account.closingBalance / 100,
+        })),
+        generatedAt: report.generatedAt,
+      },
+    };
+  });
+
+  // Voucher List Report (Verifikationslista)
+  fastify.get<{
+    Params: { orgId: string };
+    Querystring: { fiscalYearId: string };
+  }>("/:orgId/reports/voucher-list", async (request, reply) => {
+    const { orgId } = request.params;
+    const { fiscalYearId } = request.query;
+
+    if (!fiscalYearId) {
+      return reply.status(400).send({ error: "fiscalYearId is required" });
+    }
+
+    const [vouchers, accounts] = await Promise.all([
+      voucherRepo.findByFiscalYear(fiscalYearId, orgId),
+      accountRepo.findByOrganization(orgId),
+    ]);
+
+    const report = generateVoucherListReport(vouchers, accounts);
+
+    return {
+      data: {
+        entries: report.entries.map((entry) => ({
+          ...entry,
+          lines: entry.lines.map((line) => ({
+            ...line,
+            debit: line.debit / 100,
+            credit: line.credit / 100,
+          })),
+          totalDebit: entry.totalDebit / 100,
+          totalCredit: entry.totalCredit / 100,
+        })),
+        totalDebit: report.totalDebit / 100,
+        totalCredit: report.totalCredit / 100,
+        count: report.count,
         generatedAt: report.generatedAt,
       },
     };
