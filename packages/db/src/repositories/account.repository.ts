@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "../generated/prisma/client.js";
 import type { Account, CreateAccountInput, AccountError } from "@muninsbok/core";
 import { ok, err, type Result, isValidAccountNumber } from "@muninsbok/core";
 import { toAccount } from "../mappers.js";
