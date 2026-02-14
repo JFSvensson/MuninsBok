@@ -54,15 +54,21 @@ export function VoucherList() {
         <tbody>
           {vouchers.map((voucher) => {
             const totalOre = voucher.lines.reduce((sum, l) => sum + l.debit, 0);
+            const isCorrected = !!voucher.correctedByVoucherId;
+            const isCorrection = !!voucher.correctsVoucherId;
             return (
               <tr
                 key={voucher.id}
-                className="clickable-row"
+                className={`clickable-row${isCorrected ? " corrected" : ""}`}
                 onClick={() => navigate(`/vouchers/${voucher.id}`)}
               >
                 <td>{voucher.number}</td>
                 <td>{formatDate(voucher.date)}</td>
-                <td>{voucher.description}</td>
+                <td>
+                  {voucher.description}
+                  {isCorrected && <span className="badge badge-warning" style={{ marginLeft: 6, fontSize: "0.75em" }}>Rättat</span>}
+                  {isCorrection && <span className="badge badge-info" style={{ marginLeft: 6, fontSize: "0.75em" }}>Rättelse</span>}
+                </td>
                 <td className="text-right amount">
                   {formatAmount(oreToKronor(totalOre))} kr
                 </td>
