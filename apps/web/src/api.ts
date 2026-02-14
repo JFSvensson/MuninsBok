@@ -114,6 +114,85 @@ export interface VoucherGaps {
   count: number;
 }
 
+// Journal (Grundbok) types
+export interface JournalLine {
+  accountNumber: string;
+  accountName: string;
+  debit: number;
+  credit: number;
+  description?: string;
+}
+
+export interface JournalEntry {
+  voucherId: string;
+  voucherNumber: number;
+  date: string;
+  description: string;
+  lines: JournalLine[];
+  totalDebit: number;
+  totalCredit: number;
+}
+
+export interface JournalReport {
+  entries: JournalEntry[];
+  totalDebit: number;
+  totalCredit: number;
+  generatedAt: string;
+}
+
+// General Ledger (Huvudbok) types
+export interface GeneralLedgerTransaction {
+  voucherId: string;
+  voucherNumber: number;
+  date: string;
+  description: string;
+  debit: number;
+  credit: number;
+  balance: number;
+}
+
+export interface GeneralLedgerAccount {
+  accountNumber: string;
+  accountName: string;
+  transactions: GeneralLedgerTransaction[];
+  totalDebit: number;
+  totalCredit: number;
+  closingBalance: number;
+}
+
+export interface GeneralLedgerReport {
+  accounts: GeneralLedgerAccount[];
+  generatedAt: string;
+}
+
+// Voucher List Report (Verifikationslista) types
+export interface VoucherListReportLine {
+  accountNumber: string;
+  accountName: string;
+  debit: number;
+  credit: number;
+  description?: string;
+}
+
+export interface VoucherListReportEntry {
+  voucherId: string;
+  voucherNumber: number;
+  date: string;
+  description: string;
+  createdBy?: string;
+  lines: VoucherListReportLine[];
+  totalDebit: number;
+  totalCredit: number;
+}
+
+export interface VoucherListReportData {
+  entries: VoucherListReportEntry[];
+  totalDebit: number;
+  totalCredit: number;
+  count: number;
+  generatedAt: string;
+}
+
 export interface DocumentMeta {
   id: string;
   organizationId: string;
@@ -303,6 +382,21 @@ export const api = {
   getVatReport: (orgId: string, fiscalYearId: string) =>
     fetchJson<ApiResponse<VatReport>>(
       `${API_BASE}/organizations/${orgId}/reports/vat?fiscalYearId=${fiscalYearId}`
+    ),
+
+  getJournal: (orgId: string, fiscalYearId: string) =>
+    fetchJson<ApiResponse<JournalReport>>(
+      `${API_BASE}/organizations/${orgId}/reports/journal?fiscalYearId=${fiscalYearId}`
+    ),
+
+  getGeneralLedger: (orgId: string, fiscalYearId: string) =>
+    fetchJson<ApiResponse<GeneralLedgerReport>>(
+      `${API_BASE}/organizations/${orgId}/reports/general-ledger?fiscalYearId=${fiscalYearId}`
+    ),
+
+  getVoucherListReport: (orgId: string, fiscalYearId: string) =>
+    fetchJson<ApiResponse<VoucherListReportData>>(
+      `${API_BASE}/organizations/${orgId}/reports/voucher-list?fiscalYearId=${fiscalYearId}`
     ),
 
   // Voucher gaps
