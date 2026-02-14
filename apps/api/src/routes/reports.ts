@@ -109,8 +109,9 @@ export async function reportRoutes(fastify: FastifyInstance) {
     const convertSection = (section: typeof report.assets) => ({
       ...section,
       rows: section.rows.map((row) => ({
-        ...row,
-        balance: row.balance / 100,
+        accountNumber: row.accountNumber,
+        accountName: row.accountName,
+        amount: row.balance / 100,
       })),
       total: section.total / 100,
     });
