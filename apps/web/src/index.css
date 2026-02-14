@@ -216,3 +216,118 @@ textarea:focus {
   background-color: #fafafa;
   border-radius: 4px;
 }
+
+/* Dialog / Modal */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.dialog {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.dialog.dialog-sm {
+  max-width: 360px;
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.dialog-header h3 {
+  font-size: 1.15rem;
+  margin: 0;
+}
+
+.dialog-description {
+  color: #666;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+/* Icon buttons */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 4px;
+  background: #e0e0e0;
+  color: #213547;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s;
+}
+
+.btn-icon:hover {
+  background: #ccc;
+}
+
+.btn-icon-danger:hover {
+  background: #ffcdd2;
+  color: #c62828;
+}
+
+/* Danger button */
+button.danger {
+  background-color: #c62828;
+  color: white;
+}
+
+button.danger:hover {
+  background-color: #b71c1c;
+}
+
+button.danger:disabled {
+  background-color: #ccc;
+}
+
+/* Clickable table rows */
+.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.clickable-row:hover {
+  background-color: #e3f2fd;
+}
+
+/* Navigation groups */
+.nav-group {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.nav-separator {
+  width: 1px;
+  background-color: #ddd;
+  margin: 0 0.5rem;
+  align-self: stretch;
+}
