@@ -19,6 +19,7 @@
     "@fastify/multipart": "^8.1.0",
     "@muninsbok/core": "workspace:*",
     "@muninsbok/db": "workspace:*",
+    "dotenv": "^17.3.1",
     "fastify": "^4.26.0",
     "zod": "^3.22.4"
   },
