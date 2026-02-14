@@ -2,8 +2,8 @@
  * Dependency injection types for API routes.
  * Allows routes to use repository interfaces instead of importing prisma directly.
  */
-import type { PrismaClient } from "@prisma/client";
 import {
+  type PrismaClient,
   OrganizationRepository,
   AccountRepository,
   VoucherRepository,
