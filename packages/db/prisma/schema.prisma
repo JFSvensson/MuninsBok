@@ -124,7 +124,7 @@ model VoucherLine {
 
   // Relations
   voucher Voucher @relation(fields: [voucherId], references: [id], onDelete: Cascade)
-  account Account @relation(fields: [accountId], references: [id])
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
   @@index([voucherId])
   @@index([accountNumber])
