@@ -20,6 +20,8 @@ export function exportSie(
     accounts: readonly Account[];
     vouchers: readonly Voucher[];
     openingBalances?: Map<string, number>;
+    closingBalances?: Map<string, number>;
+    resultBalances?: Map<string, number>;
   }
 ): string {
   const lines: string[] = [];
@@ -53,6 +55,24 @@ export function exportSie(
     for (const [accountNumber, balance] of options.openingBalances) {
       if (balance !== 0) {
         lines.push(`#IB 0 ${accountNumber} ${formatAmount(balance)}`);
+      }
+    }
+  }
+
+  // Closing balances (if provided) – balance sheet accounts
+  if (options.closingBalances) {
+    for (const [accountNumber, balance] of options.closingBalances) {
+      if (balance !== 0) {
+        lines.push(`#UB 0 ${accountNumber} ${formatAmount(balance)}`);
+      }
+    }
+  }
+
+  // Result balances (if provided) – P&L accounts
+  if (options.resultBalances) {
+    for (const [accountNumber, balance] of options.resultBalances) {
+      if (balance !== 0) {
+        lines.push(`#RES 0 ${accountNumber} ${formatAmount(balance)}`);
       }
     }
   }
