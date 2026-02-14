@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useOrganization } from "../context/OrganizationContext";
 import { api, type ReportSection } from "../api";
 import { formatAmount, amountClassName } from "../utils/formatting";
+import { toCsv, downloadCsv, csvAmount } from "../utils/csv";
 
 function Section({ section }: { section: ReportSection }) {
   if (section.rows.length === 0) {
@@ -62,7 +63,26 @@ export function IncomeStatement() {
 
   return (
     <div className="card">
-      <h2>Resultaträkning</h2>
+      <div className="flex justify-between items-center mb-2">
+        <h2>Resultaträkning</h2>
+        <button
+          className="secondary"
+          onClick={() => {
+            const allRows = [
+              ...report.revenues.rows.map((r) => [r.accountNumber, r.accountName, "Intäkt", csvAmount(r.amount)]),
+              ...report.expenses.rows.map((r) => [r.accountNumber, r.accountName, "Kostnad", csvAmount(r.amount)]),
+              ...report.financialIncome.rows.map((r) => [r.accountNumber, r.accountName, "Finansiell intäkt", csvAmount(r.amount)]),
+              ...report.financialExpenses.rows.map((r) => [r.accountNumber, r.accountName, "Finansiell kostnad", csvAmount(r.amount)]),
+              ["", "Rörelseresultat", "", csvAmount(report.operatingResult)],
+              ["", "Årets resultat", "", csvAmount(report.netResult)],
+            ];
+            const csv = toCsv(["Konto", "Namn", "Kategori", "Belopp"], allRows);
+            downloadCsv(csv, "resultatrakning.csv");
+          }}
+        >
+          Exportera CSV
+        </button>
+      </div>
       <table>
         <thead>
           <tr>
