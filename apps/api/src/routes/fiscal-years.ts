@@ -58,7 +58,7 @@ export async function fiscalYearRoutes(fastify: FastifyInstance) {
     }
   );
 
-  // Close fiscal year
+  // Close fiscal year (creates closing voucher + marks as closed)
   fastify.patch<{ Params: { orgId: string; fyId: string } }>(
     "/:orgId/fiscal-years/:fyId/close",
     async (request, reply) => {
@@ -75,6 +75,38 @@ export async function fiscalYearRoutes(fastify: FastifyInstance) {
       }
 
       return { data: result.value };
+    }
+  );
+
+  // Create opening balances from previous fiscal year
+  fastify.post<{
+    Params: { orgId: string; fyId: string };
+    Body: { previousFiscalYearId: string };
+  }>(
+    "/:orgId/fiscal-years/:fyId/opening-balances",
+    async (request, reply) => {
+      const body = z
+        .object({ previousFiscalYearId: z.string() })
+        .safeParse(request.body);
+
+      if (!body.success) {
+        return reply.status(400).send({ error: body.error.issues });
+      }
+
+      const result = await fyRepo.createOpeningBalances(
+        request.params.fyId,
+        body.data.previousFiscalYearId,
+        request.params.orgId
+      );
+
+      if (!result.ok) {
+        if (result.error.code === "NOT_FOUND") {
+          return reply.status(404).send({ error: result.error });
+        }
+        return reply.status(400).send({ error: result.error });
+      }
+
+      return reply.status(201).send({ data: result.value });
     }
   );
 }
