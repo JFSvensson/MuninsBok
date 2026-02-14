@@ -1,16 +1,35 @@
-import { PrismaClient } from "@prisma/client";
+import "dotenv/config";
+import { PrismaClient } from "./generated/prisma/client.js";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 declare global {
   // eslint-disable-next-line no-var
-  var prisma: PrismaClient | undefined;
+  var __prisma: PrismaClient | undefined;
 }
 
-// Prevent multiple instances during development with hot reload
-export const prisma = globalThis.prisma ?? new PrismaClient();
-
-if (process.env["NODE_ENV"] !== "production") {
-  globalThis.prisma = prisma;
+function createPrismaClient(): PrismaClient {
+  const connectionString = process.env["DATABASE_URL"];
+  if (!connectionString) {
+    throw new Error("DATABASE_URL environment variable is required");
+  }
+  const adapter = new PrismaPg({ connectionString });
+  return new PrismaClient({ adapter });
 }
+
+/**
+ * Lazy-initialized PrismaClient singleton.
+ * Only connects when first accessed, allowing test modules to import
+ * without requiring DATABASE_URL.
+ */
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, prop, receiver) {
+    if (!globalThis.__prisma) {
+      globalThis.__prisma = createPrismaClient();
+    }
+    const value = Reflect.get(globalThis.__prisma, prop, receiver);
+    return typeof value === "function" ? value.bind(globalThis.__prisma) : value;
+  },
+});
 
 export { PrismaClient };
-export * from "@prisma/client";
+export type { Prisma } from "./generated/prisma/client.js";
