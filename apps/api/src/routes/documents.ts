@@ -100,6 +100,26 @@ export async function documentRoutes(fastify: FastifyInstance) {
         return reply.status(404).send({ error: "Dokumentet hittades inte" });
       }
 
+      // BFL: Prevent deletion of documents attached to vouchers in closed fiscal years
+      if (doc.voucherId) {
+        const voucher = await fastify.repos.prisma.voucher.findFirst({
+          where: { id: doc.voucherId, organizationId: request.params.orgId },
+          select: { fiscalYearId: true },
+        });
+        if (voucher) {
+          const fiscalYear = await fastify.repos.prisma.fiscalYear.findFirst({
+            where: { id: voucher.fiscalYearId, organizationId: request.params.orgId },
+            select: { isClosed: true },
+          });
+          if (fiscalYear?.isClosed) {
+            return reply.status(403).send({
+              error: "Kan inte radera dokument som tillhör ett stängt räkenskapsår",
+              code: "FISCAL_YEAR_CLOSED",
+            });
+          }
+        }
+      }
+
       await storage.remove(doc.storageKey);
       await documentRepo.delete(doc.id, request.params.orgId);
 
