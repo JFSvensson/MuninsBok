@@ -103,6 +103,7 @@ export function OrganizationSelect() {
             onClose={() => setShowCreateFy(false)}
             onCreated={(fy) => setFiscalYear(fy)}
             organization={organization}
+            fiscalYears={fiscalYears}
           />
           <DeleteOrganizationDialog
             open={showDeleteOrg}
