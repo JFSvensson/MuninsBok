@@ -14,6 +14,12 @@ export function VoucherList() {
     enabled: !!organization && !!fiscalYear,
   });
 
+  const { data: gapsData } = useQuery({
+    queryKey: ["voucher-gaps", organization?.id, fiscalYear?.id],
+    queryFn: () => api.getVoucherGaps(organization!.id, fiscalYear!.id),
+    enabled: !!organization && !!fiscalYear,
+  });
+
   if (isLoading) {
     return <div className="loading">Laddar verifikat...</div>;
   }
@@ -23,6 +29,7 @@ export function VoucherList() {
   }
 
   const vouchers = data?.data ?? [];
+  const gaps = gapsData?.data;
 
   if (vouchers.length === 0) {
     return (
@@ -42,6 +49,21 @@ export function VoucherList() {
         <h2>Verifikat</h2>
         <button onClick={() => navigate("/vouchers/new")}>+ Nytt verifikat</button>
       </div>
+
+      {gaps && gaps.count > 0 && (
+        <div className="warning mb-2" style={{
+          padding: "0.75rem 1rem",
+          backgroundColor: "#fff3e0",
+          border: "1px solid #ffb74d",
+          borderRadius: "4px",
+        }}>
+          <strong>⚠ Luckor i verifikatnumrering (BFL 5:6):</strong>{" "}
+          {gaps.count <= 10
+            ? `Nummer ${gaps.gaps.join(", ")} saknas.`
+            : `${gaps.count} nummer saknas (${gaps.gaps.slice(0, 5).join(", ")}…).`
+          }
+        </div>
+      )}
       <table>
         <thead>
           <tr>
