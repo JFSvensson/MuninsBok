@@ -70,9 +70,17 @@ export async function voucherRoutes(fastify: FastifyInstance) {
         return reply.status(400).send({ error: parsed.error.issues });
       }
 
+      const { lines, documentIds, ...rest } = parsed.data;
       const result = await voucherRepo.create({
-        ...parsed.data,
+        ...rest,
         organizationId: request.params.orgId,
+        lines: lines.map((l) => ({
+          accountNumber: l.accountNumber,
+          debit: l.debit,
+          credit: l.credit,
+          ...(l.description != null && { description: l.description }),
+        })),
+        ...(documentIds != null && { documentIds }),
       });
 
       if (!result.ok) {
