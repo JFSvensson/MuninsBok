@@ -91,18 +91,21 @@ export async function voucherRoutes(fastify: FastifyInstance) {
     }
   );
 
-  // Delete voucher
-  fastify.delete<{ Params: { orgId: string; voucherId: string } }>(
-    "/:orgId/vouchers/:voucherId",
+  // Create correction voucher (rättelseverifikat) — BFL 5:5
+  fastify.post<{ Params: { orgId: string; voucherId: string } }>(
+    "/:orgId/vouchers/:voucherId/correct",
     async (request, reply) => {
-      const deleted = await voucherRepo.delete(
+      const result = await voucherRepo.createCorrection(
         request.params.voucherId,
         request.params.orgId
       );
-      if (!deleted) {
-        return reply.status(404).send({ error: "Voucher not found" });
+
+      if (!result.ok) {
+        const status = result.error.code === "NOT_FOUND" ? 404 : 400;
+        return reply.status(status).send({ error: result.error });
       }
-      return reply.status(204).send();
+
+      return reply.status(201).send({ data: result.value });
     }
   );
 }
