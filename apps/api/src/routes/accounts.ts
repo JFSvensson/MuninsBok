@@ -51,7 +51,11 @@ export async function accountRoutes(fastify: FastifyInstance) {
         return reply.status(400).send({ error: parsed.error.issues });
       }
 
-      const result = await accountRepo.create(request.params.orgId, parsed.data);
+      const { isVatAccount, ...rest } = parsed.data;
+      const result = await accountRepo.create(request.params.orgId, {
+        ...rest,
+        ...(isVatAccount != null && { isVatAccount }),
+      });
 
       if (!result.ok) {
         return reply.status(400).send({ error: result.error });
