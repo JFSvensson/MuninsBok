@@ -39,7 +39,11 @@ export async function organizationRoutes(fastify: FastifyInstance) {
       return reply.status(400).send({ error: parsed.error.issues });
     }
 
-    const result = await orgRepo.create(parsed.data);
+    const { fiscalYearStartMonth, ...rest } = parsed.data;
+    const result = await orgRepo.create({
+      ...rest,
+      ...(fiscalYearStartMonth != null && { fiscalYearStartMonth }),
+    });
     if (!result.ok) {
       return reply.status(400).send({ error: result.error });
     }
@@ -66,7 +70,11 @@ export async function organizationRoutes(fastify: FastifyInstance) {
       return reply.status(400).send({ error: parsed.error.issues });
     }
 
-    const org = await orgRepo.update(request.params.orgId, parsed.data);
+    const { name, fiscalYearStartMonth } = parsed.data;
+    const org = await orgRepo.update(request.params.orgId, {
+      ...(name != null && { name }),
+      ...(fiscalYearStartMonth != null && { fiscalYearStartMonth }),
+    });
     if (!org) {
       return reply.status(404).send({ error: "Organization not found" });
     }
