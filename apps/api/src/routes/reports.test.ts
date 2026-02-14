@@ -140,4 +140,91 @@ describe("Report routes", () => {
       expect(res.statusCode).toBe(400);
     });
   });
+
+  describe("GET /:orgId/reports/journal (Grundbok)", () => {
+    it("returns journal with entries sorted by date", async () => {
+      setupRepos();
+
+      const res = await app.inject({
+        method: "GET",
+        url: `/api/organizations/${orgId}/reports/journal?fiscalYearId=${fyId}`,
+      });
+
+      expect(res.statusCode).toBe(200);
+      const data = JSON.parse(res.body).data;
+      expect(data.entries).toBeDefined();
+      expect(data.entries).toHaveLength(2);
+      // v1 is March, v2 is April → already in order
+      expect(data.entries[0].voucherNumber).toBe(1);
+      expect(data.entries[1].voucherNumber).toBe(2);
+      // Amounts in kronor
+      expect(data.totalDebit).toBe(data.totalCredit);
+    });
+
+    it("returns 400 when fiscalYearId missing", async () => {
+      const res = await app.inject({
+        method: "GET",
+        url: `/api/organizations/${orgId}/reports/journal`,
+      });
+      expect(res.statusCode).toBe(400);
+    });
+  });
+
+  describe("GET /:orgId/reports/general-ledger (Huvudbok)", () => {
+    it("returns general ledger grouped by account", async () => {
+      setupRepos();
+
+      const res = await app.inject({
+        method: "GET",
+        url: `/api/organizations/${orgId}/reports/general-ledger?fiscalYearId=${fyId}`,
+      });
+
+      expect(res.statusCode).toBe(200);
+      const data = JSON.parse(res.body).data;
+      expect(data.accounts).toBeDefined();
+      // 3 accounts with transactions: 1930, 3000, 5010
+      expect(data.accounts).toHaveLength(3);
+      // Sorted by account number
+      expect(data.accounts[0].accountNumber).toBe("1930");
+      // Running balance
+      const bank = data.accounts[0];
+      expect(bank.transactions).toHaveLength(2);
+      expect(bank.closingBalance).toBe(300); // (500 - 200) kr
+    });
+
+    it("returns 400 when fiscalYearId missing", async () => {
+      const res = await app.inject({
+        method: "GET",
+        url: `/api/organizations/${orgId}/reports/general-ledger`,
+      });
+      expect(res.statusCode).toBe(400);
+    });
+  });
+
+  describe("GET /:orgId/reports/voucher-list (Verifikationslista)", () => {
+    it("returns voucher list sorted by number", async () => {
+      setupRepos();
+
+      const res = await app.inject({
+        method: "GET",
+        url: `/api/organizations/${orgId}/reports/voucher-list?fiscalYearId=${fyId}`,
+      });
+
+      expect(res.statusCode).toBe(200);
+      const data = JSON.parse(res.body).data;
+      expect(data.entries).toBeDefined();
+      expect(data.count).toBe(2);
+      expect(data.entries[0].voucherNumber).toBe(1);
+      expect(data.entries[1].voucherNumber).toBe(2);
+      expect(data.totalDebit).toBe(data.totalCredit);
+    });
+
+    it("returns 400 when fiscalYearId missing", async () => {
+      const res = await app.inject({
+        method: "GET",
+        url: `/api/organizations/${orgId}/reports/voucher-list`,
+      });
+      expect(res.statusCode).toBe(400);
+    });
+  });
 });
