@@ -91,7 +91,7 @@ export function toVoucherLine(
     accountNumber: line.accountNumber,
     debit: line.debit,
     credit: line.credit,
-    description: line.description ?? undefined,
+    ...(line.description != null && { description: line.description }),
   };
 }
 
@@ -104,7 +104,7 @@ export function toDocument(
   return {
     id: doc.id,
     organizationId: doc.organizationId,
-    voucherId: doc.voucherId ?? undefined,
+    ...(doc.voucherId != null && { voucherId: doc.voucherId }),
     filename: doc.filename,
     mimeType: doc.mimeType,
     storageKey: doc.storageKey,
