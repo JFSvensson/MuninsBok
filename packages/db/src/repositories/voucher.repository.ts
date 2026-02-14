@@ -117,19 +117,19 @@ export class VoucherRepository {
             accountNumber: line.accountNumber,
             debit: line.debit,
             credit: line.credit,
-            description: line.description,
+            ...(line.description != null && { description: line.description }),
           })),
         },
         documents: input.documentIds
           ? {
               connect: input.documentIds.map((id) => ({ id })),
             }
-          : undefined,
+          : {},
       },
       include: { lines: true, documents: true },
     });
 
-    return ok(toVoucher(voucher));
+    return ok(toVoucher(voucher as any));
   }
 
   async delete(id: string, organizationId: string): Promise<boolean> {
