@@ -163,21 +163,47 @@ describe("Voucher routes", () => {
     });
   });
 
-  describe("DELETE /:orgId/vouchers/:voucherId", () => {
-    it("deletes voucher", async () => {
-      repos.vouchers.delete.mockResolvedValue(true);
+  describe("POST /:orgId/vouchers/:voucherId/correct", () => {
+    it("creates correction voucher", async () => {
+      const correctionVoucher = {
+        ...sampleVoucher,
+        id: "v-2",
+        number: 2,
+        description: "Rättelse av verifikat #1",
+        correctsVoucherId: "v-1",
+        lines: [
+          { id: "l3", voucherId: "v-2", accountNumber: "1930", debit: 0, credit: 10000 },
+          { id: "l4", voucherId: "v-2", accountNumber: "1910", debit: 10000, credit: 0 },
+        ],
+      };
+      repos.vouchers.createCorrection.mockResolvedValue({ ok: true, value: correctionVoucher });
 
-      const res = await app.inject({ method: "DELETE", url: `${baseUrl}/v-1` });
+      const res = await app.inject({ method: "POST", url: `${baseUrl}/v-1/correct` });
 
-      expect(res.statusCode).toBe(204);
+      expect(res.statusCode).toBe(201);
+      expect(repos.vouchers.createCorrection).toHaveBeenCalledWith("v-1", orgId);
     });
 
     it("returns 404 for unknown voucher", async () => {
-      repos.vouchers.delete.mockResolvedValue(false);
+      repos.vouchers.createCorrection.mockResolvedValue({
+        ok: false,
+        error: { code: "NOT_FOUND", message: "Verifikatet hittades inte" },
+      });
 
-      const res = await app.inject({ method: "DELETE", url: `${baseUrl}/unknown` });
+      const res = await app.inject({ method: "POST", url: `${baseUrl}/unknown/correct` });
 
       expect(res.statusCode).toBe(404);
+    });
+
+    it("returns 400 if already corrected", async () => {
+      repos.vouchers.createCorrection.mockResolvedValue({
+        ok: false,
+        error: { code: "ALREADY_CORRECTED", message: "Verifikatet har redan rättats" },
+      });
+
+      const res = await app.inject({ method: "POST", url: `${baseUrl}/v-1/correct` });
+
+      expect(res.statusCode).toBe(400);
     });
   });
 });
