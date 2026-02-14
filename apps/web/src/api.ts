@@ -94,6 +94,26 @@ export interface BalanceSheet {
   generatedAt: string;
 }
 
+export interface VatReportRow {
+  accountNumber: string;
+  accountName: string;
+  amount: number;
+}
+
+export interface VatReport {
+  outputVat: VatReportRow[];
+  totalOutputVat: number;
+  inputVat: VatReportRow[];
+  totalInputVat: number;
+  vatPayable: number;
+  generatedAt: string;
+}
+
+export interface VoucherGaps {
+  gaps: number[];
+  count: number;
+}
+
 export interface DocumentMeta {
   id: string;
   organizationId: string;
@@ -278,6 +298,27 @@ export const api = {
   getBalanceSheet: (orgId: string, fiscalYearId: string) =>
     fetchJson<ApiResponse<BalanceSheet>>(
       `${API_BASE}/organizations/${orgId}/reports/balance-sheet?fiscalYearId=${fiscalYearId}`
+    ),
+
+  getVatReport: (orgId: string, fiscalYearId: string) =>
+    fetchJson<ApiResponse<VatReport>>(
+      `${API_BASE}/organizations/${orgId}/reports/vat?fiscalYearId=${fiscalYearId}`
+    ),
+
+  // Voucher gaps
+  getVoucherGaps: (orgId: string, fiscalYearId: string) =>
+    fetchJson<ApiResponse<VoucherGaps>>(
+      `${API_BASE}/organizations/${orgId}/vouchers/gaps?fiscalYearId=${fiscalYearId}`
+    ),
+
+  // Opening balances
+  createOpeningBalances: (orgId: string, fyId: string, previousFiscalYearId: string) =>
+    fetchJson<ApiResponse<Voucher>>(
+      `${API_BASE}/organizations/${orgId}/fiscal-years/${fyId}/opening-balances`,
+      {
+        method: "POST",
+        body: JSON.stringify({ previousFiscalYearId }),
+      }
     ),
 
   // SIE
