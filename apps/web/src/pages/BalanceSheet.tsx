@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useOrganization } from "../context/OrganizationContext";
 import { api, type ReportSection } from "../api";
 import { formatAmount, amountClassName } from "../utils/formatting";
+import { toCsv, downloadCsv, csvAmount } from "../utils/csv";
 
 function Section({ section }: { section: ReportSection }) {
   if (section.rows.length === 0) {
@@ -62,7 +63,26 @@ export function BalanceSheet() {
 
   return (
     <div className="card">
-      <h2>Balansräkning</h2>
+      <div className="flex justify-between items-center mb-2">
+        <h2>Balansräkning</h2>
+        <button
+          className="secondary"
+          onClick={() => {
+            const allRows = [
+              ...report.assets.rows.map((r) => [r.accountNumber, r.accountName, "Tillgång", csvAmount(r.amount)]),
+              ["", "Summa tillgångar", "", csvAmount(report.totalAssets)],
+              ...report.equity.rows.map((r) => [r.accountNumber, r.accountName, "Eget kapital", csvAmount(r.amount)]),
+              ...(report.yearResult !== 0 ? [["", "Årets resultat", "Eget kapital", csvAmount(report.yearResult)]] : []),
+              ...report.liabilities.rows.map((r) => [r.accountNumber, r.accountName, "Skuld", csvAmount(r.amount)]),
+              ["", "Summa EK + skulder", "", csvAmount(report.totalLiabilitiesAndEquity)],
+            ];
+            const csv = toCsv(["Konto", "Namn", "Kategori", "Saldo"], allRows);
+            downloadCsv(csv, "balansrakning.csv");
+          }}
+        >
+          Exportera CSV
+        </button>
+      </div>
 
       <div className="flex gap-2" style={{ alignItems: "flex-start" }}>
         {/* Assets (left side) */}
