@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { decodeSieFile } from "@muninsbok/core";
 import { useOrganization } from "../context/OrganizationContext";
 import { api } from "../api";
 
@@ -31,7 +32,8 @@ export function SieExport() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const content = await file.text();
+    const buffer = await file.arrayBuffer();
+    const content = decodeSieFile(new Uint8Array(buffer));
     importMutation.mutate(content);
   };
 
