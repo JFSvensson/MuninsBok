@@ -108,4 +108,20 @@ export async function voucherRoutes(fastify: FastifyInstance) {
       return reply.status(201).send({ data: result.value });
     }
   );
+
+  // Check voucher number gaps (BFL 5:6 – löpnumrering)
+  fastify.get<{
+    Params: { orgId: string };
+    Querystring: { fiscalYearId: string };
+  }>("/:orgId/vouchers/gaps", async (request, reply) => {
+    const { orgId } = request.params;
+    const { fiscalYearId } = request.query;
+
+    if (!fiscalYearId) {
+      return reply.status(400).send({ error: "fiscalYearId is required" });
+    }
+
+    const gaps = await voucherRepo.findNumberGaps(fiscalYearId, orgId);
+    return { data: { gaps, count: gaps.length } };
+  });
 }
