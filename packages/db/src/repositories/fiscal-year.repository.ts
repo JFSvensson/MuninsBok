@@ -46,6 +46,21 @@ export class FiscalYearRepository {
       });
     }
 
+    // Validate fiscal year length (BFL 3:1 – max 18 months)
+    const startDate = new Date(input.startDate);
+    const endDate = new Date(input.endDate);
+    const months =
+      (endDate.getFullYear() - startDate.getFullYear()) * 12 +
+      (endDate.getMonth() - startDate.getMonth()) +
+      (endDate.getDate() >= startDate.getDate() ? 0 : -1) +
+      1; // +1 because both start and end months count
+    if (months > 18) {
+      return err({
+        code: "INVALID_LENGTH",
+        message: "Räkenskapsåret får vara högst 18 månader (BFL 3:1)",
+      });
+    }
+
     // Check for overlapping fiscal years
     const existing = await this.prisma.fiscalYear.findMany({
       where: { organizationId: input.organizationId },
