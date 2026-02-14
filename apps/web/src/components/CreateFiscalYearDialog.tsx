@@ -8,11 +8,19 @@ interface Props {
   onClose: () => void;
   onCreated: (fy: FiscalYear) => void;
   organization: Organization;
+  fiscalYears?: FiscalYear[];
 }
 
-export function CreateFiscalYearDialog({ open, onClose, onCreated, organization }: Props) {
+export function CreateFiscalYearDialog({ open, onClose, onCreated, organization, fiscalYears = [] }: Props) {
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
+  const [carryOverBalances, setCarryOverBalances] = useState(true);
+
+  // Find closed fiscal years that can serve as source for opening balances
+  const closedYears = useMemo(
+    () => fiscalYears.filter((fy) => fy.isClosed),
+    [fiscalYears]
+  );
 
   // Pre-fill dates based on org's fiscal year start month and current year
   const defaultDates = useMemo(() => {
@@ -39,10 +47,25 @@ export function CreateFiscalYearDialog({ open, onClose, onCreated, organization 
   const [endDate, setEndDate] = useState(defaultDates.end);
 
   const mutation = useMutation({
-    mutationFn: () =>
-      api.createFiscalYear(organization.id, { startDate, endDate }),
+    mutationFn: async () => {
+      const created = await api.createFiscalYear(organization.id, { startDate, endDate });
+
+      // Auto-create opening balances from most recent closed year
+      if (carryOverBalances && closedYears.length > 0) {
+        const previousFy = closedYears[closedYears.length - 1]!;
+        try {
+          await api.createOpeningBalances(organization.id, created.data.id, previousFy.id);
+        } catch {
+          // Non-fatal — the FY was created successfully, opening balances just failed
+          console.warn("Kunde inte skapa ingående balanser");
+        }
+      }
+
+      return created;
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["fiscalYears", organization.id] });
+      queryClient.invalidateQueries({ queryKey: ["vouchers"] });
       onCreated(data.data);
       resetAndClose();
     },
@@ -103,6 +126,20 @@ export function CreateFiscalYearDialog({ open, onClose, onCreated, organization 
               />
             </div>
           </div>
+
+          {closedYears.length > 0 && (
+            <div className="form-group" style={{ marginTop: "0.5rem" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={carryOverBalances}
+                  onChange={(e) => setCarryOverBalances(e.target.checked)}
+                  style={{ width: "auto" }}
+                />
+                Överför ingående balanser från föregående år
+              </label>
+            </div>
+          )}
 
           <div className="dialog-actions">
             <button type="button" className="secondary" onClick={resetAndClose}>
