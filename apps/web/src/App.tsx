@@ -8,6 +8,7 @@ import { AccountList } from "./pages/AccountList";
 import { TrialBalance } from "./pages/TrialBalance";
 import { IncomeStatement } from "./pages/IncomeStatement";
 import { BalanceSheet } from "./pages/BalanceSheet";
+import { VatReport } from "./pages/VatReport";
 import { SieExport } from "./pages/SieExport";
 import { useState } from "react";
 import { CreateOrganizationDialog } from "./components/CreateOrganizationDialog";
@@ -56,6 +57,7 @@ function AppContent() {
               <NavLink to="/reports/trial-balance">Råbalans</NavLink>
               <NavLink to="/reports/income-statement">Resultaträkning</NavLink>
               <NavLink to="/reports/balance-sheet">Balansräkning</NavLink>
+              <NavLink to="/reports/vat">Moms</NavLink>
             </span>
             <span className="nav-separator" />
             <NavLink to="/sie">SIE</NavLink>
@@ -70,6 +72,7 @@ function AppContent() {
             <Route path="/reports/trial-balance" element={<TrialBalance />} />
             <Route path="/reports/income-statement" element={<IncomeStatement />} />
             <Route path="/reports/balance-sheet" element={<BalanceSheet />} />
+            <Route path="/reports/vat" element={<VatReport />} />
             <Route path="/sie" element={<SieExport />} />
           </Routes>
         </>
