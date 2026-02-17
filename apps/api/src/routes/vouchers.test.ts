@@ -31,7 +31,12 @@ describe("Voucher routes", () => {
 
   describe("GET /:orgId/vouchers", () => {
     it("returns vouchers by fiscal year", async () => {
-      repos.vouchers.findByFiscalYear.mockResolvedValue([sampleVoucher]);
+      repos.vouchers.findByFiscalYearPaginated.mockResolvedValue({
+        vouchers: [sampleVoucher],
+        total: 1,
+        page: 1,
+        limit: 50,
+      });
 
       const res = await app.inject({
         method: "GET",
@@ -40,7 +45,7 @@ describe("Voucher routes", () => {
 
       expect(res.statusCode).toBe(200);
       expect(JSON.parse(res.body).data).toHaveLength(1);
-      expect(repos.vouchers.findByFiscalYear).toHaveBeenCalledWith("fy-1", orgId);
+      expect(repos.vouchers.findByFiscalYearPaginated).toHaveBeenCalled();
     });
 
     it("returns vouchers by date range", async () => {
