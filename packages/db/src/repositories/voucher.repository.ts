@@ -43,6 +43,41 @@ export class VoucherRepository {
     return vouchers.map(toVoucher);
   }
 
+  /**
+   * Paginated voucher list with optional search.
+   */
+  async findByFiscalYearPaginated(
+    fiscalYearId: string,
+    organizationId: string,
+    options: { page: number; limit: number; search?: string }
+  ): Promise<{ vouchers: Voucher[]; total: number; page: number; limit: number }> {
+    const { page, limit, search } = options;
+    const skip = (page - 1) * limit;
+
+    const where: Record<string, unknown> = { fiscalYearId, organizationId };
+
+    if (search) {
+      const asNumber = Number(search);
+      where["OR"] = [
+        { description: { contains: search, mode: "insensitive" } },
+        ...(!isNaN(asNumber) ? [{ number: asNumber }] : []),
+      ];
+    }
+
+    const [vouchers, total] = await Promise.all([
+      this.prisma.voucher.findMany({
+        where,
+        include: voucherInclude,
+        orderBy: [{ number: "asc" }],
+        skip,
+        take: limit,
+      }),
+      this.prisma.voucher.count({ where }),
+    ]);
+
+    return { vouchers: vouchers.map(toVoucher), total, page, limit };
+  }
+
   async findByDateRange(
     organizationId: string,
     startDate: Date,
