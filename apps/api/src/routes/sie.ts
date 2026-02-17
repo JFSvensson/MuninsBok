@@ -163,32 +163,52 @@ export async function sieRoutes(fastify: FastifyInstance) {
       );
     }
 
-    // Import vouchers
+    // Import vouchers inside a transaction (all-or-nothing)
+    const db = fastify.repos.prisma;
     let importedCount = 0;
     let errorCount = 0;
+    const errors: string[] = [];
 
-    for (const sieVoucher of sieFile.vouchers) {
-      // Convert SIE transactions to voucher lines
-      const lines = sieVoucher.transactions.map((t) => ({
-        accountNumber: t.accountNumber,
-        debit: t.amount > 0 ? t.amount : 0,
-        credit: t.amount < 0 ? -t.amount : 0,
-        ...(t.description != null && { description: t.description }),
-      }));
+    try {
+      await db.$transaction(async (tx: any) => {
+        for (const sieVoucher of sieFile.vouchers) {
+          // Convert SIE transactions to voucher lines
+          const lines = sieVoucher.transactions.map((t) => ({
+            accountNumber: t.accountNumber,
+            debit: t.amount > 0 ? t.amount : 0,
+            credit: t.amount < 0 ? -t.amount : 0,
+            ...(t.description != null && { description: t.description }),
+          }));
 
-      const result = await voucherRepo.create({
-        organizationId: orgId,
-        fiscalYearId,
-        date: sieVoucher.date,
-        description: sieVoucher.description || `Import ${sieVoucher.series}${sieVoucher.number}`,
-        lines,
+          const result = await voucherRepo.create({
+            organizationId: orgId,
+            fiscalYearId,
+            date: sieVoucher.date,
+            description: sieVoucher.description || `Import ${sieVoucher.series}${sieVoucher.number}`,
+            lines,
+          });
+
+          if (result.ok) {
+            importedCount++;
+          } else {
+            errorCount++;
+            errors.push(`Verifikat ${sieVoucher.series}${sieVoucher.number}: ${result.error.message}`);
+          }
+        }
+
+        // If any voucher failed, abort the entire transaction
+        if (errorCount > 0) {
+          throw new Error(`${errorCount} verifikat kunde inte importeras`);
+        }
       });
-
-      if (result.ok) {
-        importedCount++;
-      } else {
-        errorCount++;
+    } catch (txError) {
+      if (errorCount > 0) {
+        return reply.status(400).send({
+          error: `Import avbruten — ${errorCount} verifikat med fel`,
+          details: errors,
+        });
       }
+      throw txError; // Re-throw unexpected errors
     }
 
     return {
