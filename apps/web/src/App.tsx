@@ -5,6 +5,7 @@ import { VoucherList } from "./pages/VoucherList";
 import { VoucherCreate } from "./pages/VoucherCreate";
 import { VoucherDetail } from "./pages/VoucherDetail";
 import { AccountList } from "./pages/AccountList";
+import { Dashboard } from "./pages/Dashboard";
 import { TrialBalance } from "./pages/TrialBalance";
 import { IncomeStatement } from "./pages/IncomeStatement";
 import { BalanceSheet } from "./pages/BalanceSheet";
@@ -52,6 +53,7 @@ function AppContent() {
         <>
           <nav className="nav mb-2">
             <span className="nav-group">
+              <NavLink to="/dashboard">Översikt</NavLink>
               <NavLink to="/vouchers">Verifikat</NavLink>
               <NavLink to="/accounts">Kontoplan</NavLink>
             </span>
@@ -73,7 +75,8 @@ function AppContent() {
           </nav>
 
           <Routes>
-            <Route path="/" element={<Navigate to="/vouchers" replace />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/vouchers" element={<VoucherList />} />
             <Route path="/vouchers/new" element={<VoucherCreate />} />
             <Route path="/vouchers/:voucherId" element={<VoucherDetail />} />
