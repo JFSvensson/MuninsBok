@@ -19,17 +19,40 @@ const createVoucherSchema = z.object({
 export async function voucherRoutes(fastify: FastifyInstance) {
   const voucherRepo = fastify.repos.vouchers;
 
-  // List vouchers for a fiscal year
+  // List vouchers for a fiscal year (paginated)
   fastify.get<{
     Params: { orgId: string };
-    Querystring: { fiscalYearId?: string; startDate?: string; endDate?: string };
+    Querystring: {
+      fiscalYearId?: string;
+      startDate?: string;
+      endDate?: string;
+      page?: string;
+      limit?: string;
+      search?: string;
+    };
   }>("/:orgId/vouchers", async (request, reply) => {
     const { orgId } = request.params;
-    const { fiscalYearId, startDate, endDate } = request.query;
+    const { fiscalYearId, startDate, endDate, page, limit, search } = request.query;
 
     if (fiscalYearId) {
-      const vouchers = await voucherRepo.findByFiscalYear(fiscalYearId, orgId);
-      return { data: vouchers };
+      const pageNum = Math.max(1, parseInt(page ?? "1", 10) || 1);
+      const limitNum = Math.min(200, Math.max(1, parseInt(limit ?? "50", 10) || 50));
+
+      const result = await voucherRepo.findByFiscalYearPaginated(
+        fiscalYearId,
+        orgId,
+        { page: pageNum, limit: limitNum, ...(search != null && { search }) }
+      );
+
+      return {
+        data: result.vouchers,
+        pagination: {
+          page: result.page,
+          limit: result.limit,
+          total: result.total,
+          totalPages: Math.ceil(result.total / result.limit),
+        },
+      };
     }
 
     if (startDate && endDate) {
