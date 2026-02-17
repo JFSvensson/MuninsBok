@@ -11,9 +11,11 @@ import { createRepositories } from "./repositories.js";
 
 const repos = createRepositories(prisma);
 
+const apiKey = process.env["API_KEY"];
 const fastify = await buildApp({
   repos,
   corsOrigin: process.env["CORS_ORIGIN"] ?? "http://localhost:5173",
+  ...(apiKey != null && { apiKey }),
   fastifyOptions: { logger: true },
 });
 
