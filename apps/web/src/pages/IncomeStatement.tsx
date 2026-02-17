@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useOrganization } from "../context/OrganizationContext";
 import { api, type ReportSection } from "../api";
 import { formatAmount, amountClassName } from "../utils/formatting";
 import { toCsv, downloadCsv, csvAmount } from "../utils/csv";
+import { DateFilter, type DateRange } from "../components/DateFilter";
 
 function Section({ section }: { section: ReportSection }) {
   if (section.rows.length === 0) {
@@ -35,10 +37,11 @@ function Section({ section }: { section: ReportSection }) {
 
 export function IncomeStatement() {
   const { organization, fiscalYear } = useOrganization();
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["income-statement", organization?.id, fiscalYear?.id],
-    queryFn: () => api.getIncomeStatement(organization!.id, fiscalYear!.id),
+    queryKey: ["income-statement", organization?.id, fiscalYear?.id, dateRange],
+    queryFn: () => api.getIncomeStatement(organization!.id, fiscalYear!.id, dateRange),
     enabled: !!organization && !!fiscalYear,
   });
 
@@ -82,6 +85,9 @@ export function IncomeStatement() {
         >
           Exportera CSV
         </button>
+      </div>
+      <div className="mb-2">
+        <DateFilter onFilter={setDateRange} />
       </div>
       <table>
         <thead>
