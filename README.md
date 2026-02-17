@@ -26,12 +26,22 @@ Målet är att göra bokföring **enkel, transparent och självhostbar** — uta
 - Rapporter:
   - Balansräkning
   - Resultaträkning
+  - Råbalans (trial balance)
+  - Momsrapport
+  - Grundbok (journal)
+  - Huvudbok (general ledger)
   - Verifikationslista
-  - Provbalans (trial balance)
-  - Enkel momsrapport (v1)
 - Import/export:
-  - SIE (mål: SIE4)
-  - CSV (minst som fallback)
+  - SIE4 (med IB/UB/RES)
+  - CSV (alla rapporter)
+- Rättelseverifikat (BFL 5:5)
+- Löpnumrering med luckkontroll (BFL 5:6)
+- Dokumenthantering (bifoga underlag)
+- Dashboard med översikt
+- Datumfilter på rapporter
+- Sökfunktion för verifikat
+- API-nyckelautentisering
+- Rate limiting
 - Självhostbar via Docker.
 
 ### Icke-mål (i början)
@@ -61,7 +71,7 @@ Se `LICENSE`.
 |-------|--------|
 | **Frontend** | React 18 + Vite 5 + TypeScript 5.3 |
 | **Backend** | Node.js 20 + Fastify 4 + TypeScript |
-| **Databas** | PostgreSQL 14+ (Prisma 5) |
+| **Databas** | PostgreSQL 16+ (Prisma 7.4) |
 | **Monorepo** | pnpm workspaces |
 | **Test** | Vitest |
 | **Deploy** | Docker Compose |
@@ -74,7 +84,7 @@ Se `LICENSE`.
 
 - Node.js 20+
 - pnpm 8+
-- PostgreSQL 14+ (eller Docker)
+- PostgreSQL 16+ (eller Docker)
 
 ### Lokal utveckling
 
@@ -149,14 +159,14 @@ muninsbok/
 
 ## Teststatus
 
-**296 tester** fördelade på 21 testfiler:
+**356+ tester** fördelade på ~25 testfiler:
 
 | Paket | Testfiler | Tester | Vad som testas |
 |-------|-----------|--------|----------------|
-| `@muninsbok/core` | 12 | 176 | Result-typer, organisationsnummer (Luhn), kontotyper, kontoplan (BAS), räkenskapsår, verifikatrader, verifikatvalidering, dokument-MIME, rapporter, SIE-import/export |
+| `@muninsbok/core` | 14 | 208 | Result-typer, organisationsnummer (Luhn), kontotyper, kontoplan (BAS), räkenskapsår (max 18 mån), verifikatrader, verifikatvalidering, dokument-MIME, rapporter (råbalans, resultat, balans, moms, grundbok, huvudbok, verifikationslista), SIE-import/export (IB/UB/RES) |
 | `@muninsbok/db` | 1 | 17 | Prisma→domän-mappers (organisation, räkenskapsår, konto, verifikat, verifikatrad, dokument) |
-| `@muninsbok/api` | 5 | 57 | Zod-schemavalidering, CRUD-endpoints (organisationer, konton, verifikat), rapporter, health check |
-| `@muninsbok/web` | 3 | 46 | ApiError-klass, fetchJson, verifikatformulär (beräkningar, radhantering, öre-konvertering), beloppsformatering |
+| `@muninsbok/api` | 6 | 78 | Zod-schemavalidering, CRUD-endpoints (organisationer, konton, verifikat), rapporter, health check, felhantering |
+| `@muninsbok/web` | 3 | 53 | ApiError-klass, fetchJson, verifikatformulär (beräkningar, radhantering, öre-konvertering), beloppsformatering |
 
 ---
 
