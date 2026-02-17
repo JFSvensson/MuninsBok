@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useOrganization } from "../context/OrganizationContext";
@@ -7,10 +8,15 @@ import { formatAmount, formatDate, oreToKronor } from "../utils/formatting";
 export function VoucherList() {
   const { organization, fiscalYear } = useOrganization();
   const navigate = useNavigate();
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const limit = 50;
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["vouchers", organization?.id, fiscalYear?.id],
-    queryFn: () => api.getVouchers(organization!.id, fiscalYear!.id),
+    queryKey: ["vouchers", organization?.id, fiscalYear?.id, page, limit, search],
+    queryFn: () =>
+      api.getVouchers(organization!.id, fiscalYear!.id, { page, limit, search: search || undefined }),
     enabled: !!organization && !!fiscalYear,
   });
 
@@ -19,6 +25,12 @@ export function VoucherList() {
     queryFn: () => api.getVoucherGaps(organization!.id, fiscalYear!.id),
     enabled: !!organization && !!fiscalYear,
   });
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearch(searchInput);
+    setPage(1);
+  };
 
   if (isLoading) {
     return <div className="loading">Laddar verifikat...</div>;
@@ -29,9 +41,10 @@ export function VoucherList() {
   }
 
   const vouchers = data?.data ?? [];
+  const pagination = data?.pagination;
   const gaps = gapsData?.data;
 
-  if (vouchers.length === 0) {
+  if (vouchers.length === 0 && !search) {
     return (
       <div className="card">
         <div className="flex justify-between items-center mb-2">
@@ -49,6 +62,26 @@ export function VoucherList() {
         <h2>Verifikat</h2>
         <button onClick={() => navigate("/vouchers/new")}>+ Nytt verifikat</button>
       </div>
+
+      <form onSubmit={handleSearch} className="flex gap-1 mb-2">
+        <input
+          type="text"
+          placeholder="Sök verifikat (beskrivning eller nummer)…"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          style={{ flex: 1 }}
+        />
+        <button type="submit" className="secondary">Sök</button>
+        {search && (
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => { setSearch(""); setSearchInput(""); setPage(1); }}
+          >
+            Rensa
+          </button>
+        )}
+      </form>
 
       {gaps && gaps.count > 0 && (
         <div className="warning mb-2" style={{
@@ -99,6 +132,31 @@ export function VoucherList() {
           })}
         </tbody>
       </table>
+
+      {pagination && pagination.totalPages > 1 && (
+        <div className="flex justify-between items-center" style={{ marginTop: "1rem" }}>
+          <span style={{ color: "#666", fontSize: "0.9rem" }}>
+            Visar {(pagination.page - 1) * pagination.limit + 1}–
+            {Math.min(pagination.page * pagination.limit, pagination.total)} av {pagination.total}
+          </span>
+          <div className="flex gap-1">
+            <button
+              className="secondary"
+              disabled={pagination.page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              ← Föregående
+            </button>
+            <button
+              className="secondary"
+              disabled={pagination.page >= pagination.totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Nästa →
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
