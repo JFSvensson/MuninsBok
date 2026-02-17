@@ -37,6 +37,7 @@ export function createMockVoucherRepo(): MockedRepo<VoucherRepository> {
   return {
     findById: vi.fn(),
     findByFiscalYear: vi.fn(),
+    findByFiscalYearPaginated: vi.fn(),
     findByDateRange: vi.fn(),
     create: vi.fn(),
     createCorrection: vi.fn(),
@@ -83,6 +84,7 @@ export function createMockRepos(): MockRepos {
     prisma: {
       organization: { findUnique: vi.fn() },
       fiscalYear: { findFirst: vi.fn() },
+      $queryRawUnsafe: vi.fn().mockResolvedValue([{ "?column?": 1 }]),
     },
   };
 }
