@@ -36,7 +36,7 @@ export async function accountRoutes(fastify: FastifyInstance) {
         request.params.accountNumber
       );
       if (!account) {
-        return reply.status(404).send({ error: "Account not found" });
+        return reply.status(404).send({ error: "Kontot hittades inte" });
       }
       return { data: account };
     }
@@ -74,7 +74,7 @@ export async function accountRoutes(fastify: FastifyInstance) {
         request.params.accountNumber
       );
       if (!deactivated) {
-        return reply.status(404).send({ error: "Account not found" });
+        return reply.status(404).send({ error: "Kontot hittades inte" });
       }
       return reply.status(204).send();
     }
