@@ -1,15 +1,18 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useOrganization } from "../context/OrganizationContext";
 import { api } from "../api";
 import { formatAmount, amountClassName } from "../utils/formatting";
 import { toCsv, downloadCsv, csvAmount } from "../utils/csv";
+import { DateFilter, type DateRange } from "../components/DateFilter";
 
 export function VatReport() {
   const { organization, fiscalYear } = useOrganization();
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["vat-report", organization?.id, fiscalYear?.id],
-    queryFn: () => api.getVatReport(organization!.id, fiscalYear!.id),
+    queryKey: ["vat-report", organization?.id, fiscalYear?.id, dateRange],
+    queryFn: () => api.getVatReport(organization!.id, fiscalYear!.id, dateRange),
     enabled: !!organization && !!fiscalYear,
   });
 
@@ -63,6 +66,9 @@ export function VatReport() {
         >
           Exportera CSV
         </button>
+      </div>
+      <div className="mb-2">
+        <DateFilter onFilter={setDateRange} />
       </div>
 
       <table>
