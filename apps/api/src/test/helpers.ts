@@ -84,7 +84,7 @@ export function createMockRepos(): MockRepos {
     prisma: {
       organization: { findUnique: vi.fn() },
       fiscalYear: { findFirst: vi.fn() },
-      $queryRawUnsafe: vi.fn().mockResolvedValue([{ "?column?": 1 }]),
+      $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]),
     },
   };
 }
