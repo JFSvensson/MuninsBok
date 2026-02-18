@@ -27,7 +27,7 @@ export async function organizationRoutes(fastify: FastifyInstance) {
   fastify.get<{ Params: { orgId: string } }>("/:orgId", async (request, reply) => {
     const org = await orgRepo.findById(request.params.orgId);
     if (!org) {
-      return reply.status(404).send({ error: "Organization not found" });
+      return reply.status(404).send({ error: "Organisationen hittades inte" });
     }
     return { data: org };
   });
@@ -83,7 +83,7 @@ export async function organizationRoutes(fastify: FastifyInstance) {
       ...(fiscalYearStartMonth != null && { fiscalYearStartMonth }),
     });
     if (!org) {
-      return reply.status(404).send({ error: "Organization not found" });
+      return reply.status(404).send({ error: "Organisationen hittades inte" });
     }
     return { data: org };
   });
@@ -92,7 +92,7 @@ export async function organizationRoutes(fastify: FastifyInstance) {
   fastify.delete<{ Params: { orgId: string } }>("/:orgId", async (request, reply) => {
     const deleted = await orgRepo.delete(request.params.orgId);
     if (!deleted) {
-      return reply.status(404).send({ error: "Organization not found" });
+      return reply.status(404).send({ error: "Organisationen hittades inte" });
     }
     return reply.status(204).send();
   });
