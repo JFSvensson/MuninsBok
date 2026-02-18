@@ -78,7 +78,7 @@ export async function voucherRoutes(fastify: FastifyInstance) {
         request.params.orgId
       );
       if (!voucher) {
-        return reply.status(404).send({ error: "Voucher not found" });
+        return reply.status(404).send({ error: "Verifikatet hittades inte" });
       }
       return { data: voucher };
     }
@@ -141,7 +141,7 @@ export async function voucherRoutes(fastify: FastifyInstance) {
     const { fiscalYearId } = request.query;
 
     if (!fiscalYearId) {
-      return reply.status(400).send({ error: "fiscalYearId is required" });
+      return reply.status(400).send({ error: "fiscalYearId krävs" });
     }
 
     const gaps = await voucherRepo.findNumberGaps(fiscalYearId, orgId);
