@@ -27,6 +27,7 @@ export function AccountList() {
   const [typeFilter, setTypeFilter] = useState("");
   const [search, setSearch] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<string | null>(null);
 
   // Create account form state
   const [newNumber, setNewNumber] = useState("");
@@ -34,6 +35,12 @@ export function AccountList() {
   const [newType, setNewType] = useState<Account["type"]>("EXPENSE");
   const [newIsVat, setNewIsVat] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  // Edit account form state
+  const [editName, setEditName] = useState("");
+  const [editType, setEditType] = useState<Account["type"]>("EXPENSE");
+  const [editIsVat, setEditIsVat] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["accounts", organization?.id, showAll],
@@ -68,6 +75,25 @@ export function AccountList() {
       queryClient.invalidateQueries({ queryKey: ["accounts", organization?.id] });
     },
   });
+
+  const updateMutation = useMutation({
+    mutationFn: (params: { accountNumber: string; data: { name?: string; type?: Account["type"]; isVatAccount?: boolean } }) =>
+      api.updateAccount(organization!.id, params.accountNumber, params.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["accounts", organization?.id] });
+      setEditingAccount(null);
+      setEditError(null);
+    },
+    onError: (err: Error) => setEditError(err.message),
+  });
+
+  const startEditing = (account: Account) => {
+    setEditingAccount(account.number);
+    setEditName(account.name);
+    setEditType(account.type);
+    setEditIsVat(account.isVatAccount);
+    setEditError(null);
+  };
 
   const accounts = data?.data ?? [];
 
@@ -211,25 +237,99 @@ export function AccountList() {
             {filtered.map((account) => (
               <tr key={account.number} style={!account.isActive ? { opacity: 0.5 } : undefined}>
                 <td><strong>{account.number}</strong></td>
-                <td>{account.name}</td>
-                <td>{TYPE_LABELS[account.type]}</td>
-                <td>{account.isVatAccount ? "Ja" : "Nej"}</td>
-                <td>{account.isActive ? "Aktiv" : "Inaktiv"}</td>
-                <td>
-                  {account.isActive && (
-                    <button
-                      className="secondary"
-                      style={{ padding: "0.25rem 0.5rem", fontSize: "0.85rem" }}
-                      onClick={() => {
-                        if (confirm(`Inaktivera konto ${account.number} ${account.name}?`)) {
-                          deactivateMutation.mutate(account.number);
-                        }
-                      }}
-                    >
-                      Inaktivera
-                    </button>
-                  )}
-                </td>
+                {editingAccount === account.number ? (
+                  <>
+                    <td>
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        style={{ width: "100%", padding: "0.25rem" }}
+                      />
+                    </td>
+                    <td>
+                      <select
+                        value={editType}
+                        onChange={(e) => setEditType(e.target.value as Account["type"])}
+                        style={{ width: "100%", padding: "0.25rem" }}
+                      >
+                        <option value="ASSET">Tillgång</option>
+                        <option value="LIABILITY">Skuld</option>
+                        <option value="EQUITY">Eget kapital</option>
+                        <option value="REVENUE">Intäkt</option>
+                        <option value="EXPENSE">Kostnad</option>
+                      </select>
+                    </td>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={editIsVat}
+                        onChange={(e) => setEditIsVat(e.target.checked)}
+                        style={{ width: "auto" }}
+                      />
+                    </td>
+                    <td>{account.isActive ? "Aktiv" : "Inaktiv"}</td>
+                    <td>
+                      <div className="flex gap-1">
+                        <button
+                          className="secondary"
+                          style={{ padding: "0.25rem 0.5rem", fontSize: "0.85rem" }}
+                          disabled={updateMutation.isPending}
+                          onClick={() => {
+                            setEditError(null);
+                            updateMutation.mutate({
+                              accountNumber: account.number,
+                              data: { name: editName, type: editType, isVatAccount: editIsVat },
+                            });
+                          }}
+                        >
+                          {updateMutation.isPending ? "Sparar..." : "Spara"}
+                        </button>
+                        <button
+                          className="secondary"
+                          style={{ padding: "0.25rem 0.5rem", fontSize: "0.85rem" }}
+                          onClick={() => { setEditingAccount(null); setEditError(null); }}
+                        >
+                          Avbryt
+                        </button>
+                      </div>
+                      {editError && <div style={{ color: "red", fontSize: "0.8rem" }}>{editError}</div>}
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td>{account.name}</td>
+                    <td>{TYPE_LABELS[account.type]}</td>
+                    <td>{account.isVatAccount ? "Ja" : "Nej"}</td>
+                    <td>{account.isActive ? "Aktiv" : "Inaktiv"}</td>
+                    <td>
+                      <div className="flex gap-1">
+                        {account.isActive && (
+                          <>
+                            <button
+                              className="secondary"
+                              style={{ padding: "0.25rem 0.5rem", fontSize: "0.85rem" }}
+                              onClick={() => startEditing(account)}
+                            >
+                              Redigera
+                            </button>
+                            <button
+                              className="secondary"
+                              style={{ padding: "0.25rem 0.5rem", fontSize: "0.85rem" }}
+                              onClick={() => {
+                                if (confirm(`Inaktivera konto ${account.number} ${account.name}?`)) {
+                                  deactivateMutation.mutate(account.number);
+                                }
+                              }}
+                            >
+                              Inaktivera
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </>
+                )}
               </tr>
             ))}
           </tbody>
