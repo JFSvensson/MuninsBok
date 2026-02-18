@@ -364,6 +364,16 @@ export const api = {
       if (!res.ok) throw new ApiError(res.status, "DELETE_FAILED", "Kunde inte inaktivera kontot");
     }),
 
+  updateAccount: (orgId: string, accountNumber: string, data: {
+    name?: string;
+    type?: Account["type"];
+    isVatAccount?: boolean;
+  }) =>
+    fetchJson<ApiResponse<Account>>(
+      `${API_BASE}/organizations/${orgId}/accounts/${accountNumber}`,
+      { method: "PUT", body: JSON.stringify(data) }
+    ),
+
   // Vouchers
   getVouchers: (
     orgId: string,
