@@ -29,6 +29,8 @@ services:
       DATABASE_URL: postgresql://muninsbok:muninsbok@postgres:5432/muninsbok
       HOST: 0.0.0.0
       PORT: 3000
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -47,3 +49,4 @@ services:
 
 volumes:
   postgres_data:
+  uploads_data:
