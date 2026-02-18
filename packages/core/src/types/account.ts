@@ -32,6 +32,12 @@ export interface CreateAccountInput {
   readonly isVatAccount?: boolean;
 }
 
+export interface UpdateAccountInput {
+  readonly name?: string;
+  readonly type?: AccountType;
+  readonly isVatAccount?: boolean;
+}
+
 export interface AccountError {
   readonly code:
     | "INVALID_NUMBER"
