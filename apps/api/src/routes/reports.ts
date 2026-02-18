@@ -38,7 +38,7 @@ export async function reportRoutes(fastify: FastifyInstance) {
     const { fiscalYearId, startDate, endDate } = request.query;
 
     if (!fiscalYearId) {
-      return reply.status(400).send({ error: "fiscalYearId is required" });
+      return reply.status(400).send({ error: "fiscalYearId krävs" });
     }
 
     const [allVouchers, accounts] = await Promise.all([
@@ -74,7 +74,7 @@ export async function reportRoutes(fastify: FastifyInstance) {
     const { fiscalYearId, startDate, endDate } = request.query;
 
     if (!fiscalYearId) {
-      return reply.status(400).send({ error: "fiscalYearId is required" });
+      return reply.status(400).send({ error: "fiscalYearId krävs" });
     }
 
     const [allVouchers, accounts] = await Promise.all([
@@ -117,7 +117,7 @@ export async function reportRoutes(fastify: FastifyInstance) {
     const { fiscalYearId, startDate, endDate } = request.query;
 
     if (!fiscalYearId) {
-      return reply.status(400).send({ error: "fiscalYearId is required" });
+      return reply.status(400).send({ error: "fiscalYearId krävs" });
     }
 
     const [allVouchers, accounts] = await Promise.all([
@@ -162,7 +162,7 @@ export async function reportRoutes(fastify: FastifyInstance) {
     const { fiscalYearId, startDate, endDate } = request.query;
 
     if (!fiscalYearId) {
-      return reply.status(400).send({ error: "fiscalYearId is required" });
+      return reply.status(400).send({ error: "fiscalYearId krävs" });
     }
 
     const [allVouchers, accounts] = await Promise.all([
@@ -200,7 +200,7 @@ export async function reportRoutes(fastify: FastifyInstance) {
     const { fiscalYearId, startDate, endDate } = request.query;
 
     if (!fiscalYearId) {
-      return reply.status(400).send({ error: "fiscalYearId is required" });
+      return reply.status(400).send({ error: "fiscalYearId krävs" });
     }
 
     const [allVouchers, accounts] = await Promise.all([
@@ -239,7 +239,7 @@ export async function reportRoutes(fastify: FastifyInstance) {
     const { fiscalYearId, startDate, endDate } = request.query;
 
     if (!fiscalYearId) {
-      return reply.status(400).send({ error: "fiscalYearId is required" });
+      return reply.status(400).send({ error: "fiscalYearId krävs" });
     }
 
     const [allVouchers, accounts] = await Promise.all([
@@ -278,7 +278,7 @@ export async function reportRoutes(fastify: FastifyInstance) {
     const { fiscalYearId, startDate, endDate } = request.query;
 
     if (!fiscalYearId) {
-      return reply.status(400).send({ error: "fiscalYearId is required" });
+      return reply.status(400).send({ error: "fiscalYearId krävs" });
     }
 
     const [allVouchers, accounts] = await Promise.all([
