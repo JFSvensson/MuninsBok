@@ -4,6 +4,25 @@ import { useOrganization } from "../context/OrganizationContext";
 import { api } from "../api";
 import { formatAmount, formatDate } from "../utils/formatting";
 
+const ACCOUNT_TYPE_LABELS: Record<string, string> = {
+  ASSET: "Tillgångar",
+  LIABILITY: "Skulder",
+  EQUITY: "Eget kapital",
+  REVENUE: "Intäkter",
+  EXPENSE: "Kostnader",
+};
+
+const MONTH_NAMES = [
+  "Jan", "Feb", "Mar", "Apr", "Maj", "Jun",
+  "Jul", "Aug", "Sep", "Okt", "Nov", "Dec",
+];
+
+function formatMonth(key: string): string {
+  const parts = key.split("-");
+  const monthIndex = parseInt(parts[1]!, 10) - 1;
+  return MONTH_NAMES[monthIndex] ?? key;
+}
+
 export function Dashboard() {
   const { organization, fiscalYear } = useOrganization();
   const navigate = useNavigate();
@@ -33,10 +52,20 @@ export function Dashboard() {
     );
   }
 
+  // Compute max value for bar chart scaling
+  const maxBarValue = d.monthlyTrend.reduce(
+    (max, m) => Math.max(max, m.income, m.expense),
+    0,
+  );
+
+  const accountTypes = Object.entries(d.accountTypeCounts);
+  const totalAccounts = accountTypes.reduce((s, [, v]) => s + v, 0);
+
   return (
     <div>
       <h2 style={{ marginBottom: "1rem" }}>Översikt</h2>
 
+      {/* KPI cards */}
       <div className="dashboard-grid">
         <div className="card dashboard-stat">
           <div className="stat-label">Verifikat</div>
@@ -63,12 +92,72 @@ export function Dashboard() {
         </div>
       </div>
 
+      {/* Monthly trend chart */}
+      {d.monthlyTrend.length > 0 && (
+        <div className="card">
+          <h3 style={{ marginBottom: "0.75rem" }}>Månadsöversikt</h3>
+          <div className="chart-container" role="img" aria-label="Stapeldiagram med intäkter och kostnader per månad">
+            {d.monthlyTrend.map((m) => (
+              <div key={m.month} className="chart-column">
+                <div className="chart-bars">
+                  <div
+                    className="chart-bar chart-bar-income"
+                    style={{
+                      height: maxBarValue > 0 ? `${(m.income / maxBarValue) * 100}%` : "0%",
+                    }}
+                    title={`Intäkter: ${formatAmount(m.income)} kr`}
+                  />
+                  <div
+                    className="chart-bar chart-bar-expense"
+                    style={{
+                      height: maxBarValue > 0 ? `${(m.expense / maxBarValue) * 100}%` : "0%",
+                    }}
+                    title={`Kostnader: ${formatAmount(m.expense)} kr`}
+                  />
+                </div>
+                <div className="chart-label">{formatMonth(m.month)}</div>
+                <div className="chart-count">{m.voucherCount} ver.</div>
+              </div>
+            ))}
+          </div>
+          <div className="chart-legend">
+            <span className="legend-item"><span className="legend-swatch legend-income" /> Intäkter</span>
+            <span className="legend-item"><span className="legend-swatch legend-expense" /> Kostnader</span>
+          </div>
+        </div>
+      )}
+
+      {/* Account type distribution */}
+      {accountTypes.length > 0 && (
+        <div className="card">
+          <h3 style={{ marginBottom: "0.75rem" }}>Kontofördelning</h3>
+          <div className="distribution-bars">
+            {accountTypes
+              .sort(([, a], [, b]) => b - a)
+              .map(([type, count]) => (
+                <div key={type} className="dist-row">
+                  <span className="dist-label">{ACCOUNT_TYPE_LABELS[type] ?? type}</span>
+                  <div className="dist-track">
+                    <div
+                      className="dist-fill"
+                      style={{ width: totalAccounts > 0 ? `${(count / totalAccounts) * 100}%` : "0%" }}
+                    />
+                  </div>
+                  <span className="dist-count">{count}</span>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {/* Latest vouchers */}
       <div className="card">
         <h3 style={{ marginBottom: "0.75rem" }}>Senaste verifikat</h3>
         {d.latestVouchers.length === 0 ? (
           <div className="empty">Inga verifikat ännu.</div>
         ) : (
           <table>
+            <caption className="sr-only">Senaste 5 verifikat</caption>
             <thead>
               <tr>
                 <th>Nr</th>
@@ -95,6 +184,7 @@ export function Dashboard() {
         )}
       </div>
 
+      {/* Quick links */}
       <div className="card">
         <h3 style={{ marginBottom: "0.75rem" }}>Snabblänkar</h3>
         <div className="flex gap-1" style={{ flexWrap: "wrap" }}>
