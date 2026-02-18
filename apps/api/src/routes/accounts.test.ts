@@ -132,4 +132,59 @@ describe("Account routes", () => {
       expect(res.statusCode).toBe(404);
     });
   });
+
+  describe("PUT /:orgId/accounts/:accountNumber", () => {
+    it("updates account name", async () => {
+      repos.accounts.update.mockResolvedValue({ ok: true, value: { ...sampleAccount, name: "Nytt namn" } });
+
+      const res = await app.inject({
+        method: "PUT",
+        url: `${baseUrl}/1930`,
+        payload: { name: "Nytt namn" },
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(JSON.parse(res.body).data.name).toBe("Nytt namn");
+      expect(repos.accounts.update).toHaveBeenCalledWith(orgId, "1930", { name: "Nytt namn" });
+    });
+
+    it("updates account type and isVatAccount", async () => {
+      const updated = { ...sampleAccount, type: "EXPENSE" as const, isVatAccount: true };
+      repos.accounts.update.mockResolvedValue({ ok: true, value: updated });
+
+      const res = await app.inject({
+        method: "PUT",
+        url: `${baseUrl}/1930`,
+        payload: { type: "EXPENSE", isVatAccount: true },
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(JSON.parse(res.body).data.type).toBe("EXPENSE");
+    });
+
+    it("returns 400 for invalid type", async () => {
+      const res = await app.inject({
+        method: "PUT",
+        url: `${baseUrl}/1930`,
+        payload: { type: "INVALID" },
+      });
+
+      expect(res.statusCode).toBe(400);
+    });
+
+    it("returns 404 when account not found", async () => {
+      repos.accounts.update.mockResolvedValue({
+        ok: false,
+        error: { code: "NOT_FOUND", message: "Konto 9999 hittades inte" },
+      });
+
+      const res = await app.inject({
+        method: "PUT",
+        url: `${baseUrl}/9999`,
+        payload: { name: "Test" },
+      });
+
+      expect(res.statusCode).toBe(404);
+    });
+  });
 });
