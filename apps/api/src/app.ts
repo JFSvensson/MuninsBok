@@ -80,7 +80,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   fastify.get("/health", async () => {
     let dbStatus: "ok" | "error" = "error";
     try {
-      await options.repos.prisma.$queryRawUnsafe("SELECT 1");
+      await options.repos.prisma.$queryRaw`SELECT 1`;
       dbStatus = "ok";
     } catch {
       dbStatus = "error";
