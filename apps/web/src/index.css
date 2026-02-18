@@ -21,6 +21,39 @@ body {
   min-height: 100vh;
 }
 
+/* Skip to content link */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 1rem;
+  z-index: 200;
+  padding: 0.75rem 1.5rem;
+  background-color: #1976d2;
+  color: white;
+  border-radius: 0 0 4px 4px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: top 0.15s;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Focus visible outline for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid #1976d2;
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.3);
+}
+
 .app {
   max-width: 1200px;
   margin: 0 auto;
@@ -193,6 +226,36 @@ textarea:focus {
 
 .mb-2 {
   margin-bottom: 1rem;
+}
+
+.mt-1 {
+  margin-top: 0.5rem;
+}
+
+/* Correction help details */
+.correction-help {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.correction-help summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #1976d2;
+  user-select: none;
+}
+
+.correction-help summary:hover {
+  text-decoration: underline;
+}
+
+.correction-help p {
+  margin-top: 0.5rem;
+  color: #555;
 }
 
 .error {
@@ -448,6 +511,277 @@ button.danger:disabled {
 .date-filter button {
   padding: 0.4rem 0.75rem;
   font-size: 0.9rem;
+}
+
+/* Monthly trend chart */
+.chart-container {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+  min-height: 160px;
+  padding: 0.5rem 0;
+}
+
+.chart-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+
+.chart-bars {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: 120px;
+  width: 100%;
+  justify-content: center;
+}
+
+.chart-bar {
+  width: 40%;
+  max-width: 28px;
+  min-height: 2px;
+  border-radius: 3px 3px 0 0;
+  transition: height 0.3s ease;
+}
+
+.chart-bar-income {
+  background-color: #66bb6a;
+}
+
+.chart-bar-expense {
+  background-color: #ef5350;
+}
+
+.chart-label {
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 4px;
+  white-space: nowrap;
+}
+
+.chart-count {
+  font-size: 0.7rem;
+  color: #999;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.legend-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.legend-income {
+  background-color: #66bb6a;
+}
+
+.legend-expense {
+  background-color: #ef5350;
+}
+
+/* Account distribution */
+.distribution-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.dist-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dist-label {
+  flex: 0 0 110px;
+  font-size: 0.9rem;
+  color: #444;
+  text-align: right;
+}
+
+.dist-track {
+  flex: 1;
+  height: 20px;
+  background-color: #f0f0f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.dist-fill {
+  height: 100%;
+  background-color: #1976d2;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+  min-width: 2px;
+}
+
+.dist-count {
+  flex: 0 0 32px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #555;
+}
+
+/* Screen-reader only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Responsive tables */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ---- Responsive breakpoints ---- */
+
+/* Tablet (≤ 900px) */
+@media screen and (max-width: 900px) {
+  .app {
+    padding: 1rem;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+
+  .nav {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .nav-separator {
+    display: none;
+  }
+
+  .nav-group {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .chart-container {
+    overflow-x: auto;
+    min-width: 0;
+  }
+
+  .dist-label {
+    flex: 0 0 90px;
+    font-size: 0.82rem;
+  }
+}
+
+/* Mobile (≤ 600px) */
+@media screen and (max-width: 600px) {
+  .app {
+    padding: 0.75rem;
+  }
+
+  .header h1 {
+    font-size: 1.25rem;
+  }
+
+  .nav {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .nav a {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .nav-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid #eee;
+  }
+
+  .nav-group:last-of-type {
+    border-bottom: none;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .stat-value {
+    font-size: 1.3rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  table {
+    font-size: 0.85rem;
+  }
+
+  th,
+  td {
+    padding: 0.5rem 0.4rem;
+  }
+
+  button {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .flex.gap-2 {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .dialog {
+    width: 95%;
+    padding: 1rem;
+  }
+
+  .chart-bars {
+    height: 80px;
+  }
+
+  .chart-label {
+    font-size: 0.65rem;
+  }
+
+  .dist-label {
+    flex: 0 0 70px;
+    font-size: 0.78rem;
+  }
 }
 
 /* Print styles */
