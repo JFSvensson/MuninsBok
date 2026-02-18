@@ -219,6 +219,12 @@ export interface DashboardSummary {
     amount: number;
   }[];
   accountTypeCounts: Record<string, number>;
+  monthlyTrend: {
+    month: string;
+    voucherCount: number;
+    income: number;
+    expense: number;
+  }[];
   generatedAt: string;
 }
 
