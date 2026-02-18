@@ -139,6 +139,15 @@ Kör hela stacken med Docker Compose:
 docker compose up --build
 ```
 
+### Produktion
+
+Se [docs/production.md](docs/production.md) för:
+
+- TLS/HTTPS med nginx & Let's Encrypt
+- Backup & återställning av databas och filer
+- Övervakning med health check
+- Säkerhetsrekommendationer
+
 ---
 
 ## Repo-struktur
@@ -159,14 +168,15 @@ muninsbok/
 
 ## Teststatus
 
-**356+ tester** fördelade på ~25 testfiler:
+**360+ enhetstester** fördelade på ~25 testfiler + **E2E-tester** med Playwright:
 
 | Paket | Testfiler | Tester | Vad som testas |
 |-------|-----------|--------|----------------|
 | `@muninsbok/core` | 14 | 208 | Result-typer, organisationsnummer (Luhn), kontotyper, kontoplan (BAS), räkenskapsår (max 18 mån), verifikatrader, verifikatvalidering, dokument-MIME, rapporter (råbalans, resultat, balans, moms, grundbok, huvudbok, verifikationslista), SIE-import/export (IB/UB/RES) |
 | `@muninsbok/db` | 1 | 17 | Prisma→domän-mappers (organisation, räkenskapsår, konto, verifikat, verifikatrad, dokument) |
-| `@muninsbok/api` | 6 | 78 | Zod-schemavalidering, CRUD-endpoints (organisationer, konton, verifikat), rapporter, health check, felhantering |
-| `@muninsbok/web` | 3 | 53 | ApiError-klass, fetchJson, verifikatformulär (beräkningar, radhantering, öre-konvertering), beloppsformatering |
+| `@muninsbok/api` | 6 | 82 | Zod-schemavalidering, CRUD-endpoints (organisationer, konton, verifikat), rapporter, health check, felhantering |
+| `@muninsbok/web` | 4 | 53 | ApiError-klass, fetchJson, verifikatformulär (beräkningar, radhantering, öre-konvertering), beloppsformatering |
+| E2E (Playwright) | 2 | 12 | Smoke-tester, navigation, tillgänglighet, API-endpoint-validering, CORS |
 
 ---
 
