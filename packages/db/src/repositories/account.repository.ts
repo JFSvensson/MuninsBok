@@ -1,5 +1,5 @@
 import type { PrismaClient } from "../generated/prisma/client.js";
-import type { Account, CreateAccountInput, AccountError } from "@muninsbok/core";
+import type { Account, CreateAccountInput, UpdateAccountInput, AccountError } from "@muninsbok/core";
 import { ok, err, type Result, isValidAccountNumber } from "@muninsbok/core";
 import { toAccount } from "../mappers.js";
 
@@ -110,5 +110,38 @@ export class AccountRepository {
     } catch {
       return false;
     }
+  }
+
+  async update(
+    organizationId: string,
+    number: string,
+    input: UpdateAccountInput,
+  ): Promise<Result<Account, AccountError>> {
+    const existing = await this.prisma.account.findUnique({
+      where: {
+        organizationId_number: { organizationId, number },
+      },
+    });
+
+    if (!existing) {
+      return err({ code: "NOT_FOUND", message: `Konto ${number} hittades inte` });
+    }
+
+    if (input.name != null && input.name.trim().length === 0) {
+      return err({ code: "INVALID_NAME", message: "Kontonamn måste anges" });
+    }
+
+    const account = await this.prisma.account.update({
+      where: {
+        organizationId_number: { organizationId, number },
+      },
+      data: {
+        ...(input.name != null && { name: input.name.trim() }),
+        ...(input.type != null && { type: input.type }),
+        ...(input.isVatAccount != null && { isVatAccount: input.isVatAccount }),
+      },
+    });
+
+    return ok(toAccount(account));
   }
 }
