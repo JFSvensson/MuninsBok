@@ -1,5 +1,5 @@
-import type { FastifyInstance } from "fastify";
-import type { Voucher } from "@muninsbok/core";
+import type { FastifyInstance, FastifyReply } from "fastify";
+import type { Voucher, Account } from "@muninsbok/core";
 import {
   calculateTrialBalance,
   calculateIncomeStatement,
@@ -10,11 +10,13 @@ import {
   generateVoucherListReport,
 } from "@muninsbok/core";
 
+// ── helpers ─────────────────────────────────────────────────
+
 /** Filter vouchers by optional date range */
 function filterByDateRange(
   vouchers: Voucher[],
   startDate?: string,
-  endDate?: string
+  endDate?: string,
 ): Voucher[] {
   if (!startDate && !endDate) return vouchers;
   return vouchers.filter((v) => {
@@ -25,34 +27,62 @@ function filterByDateRange(
   });
 }
 
+interface ReportRouteContext {
+  vouchers: Voucher[];
+  accounts: Account[];
+}
+
+/**
+ * Common plumbing shared by every report endpoint:
+ *   1. Validate that fiscalYearId was provided
+ *   2. Fetch vouchers + accounts in parallel
+ *   3. Apply optional date range filter
+ *
+ * Returns the filtered vouchers + accounts, or sends a 400
+ * and returns `null` so the caller can short-circuit.
+ */
+async function loadReportData(
+  fastify: FastifyInstance,
+  orgId: string,
+  query: { fiscalYearId?: string; startDate?: string; endDate?: string },
+  reply: FastifyReply,
+): Promise<ReportRouteContext | null> {
+  const { fiscalYearId, startDate, endDate } = query;
+
+  if (!fiscalYearId) {
+    reply.status(400).send({ error: "fiscalYearId krävs" });
+    return null;
+  }
+
+  const [allVouchers, accounts] = await Promise.all([
+    fastify.repos.vouchers.findByFiscalYear(fiscalYearId, orgId),
+    fastify.repos.accounts.findByOrganization(orgId),
+  ]);
+
+  const vouchers = filterByDateRange(allVouchers, startDate, endDate);
+  return { vouchers, accounts };
+}
+
+// ── route type shorthand ────────────────────────────────────
+
+type ReportParams = {
+  Params: { orgId: string };
+  Querystring: { fiscalYearId: string; startDate?: string; endDate?: string };
+};
+
+// ── routes ──────────────────────────────────────────────────
+
 export async function reportRoutes(fastify: FastifyInstance) {
-  const voucherRepo = fastify.repos.vouchers;
-  const accountRepo = fastify.repos.accounts;
-
   // Trial Balance (Råbalans)
-  fastify.get<{
-    Params: { orgId: string };
-    Querystring: { fiscalYearId: string; startDate?: string; endDate?: string };
-  }>("/:orgId/reports/trial-balance", async (request, reply) => {
-    const { orgId } = request.params;
-    const { fiscalYearId, startDate, endDate } = request.query;
+  fastify.get<ReportParams>("/:orgId/reports/trial-balance", async (request, reply) => {
+    const ctx = await loadReportData(fastify, request.params.orgId, request.query, reply);
+    if (!ctx) return;
 
-    if (!fiscalYearId) {
-      return reply.status(400).send({ error: "fiscalYearId krävs" });
-    }
-
-    const [allVouchers, accounts] = await Promise.all([
-      voucherRepo.findByFiscalYear(fiscalYearId, orgId),
-      accountRepo.findByOrganization(orgId),
-    ]);
-
-    const vouchers = filterByDateRange(allVouchers, startDate, endDate);
-    const report = calculateTrialBalance(vouchers, accounts);
+    const report = calculateTrialBalance(ctx.vouchers, ctx.accounts);
 
     return {
       data: {
         ...report,
-        // Convert ören to kronor for API response
         rows: report.rows.map((row) => ({
           ...row,
           debit: row.debit / 100,
@@ -66,26 +96,12 @@ export async function reportRoutes(fastify: FastifyInstance) {
   });
 
   // Income Statement (Resultaträkning)
-  fastify.get<{
-    Params: { orgId: string };
-    Querystring: { fiscalYearId: string; startDate?: string; endDate?: string };
-  }>("/:orgId/reports/income-statement", async (request, reply) => {
-    const { orgId } = request.params;
-    const { fiscalYearId, startDate, endDate } = request.query;
+  fastify.get<ReportParams>("/:orgId/reports/income-statement", async (request, reply) => {
+    const ctx = await loadReportData(fastify, request.params.orgId, request.query, reply);
+    if (!ctx) return;
 
-    if (!fiscalYearId) {
-      return reply.status(400).send({ error: "fiscalYearId krävs" });
-    }
+    const report = calculateIncomeStatement(ctx.vouchers, ctx.accounts);
 
-    const [allVouchers, accounts] = await Promise.all([
-      voucherRepo.findByFiscalYear(fiscalYearId, orgId),
-      accountRepo.findByOrganization(orgId),
-    ]);
-
-    const vouchers = filterByDateRange(allVouchers, startDate, endDate);
-    const report = calculateIncomeStatement(vouchers, accounts);
-
-    // Convert ören to kronor
     const convertSection = (section: typeof report.revenues) => ({
       ...section,
       rows: section.rows.map((row) => ({
@@ -109,26 +125,12 @@ export async function reportRoutes(fastify: FastifyInstance) {
   });
 
   // Balance Sheet (Balansräkning)
-  fastify.get<{
-    Params: { orgId: string };
-    Querystring: { fiscalYearId: string; startDate?: string; endDate?: string };
-  }>("/:orgId/reports/balance-sheet", async (request, reply) => {
-    const { orgId } = request.params;
-    const { fiscalYearId, startDate, endDate } = request.query;
+  fastify.get<ReportParams>("/:orgId/reports/balance-sheet", async (request, reply) => {
+    const ctx = await loadReportData(fastify, request.params.orgId, request.query, reply);
+    if (!ctx) return;
 
-    if (!fiscalYearId) {
-      return reply.status(400).send({ error: "fiscalYearId krävs" });
-    }
+    const report = calculateBalanceSheet(ctx.vouchers, ctx.accounts);
 
-    const [allVouchers, accounts] = await Promise.all([
-      voucherRepo.findByFiscalYear(fiscalYearId, orgId),
-      accountRepo.findByOrganization(orgId),
-    ]);
-
-    const vouchers = filterByDateRange(allVouchers, startDate, endDate);
-    const report = calculateBalanceSheet(vouchers, accounts);
-
-    // Convert ören to kronor
     const convertSection = (section: typeof report.assets) => ({
       ...section,
       rows: section.rows.map((row) => ({
@@ -154,24 +156,11 @@ export async function reportRoutes(fastify: FastifyInstance) {
   });
 
   // VAT Report (Momsrapport)
-  fastify.get<{
-    Params: { orgId: string };
-    Querystring: { fiscalYearId: string; startDate?: string; endDate?: string };
-  }>("/:orgId/reports/vat", async (request, reply) => {
-    const { orgId } = request.params;
-    const { fiscalYearId, startDate, endDate } = request.query;
+  fastify.get<ReportParams>("/:orgId/reports/vat", async (request, reply) => {
+    const ctx = await loadReportData(fastify, request.params.orgId, request.query, reply);
+    if (!ctx) return;
 
-    if (!fiscalYearId) {
-      return reply.status(400).send({ error: "fiscalYearId krävs" });
-    }
-
-    const [allVouchers, accounts] = await Promise.all([
-      voucherRepo.findByFiscalYear(fiscalYearId, orgId),
-      accountRepo.findByOrganization(orgId),
-    ]);
-
-    const vouchers = filterByDateRange(allVouchers, startDate, endDate);
-    const report = calculateVatReport(vouchers, accounts);
+    const report = calculateVatReport(ctx.vouchers, ctx.accounts);
 
     const convertRows = (rows: typeof report.outputVat) =>
       rows.map((row) => ({
@@ -192,24 +181,11 @@ export async function reportRoutes(fastify: FastifyInstance) {
   });
 
   // Journal (Grundbok)
-  fastify.get<{
-    Params: { orgId: string };
-    Querystring: { fiscalYearId: string; startDate?: string; endDate?: string };
-  }>("/:orgId/reports/journal", async (request, reply) => {
-    const { orgId } = request.params;
-    const { fiscalYearId, startDate, endDate } = request.query;
+  fastify.get<ReportParams>("/:orgId/reports/journal", async (request, reply) => {
+    const ctx = await loadReportData(fastify, request.params.orgId, request.query, reply);
+    if (!ctx) return;
 
-    if (!fiscalYearId) {
-      return reply.status(400).send({ error: "fiscalYearId krävs" });
-    }
-
-    const [allVouchers, accounts] = await Promise.all([
-      voucherRepo.findByFiscalYear(fiscalYearId, orgId),
-      accountRepo.findByOrganization(orgId),
-    ]);
-
-    const vouchers = filterByDateRange(allVouchers, startDate, endDate);
-    const report = generateJournal(vouchers, accounts);
+    const report = generateJournal(ctx.vouchers, ctx.accounts);
 
     return {
       data: {
@@ -231,24 +207,11 @@ export async function reportRoutes(fastify: FastifyInstance) {
   });
 
   // General Ledger (Huvudbok)
-  fastify.get<{
-    Params: { orgId: string };
-    Querystring: { fiscalYearId: string; startDate?: string; endDate?: string };
-  }>("/:orgId/reports/general-ledger", async (request, reply) => {
-    const { orgId } = request.params;
-    const { fiscalYearId, startDate, endDate } = request.query;
+  fastify.get<ReportParams>("/:orgId/reports/general-ledger", async (request, reply) => {
+    const ctx = await loadReportData(fastify, request.params.orgId, request.query, reply);
+    if (!ctx) return;
 
-    if (!fiscalYearId) {
-      return reply.status(400).send({ error: "fiscalYearId krävs" });
-    }
-
-    const [allVouchers, accounts] = await Promise.all([
-      voucherRepo.findByFiscalYear(fiscalYearId, orgId),
-      accountRepo.findByOrganization(orgId),
-    ]);
-
-    const vouchers = filterByDateRange(allVouchers, startDate, endDate);
-    const report = generateGeneralLedger(vouchers, accounts);
+    const report = generateGeneralLedger(ctx.vouchers, ctx.accounts);
 
     return {
       data: {
@@ -270,24 +233,11 @@ export async function reportRoutes(fastify: FastifyInstance) {
   });
 
   // Voucher List Report (Verifikationslista)
-  fastify.get<{
-    Params: { orgId: string };
-    Querystring: { fiscalYearId: string; startDate?: string; endDate?: string };
-  }>("/:orgId/reports/voucher-list", async (request, reply) => {
-    const { orgId } = request.params;
-    const { fiscalYearId, startDate, endDate } = request.query;
+  fastify.get<ReportParams>("/:orgId/reports/voucher-list", async (request, reply) => {
+    const ctx = await loadReportData(fastify, request.params.orgId, request.query, reply);
+    if (!ctx) return;
 
-    if (!fiscalYearId) {
-      return reply.status(400).send({ error: "fiscalYearId krävs" });
-    }
-
-    const [allVouchers, accounts] = await Promise.all([
-      voucherRepo.findByFiscalYear(fiscalYearId, orgId),
-      accountRepo.findByOrganization(orgId),
-    ]);
-
-    const vouchers = filterByDateRange(allVouchers, startDate, endDate);
-    const report = generateVoucherListReport(vouchers, accounts);
+    const report = generateVoucherListReport(ctx.vouchers, ctx.accounts);
 
     return {
       data: {
