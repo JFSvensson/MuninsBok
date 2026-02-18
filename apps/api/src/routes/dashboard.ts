@@ -13,7 +13,7 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
     const { fiscalYearId } = request.query;
 
     if (!fiscalYearId) {
-      return reply.status(400).send({ error: "fiscalYearId is required" });
+      return reply.status(400).send({ error: "fiscalYearId krävs" });
     }
 
     const [vouchers, accounts] = await Promise.all([
