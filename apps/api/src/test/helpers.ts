@@ -30,6 +30,7 @@ export function createMockAccountRepo(): MockedRepo<AccountRepository> {
     create: vi.fn(),
     createMany: vi.fn(),
     deactivate: vi.fn(),
+    update: vi.fn(),
   } as any;
 }
 
