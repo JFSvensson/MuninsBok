@@ -9,6 +9,12 @@ const createAccountSchema = z.object({
   isVatAccount: z.boolean().optional(),
 });
 
+const updateAccountSchema = z.object({
+  name: z.string().min(1).max(255).optional(),
+  type: z.enum(["ASSET", "LIABILITY", "EQUITY", "REVENUE", "EXPENSE"]).optional(),
+  isVatAccount: z.boolean().optional(),
+});
+
 export async function accountRoutes(fastify: FastifyInstance) {
   const accountRepo = fastify.repos.accounts;
 
@@ -77,6 +83,35 @@ export async function accountRoutes(fastify: FastifyInstance) {
         return reply.status(404).send({ error: "Kontot hittades inte" });
       }
       return reply.status(204).send();
+    }
+  );
+
+  // Update account
+  fastify.put<{ Params: { orgId: string; accountNumber: string } }>(
+    "/:orgId/accounts/:accountNumber",
+    async (request, reply) => {
+      const parsed = updateAccountSchema.safeParse(request.body);
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues });
+      }
+
+      const { name, type, isVatAccount } = parsed.data;
+      const result = await accountRepo.update(
+        request.params.orgId,
+        request.params.accountNumber,
+        {
+          ...(name != null && { name }),
+          ...(type != null && { type }),
+          ...(isVatAccount != null && { isVatAccount }),
+        },
+      );
+
+      if (!result.ok) {
+        const statusCode = result.error.code === "NOT_FOUND" ? 404 : 400;
+        return reply.status(statusCode).send({ error: result.error });
+      }
+
+      return { data: result.value };
     }
   );
 }
