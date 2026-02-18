@@ -29,7 +29,7 @@ export async function fiscalYearRoutes(fastify: FastifyInstance) {
         request.params.orgId
       );
       if (!fy) {
-        return reply.status(404).send({ error: "Fiscal year not found" });
+        return reply.status(404).send({ error: "Räkenskapsåret hittades inte" });
       }
       return { data: fy };
     }
