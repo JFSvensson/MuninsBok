@@ -25,6 +25,8 @@ jobs:
 
       - name: Generate Prisma client
         run: pnpm --filter @muninsbok/db exec prisma generate
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
 
       - name: Build all packages
         run: pnpm -r build
