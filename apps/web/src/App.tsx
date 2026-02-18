@@ -42,39 +42,45 @@ function AppContent() {
 
   return (
     <div className="app">
-      <header className="header">
+      <a href="#main-content" className="skip-link">
+        Hoppa till innehåll
+      </a>
+      <header className="header" role="banner">
         <h1>Munins bok</h1>
         <OrganizationSelect />
       </header>
 
       {organizations.length === 0 ? (
-        <WelcomePage />
+        <main id="main-content">
+          <WelcomePage />
+        </main>
       ) : organization && fiscalYear ? (
         <>
-          <nav className="nav mb-2">
+          <nav className="nav mb-2" aria-label="Huvudnavigation">
             <span className="nav-group">
               <NavLink to="/dashboard">Översikt</NavLink>
               <NavLink to="/vouchers">Verifikat</NavLink>
               <NavLink to="/accounts">Kontoplan</NavLink>
             </span>
-            <span className="nav-separator" />
+            <span className="nav-separator" aria-hidden="true" />
             <span className="nav-group">
               <NavLink to="/reports/trial-balance">Råbalans</NavLink>
               <NavLink to="/reports/income-statement">Resultaträkning</NavLink>
               <NavLink to="/reports/balance-sheet">Balansräkning</NavLink>
               <NavLink to="/reports/vat">Moms</NavLink>
             </span>
-            <span className="nav-separator" />
+            <span className="nav-separator" aria-hidden="true" />
             <span className="nav-group">
               <NavLink to="/reports/journal">Grundbok</NavLink>
               <NavLink to="/reports/general-ledger">Huvudbok</NavLink>
               <NavLink to="/reports/voucher-list">Verifikationslista</NavLink>
             </span>
-            <span className="nav-separator" />
+            <span className="nav-separator" aria-hidden="true" />
             <NavLink to="/sie">SIE</NavLink>
           </nav>
 
-          <Routes>
+          <main id="main-content">
+            <Routes>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/vouchers" element={<VoucherList />} />
@@ -90,15 +96,20 @@ function AppContent() {
             <Route path="/reports/voucher-list" element={<VoucherListReport />} />
             <Route path="/sie" element={<SieExport />} />
           </Routes>
+          </main>
         </>
       ) : organization ? (
-        <div className="card">
-          <p>Skapa ett räkenskapsår för att börja bokföra. Klicka <strong>+</strong> bredvid räkenskapsår-listan.</p>
-        </div>
+        <main id="main-content">
+          <div className="card">
+            <p>Skapa ett räkenskapsår för att börja bokföra. Klicka <strong>+</strong> bredvid räkenskapsår-listan.</p>
+          </div>
+        </main>
       ) : (
-        <div className="card">
-          <p>Välj en organisation för att börja bokföra.</p>
-        </div>
+        <main id="main-content">
+          <div className="card">
+            <p>Välj en organisation för att börja bokföra.</p>
+          </div>
+        </main>
       )}
     </div>
   );
