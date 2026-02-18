@@ -15,7 +15,7 @@ export async function sieRoutes(fastify: FastifyInstance) {
     const { fiscalYearId } = request.query;
 
     if (!fiscalYearId) {
-      return reply.status(400).send({ error: "fiscalYearId is required" });
+      return reply.status(400).send({ error: "fiscalYearId krävs" });
     }
 
     // Get organization, fiscal year, accounts, and vouchers
@@ -28,11 +28,11 @@ export async function sieRoutes(fastify: FastifyInstance) {
     ]);
 
     if (!org) {
-      return reply.status(404).send({ error: "Organization not found" });
+      return reply.status(404).send({ error: "Organisationen hittades inte" });
     }
 
     if (!fiscalYear) {
-      return reply.status(404).send({ error: "Fiscal year not found" });
+      return reply.status(404).send({ error: "Räkenskapsåret hittades inte" });
     }
 
     // Calculate opening balances from previous fiscal year
@@ -121,14 +121,14 @@ export async function sieRoutes(fastify: FastifyInstance) {
     const { fiscalYearId } = request.query;
 
     if (!fiscalYearId) {
-      return reply.status(400).send({ error: "fiscalYearId is required" });
+      return reply.status(400).send({ error: "fiscalYearId krävs" });
     }
 
     // Get the raw body as string
     const content = request.body as string;
 
     if (!content || typeof content !== "string") {
-      return reply.status(400).send({ error: "SIE file content is required" });
+      return reply.status(400).send({ error: "SIE-filinnehåll krävs" });
     }
 
     // Parse SIE file
