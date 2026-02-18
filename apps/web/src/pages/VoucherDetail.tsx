@@ -117,6 +117,23 @@ export function VoucherDetail() {
 
       <DocumentSection organizationId={organization!.id} voucherId={voucher.id} />
 
+      {/* Help text about corrections */}
+      {!isCorrected && !isCorrection && (
+        <details className="correction-help mt-1">
+          <summary>Om rättelse av verifikat</summary>
+          <p>
+            Enligt bokföringslagen (BFL) får ett bokfört verifikat inte raderas eller ändras i
+            efterhand. Istället skapas ett <strong>rättelseverifikat</strong> som innehåller
+            omvända belopp — debet blir kredit och tvärtom. Originalverifikatet markeras då som
+            rättat och det nya rättelseverifikatet länkas till det.
+          </p>
+          <p>
+            Båda verifikaten finns kvar i bokföringen och kan granskas vid revision. Om du vill
+            bokföra korrekta belopp efter rättelsen skapar du ett nytt verifikat med rätt värden.
+          </p>
+        </details>
+      )}
+
       <ConfirmDialog
         open={showCorrect}
         title="Rätta verifikat"
