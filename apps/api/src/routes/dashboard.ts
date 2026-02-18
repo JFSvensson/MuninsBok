@@ -52,6 +52,36 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
       accountTypeCounts[account.type] = (accountTypeCounts[account.type] ?? 0) + 1;
     }
 
+    // Monthly aggregation for trend chart
+    const monthlyMap = new Map<string, { count: number; income: number; expense: number }>();
+    for (const voucher of vouchers) {
+      const key = `${voucher.date.getFullYear()}-${String(voucher.date.getMonth() + 1).padStart(2, "0")}`;
+      let entry = monthlyMap.get(key);
+      if (!entry) {
+        entry = { count: 0, income: 0, expense: 0 };
+        monthlyMap.set(key, entry);
+      }
+      entry.count += 1;
+      for (const line of voucher.lines) {
+        // Revenue accounts start with 3
+        const acct = accounts.find((a) => a.number === line.accountNumber);
+        if (acct?.type === "REVENUE") {
+          entry.income += line.credit - line.debit;
+        } else if (acct?.type === "EXPENSE") {
+          entry.expense += line.debit - line.credit;
+        }
+      }
+    }
+
+    const monthlyTrend = [...monthlyMap.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, data]) => ({
+        month,
+        voucherCount: data.count,
+        income: data.income / 100,
+        expense: data.expense / 100,
+      }));
+
     return {
       data: {
         voucherCount: vouchers.length,
@@ -62,6 +92,7 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
         isBalanced: totalDebit === totalCredit,
         latestVouchers,
         accountTypeCounts,
+        monthlyTrend,
         generatedAt: new Date().toISOString(),
       },
     };
