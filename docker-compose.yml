@@ -27,6 +27,7 @@ services:
       - "3000:3000"
     environment:
       DATABASE_URL: postgresql://muninsbok:muninsbok@postgres:5432/muninsbok
+      NODE_ENV: production
       HOST: 0.0.0.0
       PORT: 3000
     volumes:
