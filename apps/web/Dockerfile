@@ -7,15 +7,19 @@ WORKDIR /app
 
 # Copy workspace config and lockfile
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY packages/core/package.json ./packages/core/
 COPY apps/web/package.json ./apps/web/
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
 # Copy source
+COPY tsconfig.json ./
+COPY packages/core ./packages/core
 COPY apps/web ./apps/web
 
-# Build
+# Build core first (web depends on it)
+RUN pnpm --filter @muninsbok/core build
 RUN pnpm --filter @muninsbok/web build
 
 # Production stage - nginx
