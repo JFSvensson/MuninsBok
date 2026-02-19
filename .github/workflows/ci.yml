@@ -31,6 +31,12 @@ jobs:
       - name: Build all packages
         run: pnpm -r build
 
+      - name: Lint
+        run: npx eslint .
+
+      - name: Check formatting
+        run: npx prettier --check .
+
       - name: Type check
         run: pnpm -r typecheck
 
