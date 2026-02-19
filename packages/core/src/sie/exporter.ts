@@ -1,9 +1,4 @@
-import type {
-  SieExportOptions,
-  SieVoucher,
-  SieAccount,
-  SieFiscalYear,
-} from "./types.js";
+import type { SieExportOptions, SieVoucher, SieAccount, SieFiscalYear } from "./types.js";
 import type { Voucher } from "../types/voucher.js";
 import type { Account } from "../types/account.js";
 import type { FiscalYear } from "../types/fiscal-year.js";

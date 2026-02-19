@@ -1,9 +1,5 @@
 import type { PrismaClient } from "../generated/prisma/client.js";
-import type {
-  Organization,
-  CreateOrganizationInput,
-  OrganizationError,
-} from "@muninsbok/core";
+import type { Organization, CreateOrganizationInput, OrganizationError } from "@muninsbok/core";
 import { ok, err, type Result } from "@muninsbok/core";
 import { toOrganization } from "../mappers.js";
 
