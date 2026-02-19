@@ -251,7 +251,7 @@ export class ApiError extends Error {
   constructor(
     public readonly status: number,
     public readonly code: string,
-    message: string
+    message: string,
   ) {
     super(message);
     this.name = "ApiError";
@@ -284,7 +284,7 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
     throw new ApiError(
       response.status,
       errorBody.code ?? "UNKNOWN",
-      errorBody.error?.message ?? errorBody.error ?? "Ett fel uppstod"
+      errorBody.error?.message ?? errorBody.error ?? "Ett fel uppstod",
     );
   }
 
@@ -295,17 +295,12 @@ export const api = {
   // Organizations
   getDashboard: (orgId: string, fiscalYearId: string) =>
     fetchJson<ApiResponse<DashboardSummary>>(
-      `${API_BASE}/organizations/${orgId}/dashboard?fiscalYearId=${fiscalYearId}`
+      `${API_BASE}/organizations/${orgId}/dashboard?fiscalYearId=${fiscalYearId}`,
     ),
 
-  getOrganizations: () =>
-    fetchJson<ApiResponse<Organization[]>>(`${API_BASE}/organizations`),
+  getOrganizations: () => fetchJson<ApiResponse<Organization[]>>(`${API_BASE}/organizations`),
 
-  createOrganization: (data: {
-    orgNumber: string;
-    name: string;
-    fiscalYearStartMonth?: number;
-  }) =>
+  createOrganization: (data: { orgNumber: string; name: string; fiscalYearStartMonth?: number }) =>
     fetchJson<ApiResponse<Organization>>(`${API_BASE}/organizations`, {
       method: "POST",
       body: JSON.stringify(data),
@@ -319,86 +314,87 @@ export const api = {
 
   deleteOrganization: (orgId: string) =>
     fetch(`${API_BASE}/organizations/${orgId}`, { method: "DELETE" }).then((res) => {
-      if (!res.ok) throw new ApiError(res.status, "DELETE_FAILED", "Kunde inte radera organisationen");
+      if (!res.ok)
+        throw new ApiError(res.status, "DELETE_FAILED", "Kunde inte radera organisationen");
     }),
 
   // Fiscal Years
   getFiscalYears: (orgId: string) =>
-    fetchJson<ApiResponse<FiscalYear[]>>(
-      `${API_BASE}/organizations/${orgId}/fiscal-years`
-    ),
+    fetchJson<ApiResponse<FiscalYear[]>>(`${API_BASE}/organizations/${orgId}/fiscal-years`),
 
   createFiscalYear: (orgId: string, data: { startDate: string; endDate: string }) =>
-    fetchJson<ApiResponse<FiscalYear>>(
-      `${API_BASE}/organizations/${orgId}/fiscal-years`,
-      {
-        method: "POST",
-        body: JSON.stringify(data),
-      }
-    ),
+    fetchJson<ApiResponse<FiscalYear>>(`${API_BASE}/organizations/${orgId}/fiscal-years`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 
   closeFiscalYear: (orgId: string, fyId: string) =>
     fetchJson<ApiResponse<FiscalYear>>(
       `${API_BASE}/organizations/${orgId}/fiscal-years/${fyId}/close`,
-      { method: "PATCH" }
+      { method: "PATCH" },
     ),
 
   // Accounts
   getAccounts: (orgId: string, activeOnly = true) =>
     fetchJson<ApiResponse<Account[]>>(
-      `${API_BASE}/organizations/${orgId}/accounts${activeOnly ? "?active=true" : ""}`
+      `${API_BASE}/organizations/${orgId}/accounts${activeOnly ? "?active=true" : ""}`,
     ),
 
   getAccount: (orgId: string, accountNumber: string) =>
-    fetchJson<ApiResponse<Account>>(
-      `${API_BASE}/organizations/${orgId}/accounts/${accountNumber}`
-    ),
+    fetchJson<ApiResponse<Account>>(`${API_BASE}/organizations/${orgId}/accounts/${accountNumber}`),
 
-  createAccount: (orgId: string, data: {
-    number: string;
-    name: string;
-    type: Account["type"];
-    isVatAccount?: boolean;
-  }) =>
-    fetchJson<ApiResponse<Account>>(
-      `${API_BASE}/organizations/${orgId}/accounts`,
-      { method: "POST", body: JSON.stringify(data) }
-    ),
+  createAccount: (
+    orgId: string,
+    data: {
+      number: string;
+      name: string;
+      type: Account["type"];
+      isVatAccount?: boolean;
+    },
+  ) =>
+    fetchJson<ApiResponse<Account>>(`${API_BASE}/organizations/${orgId}/accounts`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 
   deactivateAccount: (orgId: string, accountNumber: string) =>
-    fetch(`${API_BASE}/organizations/${orgId}/accounts/${accountNumber}`, { method: "DELETE" }).then((res) => {
+    fetch(`${API_BASE}/organizations/${orgId}/accounts/${accountNumber}`, {
+      method: "DELETE",
+    }).then((res) => {
       if (!res.ok) throw new ApiError(res.status, "DELETE_FAILED", "Kunde inte inaktivera kontot");
     }),
 
-  updateAccount: (orgId: string, accountNumber: string, data: {
-    name?: string;
-    type?: Account["type"];
-    isVatAccount?: boolean;
-  }) =>
+  updateAccount: (
+    orgId: string,
+    accountNumber: string,
+    data: {
+      name?: string;
+      type?: Account["type"];
+      isVatAccount?: boolean;
+    },
+  ) =>
     fetchJson<ApiResponse<Account>>(
       `${API_BASE}/organizations/${orgId}/accounts/${accountNumber}`,
-      { method: "PUT", body: JSON.stringify(data) }
+      { method: "PUT", body: JSON.stringify(data) },
     ),
 
   // Vouchers
   getVouchers: (
     orgId: string,
     fiscalYearId: string,
-    options?: { page?: number; limit?: number; search?: string }
+    options?: { page?: number; limit?: number; search?: string },
   ) => {
     const params = new URLSearchParams({ fiscalYearId });
     if (options?.page) params.set("page", String(options.page));
     if (options?.limit) params.set("limit", String(options.limit));
     if (options?.search) params.set("search", options.search);
     return fetchJson<PaginatedApiResponse<Voucher[]>>(
-      `${API_BASE}/organizations/${orgId}/vouchers?${params}`
+      `${API_BASE}/organizations/${orgId}/vouchers?${params}`,
     );
   },
 
   getVoucher: (orgId: string, voucherId: string) =>
-    fetchJson<ApiResponse<Voucher>>(
-      `${API_BASE}/organizations/${orgId}/vouchers/${voucherId}`
-    ),
+    fetchJson<ApiResponse<Voucher>>(`${API_BASE}/organizations/${orgId}/vouchers/${voucherId}`),
 
   createVoucher: (
     orgId: string,
@@ -407,69 +403,129 @@ export const api = {
       date: string;
       description: string;
       lines: { accountNumber: string; debit: number; credit: number; description?: string }[];
-    }
+    },
   ) =>
-    fetchJson<ApiResponse<Voucher>>(
-      `${API_BASE}/organizations/${orgId}/vouchers`,
-      {
-        method: "POST",
-        body: JSON.stringify(data),
-      }
-    ),
+    fetchJson<ApiResponse<Voucher>>(`${API_BASE}/organizations/${orgId}/vouchers`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 
   correctVoucher: (orgId: string, voucherId: string) =>
     fetchJson<ApiResponse<Voucher>>(
       `${API_BASE}/organizations/${orgId}/vouchers/${voucherId}/correct`,
-      { method: "POST" }
+      { method: "POST" },
     ),
 
   // Reports
-  getTrialBalance: (orgId: string, fiscalYearId: string, dateRange?: { startDate: string; endDate: string }) => {
+  getTrialBalance: (
+    orgId: string,
+    fiscalYearId: string,
+    dateRange?: { startDate: string; endDate: string },
+  ) => {
     const params = new URLSearchParams({ fiscalYearId });
-    if (dateRange) { params.set("startDate", dateRange.startDate); params.set("endDate", dateRange.endDate); }
-    return fetchJson<ApiResponse<TrialBalance>>(`${API_BASE}/organizations/${orgId}/reports/trial-balance?${params}`);
+    if (dateRange) {
+      params.set("startDate", dateRange.startDate);
+      params.set("endDate", dateRange.endDate);
+    }
+    return fetchJson<ApiResponse<TrialBalance>>(
+      `${API_BASE}/organizations/${orgId}/reports/trial-balance?${params}`,
+    );
   },
 
-  getIncomeStatement: (orgId: string, fiscalYearId: string, dateRange?: { startDate: string; endDate: string }) => {
+  getIncomeStatement: (
+    orgId: string,
+    fiscalYearId: string,
+    dateRange?: { startDate: string; endDate: string },
+  ) => {
     const params = new URLSearchParams({ fiscalYearId });
-    if (dateRange) { params.set("startDate", dateRange.startDate); params.set("endDate", dateRange.endDate); }
-    return fetchJson<ApiResponse<IncomeStatement>>(`${API_BASE}/organizations/${orgId}/reports/income-statement?${params}`);
+    if (dateRange) {
+      params.set("startDate", dateRange.startDate);
+      params.set("endDate", dateRange.endDate);
+    }
+    return fetchJson<ApiResponse<IncomeStatement>>(
+      `${API_BASE}/organizations/${orgId}/reports/income-statement?${params}`,
+    );
   },
 
-  getBalanceSheet: (orgId: string, fiscalYearId: string, dateRange?: { startDate: string; endDate: string }) => {
+  getBalanceSheet: (
+    orgId: string,
+    fiscalYearId: string,
+    dateRange?: { startDate: string; endDate: string },
+  ) => {
     const params = new URLSearchParams({ fiscalYearId });
-    if (dateRange) { params.set("startDate", dateRange.startDate); params.set("endDate", dateRange.endDate); }
-    return fetchJson<ApiResponse<BalanceSheet>>(`${API_BASE}/organizations/${orgId}/reports/balance-sheet?${params}`);
+    if (dateRange) {
+      params.set("startDate", dateRange.startDate);
+      params.set("endDate", dateRange.endDate);
+    }
+    return fetchJson<ApiResponse<BalanceSheet>>(
+      `${API_BASE}/organizations/${orgId}/reports/balance-sheet?${params}`,
+    );
   },
 
-  getVatReport: (orgId: string, fiscalYearId: string, dateRange?: { startDate: string; endDate: string }) => {
+  getVatReport: (
+    orgId: string,
+    fiscalYearId: string,
+    dateRange?: { startDate: string; endDate: string },
+  ) => {
     const params = new URLSearchParams({ fiscalYearId });
-    if (dateRange) { params.set("startDate", dateRange.startDate); params.set("endDate", dateRange.endDate); }
-    return fetchJson<ApiResponse<VatReport>>(`${API_BASE}/organizations/${orgId}/reports/vat?${params}`);
+    if (dateRange) {
+      params.set("startDate", dateRange.startDate);
+      params.set("endDate", dateRange.endDate);
+    }
+    return fetchJson<ApiResponse<VatReport>>(
+      `${API_BASE}/organizations/${orgId}/reports/vat?${params}`,
+    );
   },
 
-  getJournal: (orgId: string, fiscalYearId: string, dateRange?: { startDate: string; endDate: string }) => {
+  getJournal: (
+    orgId: string,
+    fiscalYearId: string,
+    dateRange?: { startDate: string; endDate: string },
+  ) => {
     const params = new URLSearchParams({ fiscalYearId });
-    if (dateRange) { params.set("startDate", dateRange.startDate); params.set("endDate", dateRange.endDate); }
-    return fetchJson<ApiResponse<JournalReport>>(`${API_BASE}/organizations/${orgId}/reports/journal?${params}`);
+    if (dateRange) {
+      params.set("startDate", dateRange.startDate);
+      params.set("endDate", dateRange.endDate);
+    }
+    return fetchJson<ApiResponse<JournalReport>>(
+      `${API_BASE}/organizations/${orgId}/reports/journal?${params}`,
+    );
   },
 
-  getGeneralLedger: (orgId: string, fiscalYearId: string, dateRange?: { startDate: string; endDate: string }) => {
+  getGeneralLedger: (
+    orgId: string,
+    fiscalYearId: string,
+    dateRange?: { startDate: string; endDate: string },
+  ) => {
     const params = new URLSearchParams({ fiscalYearId });
-    if (dateRange) { params.set("startDate", dateRange.startDate); params.set("endDate", dateRange.endDate); }
-    return fetchJson<ApiResponse<GeneralLedgerReport>>(`${API_BASE}/organizations/${orgId}/reports/general-ledger?${params}`);
+    if (dateRange) {
+      params.set("startDate", dateRange.startDate);
+      params.set("endDate", dateRange.endDate);
+    }
+    return fetchJson<ApiResponse<GeneralLedgerReport>>(
+      `${API_BASE}/organizations/${orgId}/reports/general-ledger?${params}`,
+    );
   },
 
-  getVoucherListReport: (orgId: string, fiscalYearId: string, dateRange?: { startDate: string; endDate: string }) => {
+  getVoucherListReport: (
+    orgId: string,
+    fiscalYearId: string,
+    dateRange?: { startDate: string; endDate: string },
+  ) => {
     const params = new URLSearchParams({ fiscalYearId });
-    if (dateRange) { params.set("startDate", dateRange.startDate); params.set("endDate", dateRange.endDate); }
-    return fetchJson<ApiResponse<VoucherListReportData>>(`${API_BASE}/organizations/${orgId}/reports/voucher-list?${params}`);
+    if (dateRange) {
+      params.set("startDate", dateRange.startDate);
+      params.set("endDate", dateRange.endDate);
+    }
+    return fetchJson<ApiResponse<VoucherListReportData>>(
+      `${API_BASE}/organizations/${orgId}/reports/voucher-list?${params}`,
+    );
   },
 
   // Voucher gaps
   getVoucherGaps: (orgId: string, fiscalYearId: string) =>
     fetchJson<ApiResponse<VoucherGaps>>(
-      `${API_BASE}/organizations/${orgId}/vouchers/gaps?fiscalYearId=${fiscalYearId}`
+      `${API_BASE}/organizations/${orgId}/vouchers/gaps?fiscalYearId=${fiscalYearId}`,
     ),
 
   // Opening balances
@@ -479,7 +535,7 @@ export const api = {
       {
         method: "POST",
         body: JSON.stringify({ previousFiscalYearId }),
-      }
+      },
     ),
 
   // SIE
@@ -493,13 +549,13 @@ export const api = {
         method: "POST",
         body: content,
         headers: { "Content-Type": "text/plain" },
-      }
+      },
     ),
 
   // Documents
   getVoucherDocuments: (orgId: string, voucherId: string) =>
     fetchJson<ApiResponse<DocumentMeta[]>>(
-      `${API_BASE}/organizations/${orgId}/vouchers/${voucherId}/documents`
+      `${API_BASE}/organizations/${orgId}/vouchers/${voucherId}/documents`,
     ),
 
   uploadDocument: async (orgId: string, voucherId: string, file: File) => {
@@ -507,14 +563,14 @@ export const api = {
     formData.append("file", file);
     const response = await fetch(
       `${API_BASE}/organizations/${orgId}/vouchers/${voucherId}/documents`,
-      { method: "POST", body: formData }
+      { method: "POST", body: formData },
     );
     if (!response.ok) {
       const errorBody = await response.json().catch(() => ({}));
       throw new ApiError(
         response.status,
         errorBody.code ?? "UPLOAD_FAILED",
-        errorBody.error?.message ?? errorBody.error ?? "Kunde inte ladda upp fil"
+        errorBody.error?.message ?? errorBody.error ?? "Kunde inte ladda upp fil",
       );
     }
     return response.json() as Promise<ApiResponse<DocumentMeta>>;
@@ -524,7 +580,10 @@ export const api = {
     `${API_BASE}/organizations/${orgId}/documents/${documentId}/download`,
 
   deleteDocument: (orgId: string, documentId: string) =>
-    fetch(`${API_BASE}/organizations/${orgId}/documents/${documentId}`, { method: "DELETE" }).then((res) => {
-      if (!res.ok) throw new ApiError(res.status, "DELETE_FAILED", "Kunde inte radera dokumentet");
-    }),
+    fetch(`${API_BASE}/organizations/${orgId}/documents/${documentId}`, { method: "DELETE" }).then(
+      (res) => {
+        if (!res.ok)
+          throw new ApiError(res.status, "DELETE_FAILED", "Kunde inte radera dokumentet");
+      },
+    ),
 };

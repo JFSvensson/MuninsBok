@@ -42,23 +42,19 @@ test.describe("API endpoint validation", () => {
   });
 
   test("API returns 400 for dashboard without fiscalYearId", async ({ request }) => {
-    const resp = await request.get(
-      "http://localhost:3000/api/organizations/nonexistent/dashboard"
-    );
+    const resp = await request.get("http://localhost:3000/api/organizations/nonexistent/dashboard");
     expect(resp.status()).toBe(400);
   });
 
   test("API returns 400 for reports without fiscalYearId", async ({ request }) => {
     const resp = await request.get(
-      "http://localhost:3000/api/organizations/nonexistent/reports/trial-balance"
+      "http://localhost:3000/api/organizations/nonexistent/reports/trial-balance",
     );
     expect(resp.status()).toBe(400);
   });
 
   test("API returns proper error structure", async ({ request }) => {
-    const resp = await request.get(
-      "http://localhost:3000/api/organizations/nonexistent/vouchers"
-    );
+    const resp = await request.get("http://localhost:3000/api/organizations/nonexistent/vouchers");
     const body = await resp.json();
     expect(body).toHaveProperty("error");
     expect(typeof body.error).toBe("string");

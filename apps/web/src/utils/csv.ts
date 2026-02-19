@@ -5,10 +5,7 @@
 /**
  * Convert rows and headers to a CSV string with BOM for Excel compatibility
  */
-export function toCsv(
-  headers: string[],
-  rows: string[][]
-): string {
+export function toCsv(headers: string[], rows: string[][]): string {
   const BOM = "\uFEFF"; // Excel needs BOM for UTF-8
   const escape = (val: string) => {
     if (val.includes('"') || val.includes(";") || val.includes("\n")) {
@@ -17,10 +14,7 @@ export function toCsv(
     return val;
   };
 
-  const lines = [
-    headers.map(escape).join(";"),
-    ...rows.map((row) => row.map(escape).join(";")),
-  ];
+  const lines = [headers.map(escape).join(";"), ...rows.map((row) => row.map(escape).join(";"))];
 
   return BOM + lines.join("\r\n");
 }

@@ -22,7 +22,9 @@ test.describe("Smoke tests", () => {
   });
 
   test("API returns 400 for vouchers without fiscalYearId", async ({ request }) => {
-    const response = await request.get("http://localhost:3000/api/organizations/nonexistent/vouchers");
+    const response = await request.get(
+      "http://localhost:3000/api/organizations/nonexistent/vouchers",
+    );
     expect(response.status()).toBe(400);
   });
 });
