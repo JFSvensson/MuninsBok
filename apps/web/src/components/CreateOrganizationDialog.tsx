@@ -59,6 +59,19 @@ export function CreateOrganizationDialog({ open, onClose, onCreated }: Props) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    // Validate Swedish org number format (XXXXXX-XXXX or XXXXXXXXXX)
+    const cleanOrgNum = orgNumber.replace("-", "");
+    if (!/^\d{10}$/.test(cleanOrgNum)) {
+      setError("Organisationsnumret måste vara 10 siffror (XXXXXX-XXXX)");
+      return;
+    }
+
+    if (!name.trim()) {
+      setError("Namn krävs");
+      return;
+    }
+
     mutation.mutate();
   };
 
