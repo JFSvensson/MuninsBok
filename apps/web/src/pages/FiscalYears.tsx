@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOrganization } from "../context/OrganizationContext";
+import { useToast } from "../context/ToastContext";
 import { api, type FiscalYear } from "../api";
 
 function formatDate(dateStr: string): string {
@@ -10,6 +11,7 @@ function formatDate(dateStr: string): string {
 export function FiscalYears() {
   const { organization, fiscalYears, setFiscalYear } = useOrganization();
   const queryClient = useQueryClient();
+  const { addToast } = useToast();
 
   const [closingId, setClosingId] = useState<string | null>(null);
   const [confirmClose, setConfirmClose] = useState<string | null>(null);
@@ -18,7 +20,6 @@ export function FiscalYears() {
     previousFyId: string;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const closeMutation = useMutation({
     mutationFn: (fyId: string) => api.closeFiscalYear(organization!.id, fyId),
@@ -28,7 +29,7 @@ export function FiscalYears() {
       setConfirmClose(null);
       setClosingId(null);
       setError(null);
-      setSuccessMsg("Räkenskapsåret har stängts. Ett bokslutsverifikat har skapats.");
+      addToast("Räkenskapsåret har stängts. Ett bokslutsverifikat har skapats.");
     },
     onError: (err: Error) => {
       setError(err.message);
@@ -44,7 +45,7 @@ export function FiscalYears() {
       queryClient.invalidateQueries({ queryKey: ["vouchers"] });
       setOpeningBalanceTarget(null);
       setError(null);
-      setSuccessMsg("Ingående balanser har skapats som ett verifikat.");
+      addToast("Ingående balanser har skapats som ett verifikat.");
     },
     onError: (err: Error) => {
       setError(err.message);
@@ -63,7 +64,6 @@ export function FiscalYears() {
 
   const handleCloseClick = (fyId: string) => {
     setError(null);
-    setSuccessMsg(null);
     setConfirmClose(fyId);
   };
 
@@ -80,7 +80,6 @@ export function FiscalYears() {
     );
     if (prevClosed) {
       setError(null);
-      setSuccessMsg(null);
       setOpeningBalanceTarget({ fyId: fy.id, previousFyId: prevClosed.id });
     }
   };
@@ -94,7 +93,6 @@ export function FiscalYears() {
       </p>
 
       {error && <div className="error mb-1">{error}</div>}
-      {successMsg && <div className="success mb-1">{successMsg}</div>}
 
       <table>
         <thead>
