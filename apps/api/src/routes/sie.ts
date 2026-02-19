@@ -168,7 +168,7 @@ export async function sieRoutes(fastify: FastifyInstance) {
     const errors: string[] = [];
 
     try {
-      await db.$transaction(async (tx: any) => {
+      await db.$transaction(async (_tx: any) => {
         for (const sieVoucher of sieFile.vouchers) {
           // Convert SIE transactions to voucher lines
           const lines = sieVoucher.transactions.map((t) => ({

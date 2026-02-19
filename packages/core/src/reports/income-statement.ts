@@ -1,4 +1,4 @@
-import type { Account, AccountType } from "../types/account.js";
+import type { Account } from "../types/account.js";
 import type { Voucher } from "../types/voucher.js";
 
 /**

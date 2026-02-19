@@ -12,7 +12,6 @@ vi.mock("@muninsbok/core", async (importOriginal) => {
   };
 });
 
-// eslint-disable-next-line -- must import after vi.mock
 import { parseSie } from "@muninsbok/core";
 const mockParseSie = parseSie as unknown as ReturnType<typeof vi.fn>;
 

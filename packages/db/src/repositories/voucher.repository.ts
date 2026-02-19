@@ -3,8 +3,6 @@ import type {
   Voucher,
   CreateVoucherInput,
   VoucherError,
-  Account,
-  FiscalYear,
 } from "@muninsbok/core";
 import { ok, err, type Result, validateVoucher } from "@muninsbok/core";
 import { toVoucher, toAccount, toFiscalYear } from "../mappers.js";

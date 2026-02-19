@@ -3,7 +3,6 @@ import type {
   Organization,
   CreateOrganizationInput,
   OrganizationError,
-  isValidOrgNumber,
 } from "@muninsbok/core";
 import { ok, err, type Result } from "@muninsbok/core";
 import { toOrganization } from "../mappers.js";

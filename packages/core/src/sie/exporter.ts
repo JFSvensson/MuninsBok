@@ -1,11 +1,8 @@
 import type {
-  SieFile,
   SieExportOptions,
   SieVoucher,
-  SieTransaction,
   SieAccount,
   SieFiscalYear,
-  SieBalance,
 } from "./types.js";
 import type { Voucher } from "../types/voucher.js";
 import type { Account } from "../types/account.js";
