@@ -14,6 +14,7 @@ import { Journal } from "./pages/Journal";
 import { GeneralLedger } from "./pages/GeneralLedger";
 import { VoucherListReport } from "./pages/VoucherListReport";
 import { SieExport } from "./pages/SieExport";
+import { FiscalYears } from "./pages/FiscalYears";
 import { useState } from "react";
 import { CreateOrganizationDialog } from "./components/CreateOrganizationDialog";
 
@@ -77,6 +78,7 @@ function AppContent() {
             </span>
             <span className="nav-separator" aria-hidden="true" />
             <NavLink to="/sie">SIE</NavLink>
+            <NavLink to="/fiscal-years">Räkenskapsår</NavLink>
           </nav>
 
           <main id="main-content">
@@ -95,6 +97,7 @@ function AppContent() {
               <Route path="/reports/general-ledger" element={<GeneralLedger />} />
               <Route path="/reports/voucher-list" element={<VoucherListReport />} />
               <Route path="/sie" element={<SieExport />} />
+              <Route path="/fiscal-years" element={<FiscalYears />} />
             </Routes>
           </main>
         </>
