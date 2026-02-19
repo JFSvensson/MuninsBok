@@ -83,7 +83,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
       await options.repos.prisma.$queryRaw`SELECT 1`;
       dbStatus = "ok";
     } catch {
-      dbStatus = "error";
+      // dbStatus remains "error"
     }
 
     const status = dbStatus === "ok" ? "ok" : "degraded";
