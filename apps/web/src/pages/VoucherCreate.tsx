@@ -14,6 +14,8 @@ export function VoucherCreate() {
     setDate,
     description,
     setDescription,
+    createdBy,
+    setCreatedBy,
     lines,
     error,
     updateLine,
@@ -71,6 +73,17 @@ export function VoucherCreate() {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="T.ex. Kontantförsäljning"
               required
+            />
+          </div>
+          <div className="form-group" style={{ flex: 1 }}>
+            <label htmlFor="createdBy">Signatur</label>
+            <input
+              id="createdBy"
+              type="text"
+              value={createdBy}
+              onChange={(e) => setCreatedBy(e.target.value)}
+              placeholder="Valfri"
+              maxLength={100}
             />
           </div>
         </div>
