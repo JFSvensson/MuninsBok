@@ -22,7 +22,7 @@ export function exportSie(
     openingBalances?: Map<string, number>;
     closingBalances?: Map<string, number>;
     resultBalances?: Map<string, number>;
-  }
+  },
 ): string {
   const lines: string[] = [];
 
@@ -31,7 +31,7 @@ export function exportSie(
   lines.push("#FORMAT PC8");
   lines.push("#SIETYP 4");
   lines.push(
-    `#PROGRAM "${options.programName ?? "Munins bok"}" "${options.programVersion ?? "0.1.0"}"`
+    `#PROGRAM "${options.programName ?? "Munins bok"}" "${options.programVersion ?? "0.1.0"}"`,
   );
   lines.push(`#GEN ${formatSieDate(new Date())}`);
   lines.push(`#FNAMN "${escapeString(options.companyName)}"`);
@@ -42,7 +42,7 @@ export function exportSie(
 
   // Fiscal year
   lines.push(
-    `#RAR 0 ${formatSieDate(options.fiscalYear.startDate)} ${formatSieDate(options.fiscalYear.endDate)}`
+    `#RAR 0 ${formatSieDate(options.fiscalYear.startDate)} ${formatSieDate(options.fiscalYear.endDate)}`,
   );
 
   // Accounts
@@ -81,7 +81,7 @@ export function exportSie(
   for (const voucher of options.vouchers) {
     const series = "A"; // Default series
     lines.push(
-      `#VER "${series}" ${voucher.number} ${formatSieDate(voucher.date)} "${escapeString(voucher.description)}"`
+      `#VER "${series}" ${voucher.number} ${formatSieDate(voucher.date)} "${escapeString(voucher.description)}"`,
     );
     lines.push("{");
 
@@ -89,7 +89,7 @@ export function exportSie(
       // SIE uses positive for debit, negative for credit
       const amount = line.debit > 0 ? line.debit : -line.credit;
       lines.push(
-        `#TRANS ${line.accountNumber} {} ${formatAmount(amount)}${line.description ? ` "${escapeString(line.description)}"` : ""}`
+        `#TRANS ${line.accountNumber} {} ${formatAmount(amount)}${line.description ? ` "${escapeString(line.description)}"` : ""}`,
       );
     }
 

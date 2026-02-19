@@ -261,10 +261,7 @@ function parseSieDate(dateStr: string): Date | null {
 /**
  * Parse a balance line (#IB, #UB, #RES).
  */
-function parseBalanceLine(
-  tokens: string[],
-  _lineNumber: number
-): SieBalance | null {
+function parseBalanceLine(tokens: string[], _lineNumber: number): SieBalance | null {
   if (tokens.length < 4) return null;
 
   const yearIndex = parseInt(tokens[1] ?? "0", 10);

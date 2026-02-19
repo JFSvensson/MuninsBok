@@ -49,7 +49,7 @@ const INPUT_VAT_ACCOUNTS = ["2640"];
  */
 export function calculateVatReport(
   vouchers: readonly Voucher[],
-  accounts: readonly Account[]
+  accounts: readonly Account[],
 ): VatReport {
   const accountMap = new Map(accounts.map((a) => [a.number, a]));
 
@@ -59,10 +59,7 @@ export function calculateVatReport(
   for (const voucher of vouchers) {
     for (const line of voucher.lines) {
       const existing = balances.get(line.accountNumber) ?? 0;
-      balances.set(
-        line.accountNumber,
-        existing + line.credit - line.debit
-      );
+      balances.set(line.accountNumber, existing + line.credit - line.debit);
     }
   }
 

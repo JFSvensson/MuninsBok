@@ -9,7 +9,13 @@ import type { Account } from "../types/account.js";
 const accounts: Account[] = [
   { number: "1910", name: "Kassa", type: "ASSET", isVatAccount: false, isActive: true },
   { number: "1930", name: "Företagskonto", type: "ASSET", isVatAccount: false, isActive: true },
-  { number: "2440", name: "Leverantörsskulder", type: "LIABILITY", isVatAccount: false, isActive: true },
+  {
+    number: "2440",
+    name: "Leverantörsskulder",
+    type: "LIABILITY",
+    isVatAccount: false,
+    isActive: true,
+  },
   { number: "2610", name: "Utgående moms", type: "LIABILITY", isVatAccount: true, isActive: true },
   { number: "2080", name: "Eget kapital", type: "EQUITY", isVatAccount: false, isActive: true },
   { number: "3000", name: "Försäljning", type: "REVENUE", isVatAccount: false, isActive: true },
@@ -117,13 +123,49 @@ describe("calculateBalanceSheet", () => {
 describe("calculateVatReport", () => {
   const vatAccounts: Account[] = [
     { number: "1910", name: "Kassa", type: "ASSET", isVatAccount: false, isActive: true },
-    { number: "3000", name: "Försäljning 25%", type: "REVENUE", isVatAccount: false, isActive: true },
-    { number: "3100", name: "Försäljning 12%", type: "REVENUE", isVatAccount: false, isActive: true },
-    { number: "2610", name: "Utgående moms 25%", type: "LIABILITY", isVatAccount: true, isActive: true },
-    { number: "2620", name: "Utgående moms 12%", type: "LIABILITY", isVatAccount: true, isActive: true },
-    { number: "2640", name: "Ingående moms", type: "LIABILITY", isVatAccount: true, isActive: true },
+    {
+      number: "3000",
+      name: "Försäljning 25%",
+      type: "REVENUE",
+      isVatAccount: false,
+      isActive: true,
+    },
+    {
+      number: "3100",
+      name: "Försäljning 12%",
+      type: "REVENUE",
+      isVatAccount: false,
+      isActive: true,
+    },
+    {
+      number: "2610",
+      name: "Utgående moms 25%",
+      type: "LIABILITY",
+      isVatAccount: true,
+      isActive: true,
+    },
+    {
+      number: "2620",
+      name: "Utgående moms 12%",
+      type: "LIABILITY",
+      isVatAccount: true,
+      isActive: true,
+    },
+    {
+      number: "2640",
+      name: "Ingående moms",
+      type: "LIABILITY",
+      isVatAccount: true,
+      isActive: true,
+    },
     { number: "4000", name: "Inköp", type: "EXPENSE", isVatAccount: false, isActive: true },
-    { number: "2440", name: "Leverantörsskulder", type: "LIABILITY", isVatAccount: false, isActive: true },
+    {
+      number: "2440",
+      name: "Leverantörsskulder",
+      type: "LIABILITY",
+      isVatAccount: false,
+      isActive: true,
+    },
   ];
 
   const vatVouchers: Voucher[] = [
@@ -182,10 +224,10 @@ describe("calculateVatReport", () => {
 
     expect(result.outputVat).toHaveLength(2);
     expect(result.outputVat[0]).toEqual(
-      expect.objectContaining({ accountNumber: "2610", amount: 2500 })
+      expect.objectContaining({ accountNumber: "2610", amount: 2500 }),
     );
     expect(result.outputVat[1]).toEqual(
-      expect.objectContaining({ accountNumber: "2620", amount: 1200 })
+      expect.objectContaining({ accountNumber: "2620", amount: 1200 }),
     );
     expect(result.totalOutputVat).toBe(3700);
   });
@@ -195,7 +237,7 @@ describe("calculateVatReport", () => {
 
     expect(result.inputVat).toHaveLength(1);
     expect(result.inputVat[0]).toEqual(
-      expect.objectContaining({ accountNumber: "2640", amount: 2000 })
+      expect.objectContaining({ accountNumber: "2640", amount: 2000 }),
     );
     expect(result.totalInputVat).toBe(2000);
   });

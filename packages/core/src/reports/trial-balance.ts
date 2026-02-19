@@ -28,7 +28,7 @@ export interface TrialBalance {
  */
 export function calculateTrialBalance(
   vouchers: readonly Voucher[],
-  accounts: readonly Account[]
+  accounts: readonly Account[],
 ): TrialBalance {
   // Create a map for quick account name lookup
   const accountMap = new Map(accounts.map((a) => [a.number, a]));

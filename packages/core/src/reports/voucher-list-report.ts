@@ -39,7 +39,7 @@ export interface VoucherListReport {
  */
 export function generateVoucherListReport(
   vouchers: readonly Voucher[],
-  accounts: readonly Account[]
+  accounts: readonly Account[],
 ): VoucherListReport {
   const accountMap = new Map(accounts.map((a) => [a.number, a]));
 
