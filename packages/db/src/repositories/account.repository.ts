@@ -1,5 +1,10 @@
 import type { PrismaClient } from "../generated/prisma/client.js";
-import type { Account, CreateAccountInput, UpdateAccountInput, AccountError } from "@muninsbok/core";
+import type {
+  Account,
+  CreateAccountInput,
+  UpdateAccountInput,
+  AccountError,
+} from "@muninsbok/core";
 import { ok, err, type Result, isValidAccountNumber } from "@muninsbok/core";
 import { toAccount } from "../mappers.js";
 
@@ -22,10 +27,7 @@ export class AccountRepository {
     return accounts.map(toAccount);
   }
 
-  async findByNumber(
-    organizationId: string,
-    number: string
-  ): Promise<Account | null> {
+  async findByNumber(organizationId: string, number: string): Promise<Account | null> {
     const account = await this.prisma.account.findUnique({
       where: {
         organizationId_number: { organizationId, number },
@@ -36,7 +38,7 @@ export class AccountRepository {
 
   async create(
     organizationId: string,
-    input: CreateAccountInput
+    input: CreateAccountInput,
   ): Promise<Result<Account, AccountError>> {
     if (!isValidAccountNumber(input.number)) {
       return err({
@@ -80,10 +82,7 @@ export class AccountRepository {
     return ok(toAccount(account));
   }
 
-  async createMany(
-    organizationId: string,
-    inputs: CreateAccountInput[]
-  ): Promise<number> {
+  async createMany(organizationId: string, inputs: CreateAccountInput[]): Promise<number> {
     const result = await this.prisma.account.createMany({
       data: inputs.map((input) => ({
         organizationId,

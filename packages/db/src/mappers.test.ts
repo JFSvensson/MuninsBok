@@ -98,7 +98,13 @@ describe("toAccount", () => {
   });
 
   it("should cast type string to AccountType", () => {
-    const vatAccount = { ...prismaAccount, type: "LIABILITY", isVatAccount: true, number: "2610", name: "Utgående moms 25%" };
+    const vatAccount = {
+      ...prismaAccount,
+      type: "LIABILITY",
+      isVatAccount: true,
+      number: "2610",
+      name: "Utgående moms 25%",
+    };
     const result = toAccount(vatAccount as any);
     expect(result.type).toBe("LIABILITY");
     expect(result.isVatAccount).toBe(true);
@@ -177,10 +183,7 @@ describe("toVoucher", () => {
         createdAt: now,
       },
     ],
-    documents: [
-      { id: "doc-1" },
-      { id: "doc-2" },
-    ],
+    documents: [{ id: "doc-1" }, { id: "doc-2" }],
     createdAt: now,
     updatedAt: now,
   };

@@ -32,9 +32,7 @@ export class OrganizationRepository {
     return orgs.map(toOrganization);
   }
 
-  async create(
-    input: CreateOrganizationInput
-  ): Promise<Result<Organization, OrganizationError>> {
+  async create(input: CreateOrganizationInput): Promise<Result<Organization, OrganizationError>> {
     // Validate
     if (!input.name || input.name.trim().length === 0) {
       return err({
@@ -67,14 +65,16 @@ export class OrganizationRepository {
 
   async update(
     id: string,
-    data: Partial<Pick<Organization, "name" | "fiscalYearStartMonth">>
+    data: Partial<Pick<Organization, "name" | "fiscalYearStartMonth">>,
   ): Promise<Organization | null> {
     try {
       const org = await this.prisma.organization.update({
         where: { id },
         data: {
           ...(data.name != null && { name: data.name }),
-          ...(data.fiscalYearStartMonth != null && { fiscalYearStartMonth: data.fiscalYearStartMonth }),
+          ...(data.fiscalYearStartMonth != null && {
+            fiscalYearStartMonth: data.fiscalYearStartMonth,
+          }),
         },
       });
       return toOrganization(org);

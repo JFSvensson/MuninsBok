@@ -6,12 +6,7 @@ import type {
   Account,
   FiscalYear,
 } from "@muninsbok/core";
-import {
-  ok,
-  err,
-  type Result,
-  validateVoucher,
-} from "@muninsbok/core";
+import { ok, err, type Result, validateVoucher } from "@muninsbok/core";
 import { toVoucher, toAccount, toFiscalYear } from "../mappers.js";
 
 const voucherInclude = {
@@ -31,10 +26,7 @@ export class VoucherRepository {
     return voucher ? toVoucher(voucher) : null;
   }
 
-  async findByFiscalYear(
-    fiscalYearId: string,
-    organizationId: string
-  ): Promise<Voucher[]> {
+  async findByFiscalYear(fiscalYearId: string, organizationId: string): Promise<Voucher[]> {
     const vouchers = await this.prisma.voucher.findMany({
       where: { fiscalYearId, organizationId },
       include: voucherInclude,
@@ -49,7 +41,7 @@ export class VoucherRepository {
   async findByFiscalYearPaginated(
     fiscalYearId: string,
     organizationId: string,
-    options: { page: number; limit: number; search?: string }
+    options: { page: number; limit: number; search?: string },
   ): Promise<{ vouchers: Voucher[]; total: number; page: number; limit: number }> {
     const { page, limit, search } = options;
     const skip = (page - 1) * limit;
@@ -81,7 +73,7 @@ export class VoucherRepository {
   async findByDateRange(
     organizationId: string,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
   ): Promise<Voucher[]> {
     const vouchers = await this.prisma.voucher.findMany({
       where: {
@@ -97,9 +89,7 @@ export class VoucherRepository {
     return vouchers.map(toVoucher);
   }
 
-  async create(
-    input: CreateVoucherInput
-  ): Promise<Result<Voucher, VoucherError>> {
+  async create(input: CreateVoucherInput): Promise<Result<Voucher, VoucherError>> {
     // Get fiscal year and accounts for validation
     const [fiscalYear, accounts] = await Promise.all([
       this.prisma.fiscalYear.findFirst({
@@ -174,7 +164,7 @@ export class VoucherRepository {
    */
   async createCorrection(
     voucherId: string,
-    organizationId: string
+    organizationId: string,
   ): Promise<Result<Voucher, VoucherError>> {
     // Find the original voucher
     const original = await this.prisma.voucher.findFirst({
@@ -210,7 +200,7 @@ export class VoucherRepository {
           create: original.lines.map((line) => ({
             accountId: line.accountId,
             accountNumber: line.accountNumber,
-            debit: line.credit,   // Swap debit/credit
+            debit: line.credit, // Swap debit/credit
             credit: line.debit,
           })),
         },
@@ -234,10 +224,7 @@ export class VoucherRepository {
    * Find gaps in the voucher number sequence for a fiscal year.
    * Returns an array of missing voucher numbers (BFL 5:6 – löpnumrering).
    */
-  async findNumberGaps(
-    fiscalYearId: string,
-    organizationId: string
-  ): Promise<number[]> {
+  async findNumberGaps(fiscalYearId: string, organizationId: string): Promise<number[]> {
     const vouchers = await this.prisma.voucher.findMany({
       where: { fiscalYearId, organizationId },
       orderBy: { number: "asc" },

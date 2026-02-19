@@ -1,9 +1,5 @@
 import type { PrismaClient } from "../generated/prisma/client.js";
-import type {
-  Document,
-  CreateDocumentInput,
-  DocumentError,
-} from "@muninsbok/core";
+import type { Document, CreateDocumentInput, DocumentError } from "@muninsbok/core";
 import { ok, err, type Result, isAllowedMimeType } from "@muninsbok/core";
 import { toDocument } from "../mappers.js";
 
@@ -33,9 +29,7 @@ export class DocumentRepository {
     return docs.map(toDocument);
   }
 
-  async create(
-    input: CreateDocumentInput
-  ): Promise<Result<Document, DocumentError>> {
+  async create(input: CreateDocumentInput): Promise<Result<Document, DocumentError>> {
     if (!isAllowedMimeType(input.mimeType)) {
       return err({
         code: "INVALID_MIME_TYPE",

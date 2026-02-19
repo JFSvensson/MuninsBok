@@ -1,10 +1,5 @@
 import type { PrismaClient } from "../generated/prisma/client.js";
-import type {
-  FiscalYear,
-  CreateFiscalYearInput,
-  FiscalYearError,
-  Voucher,
-} from "@muninsbok/core";
+import type { FiscalYear, CreateFiscalYearInput, FiscalYearError, Voucher } from "@muninsbok/core";
 import { ok, err, type Result } from "@muninsbok/core";
 import { toFiscalYear, toVoucher } from "../mappers.js";
 
@@ -25,19 +20,14 @@ export class FiscalYearRepository {
     return years.map(toFiscalYear);
   }
 
-  async findById(
-    id: string,
-    organizationId: string
-  ): Promise<FiscalYear | null> {
+  async findById(id: string, organizationId: string): Promise<FiscalYear | null> {
     const fy = await this.prisma.fiscalYear.findFirst({
       where: { id, organizationId },
     });
     return fy ? toFiscalYear(fy) : null;
   }
 
-  async create(
-    input: CreateFiscalYearInput
-  ): Promise<Result<FiscalYear, FiscalYearError>> {
+  async create(input: CreateFiscalYearInput): Promise<Result<FiscalYear, FiscalYearError>> {
     // Validate date range
     if (input.endDate <= input.startDate) {
       return err({
@@ -98,10 +88,7 @@ export class FiscalYearRepository {
    * P&L accounts (3xxx-8xxx) against 2099 (Årets resultat), then marks
    * the year as closed.
    */
-  async close(
-    id: string,
-    organizationId: string
-  ): Promise<Result<FiscalYear, FiscalYearError>> {
+  async close(id: string, organizationId: string): Promise<Result<FiscalYear, FiscalYearError>> {
     const fy = await this.prisma.fiscalYear.findFirst({
       where: { id, organizationId },
     });
@@ -199,10 +186,20 @@ export class FiscalYearRepository {
       // Book net result to 2099 (Årets resultat)
       if (totalResult > 0) {
         // Profit: credit 2099
-        closingLines.push({ accountId: resultAccountId, accountNumber: "2099", debit: 0, credit: totalResult });
+        closingLines.push({
+          accountId: resultAccountId,
+          accountNumber: "2099",
+          debit: 0,
+          credit: totalResult,
+        });
       } else if (totalResult < 0) {
         // Loss: debit 2099
-        closingLines.push({ accountId: resultAccountId, accountNumber: "2099", debit: -totalResult, credit: 0 });
+        closingLines.push({
+          accountId: resultAccountId,
+          accountNumber: "2099",
+          debit: -totalResult,
+          credit: 0,
+        });
       }
 
       // Create the closing voucher
@@ -236,7 +233,7 @@ export class FiscalYearRepository {
   async createOpeningBalances(
     fiscalYearId: string,
     previousFiscalYearId: string,
-    organizationId: string
+    organizationId: string,
   ): Promise<Result<Voucher, FiscalYearError>> {
     // Verify both fiscal years exist
     const [fy, prevFy] = await Promise.all([

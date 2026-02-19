@@ -12,9 +12,7 @@ import type {
 /**
  * Map Prisma Organization to Core Organization
  */
-export function toOrganization(
-  org: Prisma.OrganizationGetPayload<{}>
-): CoreOrganization {
+export function toOrganization(org: Prisma.OrganizationGetPayload<{}>): CoreOrganization {
   return {
     id: org.id,
     orgNumber: org.orgNumber,
@@ -28,9 +26,7 @@ export function toOrganization(
 /**
  * Map Prisma FiscalYear to Core FiscalYear
  */
-export function toFiscalYear(
-  fy: Prisma.FiscalYearGetPayload<{}>
-): CoreFiscalYear {
+export function toFiscalYear(fy: Prisma.FiscalYearGetPayload<{}>): CoreFiscalYear {
   return {
     id: fy.id,
     organizationId: fy.organizationId,
@@ -45,9 +41,7 @@ export function toFiscalYear(
 /**
  * Map Prisma Account to Core Account
  */
-export function toAccount(
-  account: Prisma.AccountGetPayload<{}>
-): CoreAccount {
+export function toAccount(account: Prisma.AccountGetPayload<{}>): CoreAccount {
   return {
     number: account.number,
     name: account.name,
@@ -63,7 +57,7 @@ export function toAccount(
 export function toVoucher(
   voucher: Prisma.VoucherGetPayload<{
     include: { lines: true; documents: true; correctedByVoucher: true };
-  }>
+  }>,
 ): CoreVoucher {
   return {
     id: voucher.id,
@@ -76,7 +70,9 @@ export function toVoucher(
     documentIds: voucher.documents.map((d) => d.id),
     ...(voucher.createdBy != null && { createdBy: voucher.createdBy }),
     ...(voucher.correctsVoucherId != null && { correctsVoucherId: voucher.correctsVoucherId }),
-    ...(voucher.correctedByVoucher != null && { correctedByVoucherId: voucher.correctedByVoucher.id }),
+    ...(voucher.correctedByVoucher != null && {
+      correctedByVoucherId: voucher.correctedByVoucher.id,
+    }),
     createdAt: voucher.createdAt,
     updatedAt: voucher.updatedAt,
   };
@@ -85,9 +81,7 @@ export function toVoucher(
 /**
  * Map Prisma VoucherLine to Core VoucherLine
  */
-export function toVoucherLine(
-  line: Prisma.VoucherLineGetPayload<{}>
-): CoreVoucherLine {
+export function toVoucherLine(line: Prisma.VoucherLineGetPayload<{}>): CoreVoucherLine {
   return {
     id: line.id,
     voucherId: line.voucherId,
@@ -101,9 +95,7 @@ export function toVoucherLine(
 /**
  * Map Prisma Document to Core Document
  */
-export function toDocument(
-  doc: Prisma.DocumentGetPayload<{}>
-): CoreDocument {
+export function toDocument(doc: Prisma.DocumentGetPayload<{}>): CoreDocument {
   return {
     id: doc.id,
     organizationId: doc.organizationId,
