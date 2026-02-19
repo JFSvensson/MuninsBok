@@ -137,6 +137,10 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# tsc-generated files from vite config (composite: true)
+apps/web/vite.config.js
+apps/web/vite.config.d.ts
 # Prisma
 packages/db/prisma/*.db
 packages/db/prisma/migrations/*.sql.backup

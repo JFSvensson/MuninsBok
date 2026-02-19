@@ -3,3 +3,5 @@ node_modules
 *.sql
 *.md
 pnpm-lock.yaml
+apps/web/vite.config.js
+apps/web/vite.config.d.ts
