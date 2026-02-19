@@ -50,7 +50,7 @@ export function TrialBalance() {
                 csvAmount(r.debit),
                 csvAmount(r.credit),
                 csvAmount(r.balance),
-              ])
+              ]),
             );
             downloadCsv(csv, "rabalans.csv");
           }}
@@ -78,9 +78,7 @@ export function TrialBalance() {
               <td>{row.accountName}</td>
               <td className="text-right amount">{formatAmount(row.debit)}</td>
               <td className="text-right amount">{formatAmount(row.credit)}</td>
-              <td className={amountClassName(row.balance)}>
-                {formatAmount(row.balance)}
-              </td>
+              <td className={amountClassName(row.balance)}>{formatAmount(row.balance)}</td>
             </tr>
           ))}
         </tbody>

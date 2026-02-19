@@ -59,7 +59,7 @@ export function GeneralLedger() {
             }
             const csv = toCsv(
               ["Konto", "Kontonamn", "Datum", "Ver.nr", "Beskrivning", "Debet", "Kredit", "Saldo"],
-              rows
+              rows,
             );
             downloadCsv(csv, "huvudbok.csv");
           }}
@@ -99,9 +99,7 @@ export function GeneralLedger() {
                   <td className="text-right amount">
                     {txn.credit > 0 ? formatAmount(txn.credit) : ""}
                   </td>
-                  <td className={amountClassName(txn.balance)}>
-                    {formatAmount(txn.balance)}
-                  </td>
+                  <td className={amountClassName(txn.balance)}>{formatAmount(txn.balance)}</td>
                 </tr>
               ))}
             </tbody>

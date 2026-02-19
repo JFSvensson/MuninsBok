@@ -72,10 +72,30 @@ export function IncomeStatement() {
           className="secondary"
           onClick={() => {
             const allRows = [
-              ...report.revenues.rows.map((r) => [r.accountNumber, r.accountName, "Intäkt", csvAmount(r.amount)]),
-              ...report.expenses.rows.map((r) => [r.accountNumber, r.accountName, "Kostnad", csvAmount(r.amount)]),
-              ...report.financialIncome.rows.map((r) => [r.accountNumber, r.accountName, "Finansiell intäkt", csvAmount(r.amount)]),
-              ...report.financialExpenses.rows.map((r) => [r.accountNumber, r.accountName, "Finansiell kostnad", csvAmount(r.amount)]),
+              ...report.revenues.rows.map((r) => [
+                r.accountNumber,
+                r.accountName,
+                "Intäkt",
+                csvAmount(r.amount),
+              ]),
+              ...report.expenses.rows.map((r) => [
+                r.accountNumber,
+                r.accountName,
+                "Kostnad",
+                csvAmount(r.amount),
+              ]),
+              ...report.financialIncome.rows.map((r) => [
+                r.accountNumber,
+                r.accountName,
+                "Finansiell intäkt",
+                csvAmount(r.amount),
+              ]),
+              ...report.financialExpenses.rows.map((r) => [
+                r.accountNumber,
+                r.accountName,
+                "Finansiell kostnad",
+                csvAmount(r.amount),
+              ]),
               ["", "Rörelseresultat", "", csvAmount(report.operatingResult)],
               ["", "Årets resultat", "", csvAmount(report.netResult)],
             ];
@@ -119,9 +139,7 @@ export function IncomeStatement() {
             }}
           >
             <td colSpan={2}>Årets resultat</td>
-            <td className={amountClassName(report.netResult)}>
-              {formatAmount(report.netResult)}
-            </td>
+            <td className={amountClassName(report.netResult)}>{formatAmount(report.netResult)}</td>
           </tr>
         </tbody>
       </table>

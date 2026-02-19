@@ -36,7 +36,7 @@ export interface GeneralLedger {
  */
 export function generateGeneralLedger(
   vouchers: readonly Voucher[],
-  accounts: readonly Account[]
+  accounts: readonly Account[],
 ): GeneralLedger {
   const accountMap = new Map(accounts.map((a) => [a.number, a]));
 
@@ -71,46 +71,44 @@ export function generateGeneralLedger(
   // Build ledger accounts sorted by account number
   const sortedAccountNumbers = [...accountTransactions.keys()].sort();
 
-  const ledgerAccounts: GeneralLedgerAccount[] = sortedAccountNumbers.map(
-    (accountNumber) => {
-      const txns = accountTransactions.get(accountNumber)!;
+  const ledgerAccounts: GeneralLedgerAccount[] = sortedAccountNumbers.map((accountNumber) => {
+    const txns = accountTransactions.get(accountNumber)!;
 
-      // Sort transactions by date then voucher number
-      txns.sort((a, b) => {
-        const dateA = a.date.getTime();
-        const dateB = b.date.getTime();
-        if (dateA !== dateB) return dateA - dateB;
-        return a.voucherNumber - b.voucherNumber;
-      });
+    // Sort transactions by date then voucher number
+    txns.sort((a, b) => {
+      const dateA = a.date.getTime();
+      const dateB = b.date.getTime();
+      if (dateA !== dateB) return dateA - dateB;
+      return a.voucherNumber - b.voucherNumber;
+    });
 
-      // Build transactions with running balance
-      let runningBalance = 0;
-      const transactions: GeneralLedgerTransaction[] = txns.map((txn) => {
-        runningBalance += txn.debit - txn.credit;
-        return {
-          voucherId: txn.voucherId,
-          voucherNumber: txn.voucherNumber,
-          date: txn.date,
-          description: txn.description,
-          debit: txn.debit,
-          credit: txn.credit,
-          balance: runningBalance,
-        };
-      });
-
-      const totalDebit = txns.reduce((sum, t) => sum + t.debit, 0);
-      const totalCredit = txns.reduce((sum, t) => sum + t.credit, 0);
-
+    // Build transactions with running balance
+    let runningBalance = 0;
+    const transactions: GeneralLedgerTransaction[] = txns.map((txn) => {
+      runningBalance += txn.debit - txn.credit;
       return {
-        accountNumber,
-        accountName: accountMap.get(accountNumber)?.name ?? "Okänt konto",
-        transactions,
-        totalDebit,
-        totalCredit,
-        closingBalance: totalDebit - totalCredit,
+        voucherId: txn.voucherId,
+        voucherNumber: txn.voucherNumber,
+        date: txn.date,
+        description: txn.description,
+        debit: txn.debit,
+        credit: txn.credit,
+        balance: runningBalance,
       };
-    }
-  );
+    });
+
+    const totalDebit = txns.reduce((sum, t) => sum + t.debit, 0);
+    const totalCredit = txns.reduce((sum, t) => sum + t.credit, 0);
+
+    return {
+      accountNumber,
+      accountName: accountMap.get(accountNumber)?.name ?? "Okänt konto",
+      transactions,
+      totalDebit,
+      totalCredit,
+      closingBalance: totalDebit - totalCredit,
+    };
+  });
 
   return {
     accounts: ledgerAccounts,

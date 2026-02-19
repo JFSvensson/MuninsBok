@@ -1,8 +1,4 @@
-export {
-  calculateTrialBalance,
-  type TrialBalance,
-  type TrialBalanceRow,
-} from "./trial-balance.js";
+export { calculateTrialBalance, type TrialBalance, type TrialBalanceRow } from "./trial-balance.js";
 
 export {
   calculateIncomeStatement,
@@ -18,18 +14,9 @@ export {
   type BalanceSheetSection,
 } from "./balance-sheet.js";
 
-export {
-  calculateVatReport,
-  type VatReport,
-  type VatReportRow,
-} from "./vat-report.js";
+export { calculateVatReport, type VatReport, type VatReportRow } from "./vat-report.js";
 
-export {
-  generateJournal,
-  type Journal,
-  type JournalEntry,
-  type JournalLine,
-} from "./journal.js";
+export { generateJournal, type Journal, type JournalEntry, type JournalLine } from "./journal.js";
 
 export {
   generateGeneralLedger,

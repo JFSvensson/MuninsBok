@@ -16,7 +16,11 @@ export function VoucherList() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["vouchers", organization?.id, fiscalYear?.id, page, limit, search],
     queryFn: () =>
-      api.getVouchers(organization!.id, fiscalYear!.id, { page, limit, search: search || undefined }),
+      api.getVouchers(organization!.id, fiscalYear!.id, {
+        page,
+        limit,
+        search: search || undefined,
+      }),
     enabled: !!organization && !!fiscalYear,
   });
 
@@ -71,12 +75,18 @@ export function VoucherList() {
           onChange={(e) => setSearchInput(e.target.value)}
           style={{ flex: 1 }}
         />
-        <button type="submit" className="secondary">Sök</button>
+        <button type="submit" className="secondary">
+          Sök
+        </button>
         {search && (
           <button
             type="button"
             className="secondary"
-            onClick={() => { setSearch(""); setSearchInput(""); setPage(1); }}
+            onClick={() => {
+              setSearch("");
+              setSearchInput("");
+              setPage(1);
+            }}
           >
             Rensa
           </button>
@@ -84,17 +94,19 @@ export function VoucherList() {
       </form>
 
       {gaps && gaps.count > 0 && (
-        <div className="warning mb-2" style={{
-          padding: "0.75rem 1rem",
-          backgroundColor: "#fff3e0",
-          border: "1px solid #ffb74d",
-          borderRadius: "4px",
-        }}>
+        <div
+          className="warning mb-2"
+          style={{
+            padding: "0.75rem 1rem",
+            backgroundColor: "#fff3e0",
+            border: "1px solid #ffb74d",
+            borderRadius: "4px",
+          }}
+        >
           <strong>⚠ Luckor i verifikatnumrering (BFL 5:6):</strong>{" "}
           {gaps.count <= 10
             ? `Nummer ${gaps.gaps.join(", ")} saknas.`
-            : `${gaps.count} nummer saknas (${gaps.gaps.slice(0, 5).join(", ")}…).`
-          }
+            : `${gaps.count} nummer saknas (${gaps.gaps.slice(0, 5).join(", ")}…).`}
         </div>
       )}
       <table>
@@ -121,12 +133,24 @@ export function VoucherList() {
                 <td>{formatDate(voucher.date)}</td>
                 <td>
                   {voucher.description}
-                  {isCorrected && <span className="badge badge-warning" style={{ marginLeft: 6, fontSize: "0.75em" }}>Rättat</span>}
-                  {isCorrection && <span className="badge badge-info" style={{ marginLeft: 6, fontSize: "0.75em" }}>Rättelse</span>}
+                  {isCorrected && (
+                    <span
+                      className="badge badge-warning"
+                      style={{ marginLeft: 6, fontSize: "0.75em" }}
+                    >
+                      Rättat
+                    </span>
+                  )}
+                  {isCorrection && (
+                    <span
+                      className="badge badge-info"
+                      style={{ marginLeft: 6, fontSize: "0.75em" }}
+                    >
+                      Rättelse
+                    </span>
+                  )}
                 </td>
-                <td className="text-right amount">
-                  {formatAmount(oreToKronor(totalOre))} kr
-                </td>
+                <td className="text-right amount">{formatAmount(oreToKronor(totalOre))} kr</td>
               </tr>
             );
           })}

@@ -35,10 +35,7 @@ const EXPENSE_RANGE = { start: 4000, end: 7999 };
 const FINANCIAL_INCOME_RANGE = { start: 8000, end: 8399 };
 const FINANCIAL_EXPENSE_RANGE = { start: 8400, end: 8999 };
 
-function isInRange(
-  accountNumber: string,
-  range: { start: number; end: number }
-): boolean {
+function isInRange(accountNumber: string, range: { start: number; end: number }): boolean {
   const num = parseInt(accountNumber, 10);
   return num >= range.start && num <= range.end;
 }
@@ -48,7 +45,7 @@ function isInRange(
  */
 export function calculateIncomeStatement(
   vouchers: readonly Voucher[],
-  accounts: readonly Account[]
+  accounts: readonly Account[],
 ): IncomeStatement {
   const accountMap = new Map(accounts.map((a) => [a.number, a]));
 
@@ -61,10 +58,7 @@ export function calculateIncomeStatement(
     for (const line of voucher.lines) {
       const existing = balances.get(line.accountNumber) ?? 0;
       // Store as credit - debit (natural balance for income statement)
-      balances.set(
-        line.accountNumber,
-        existing + line.credit - line.debit
-      );
+      balances.set(line.accountNumber, existing + line.credit - line.debit);
     }
   }
 
@@ -72,7 +66,7 @@ export function calculateIncomeStatement(
   function buildSection(
     title: string,
     range: { start: number; end: number },
-    invertSign: boolean
+    invertSign: boolean,
   ): IncomeStatementSection {
     const rows: IncomeStatementRow[] = [];
 
@@ -100,19 +94,10 @@ export function calculateIncomeStatement(
   const expenses = buildSection("Kostnader", EXPENSE_RANGE, true);
   const operatingResult = revenues.total - expenses.total;
 
-  const financialIncome = buildSection(
-    "Finansiella intäkter",
-    FINANCIAL_INCOME_RANGE,
-    false
-  );
-  const financialExpenses = buildSection(
-    "Finansiella kostnader",
-    FINANCIAL_EXPENSE_RANGE,
-    true
-  );
+  const financialIncome = buildSection("Finansiella intäkter", FINANCIAL_INCOME_RANGE, false);
+  const financialExpenses = buildSection("Finansiella kostnader", FINANCIAL_EXPENSE_RANGE, true);
 
-  const netResult =
-    operatingResult + financialIncome.total - financialExpenses.total;
+  const netResult = operatingResult + financialIncome.total - financialExpenses.total;
 
   return {
     revenues,

@@ -58,7 +58,7 @@ export function Journal() {
             }
             const csv = toCsv(
               ["Datum", "Ver.nr", "Beskrivning", "Konto", "Kontonamn", "Debet", "Kredit"],
-              rows
+              rows,
             );
             downloadCsv(csv, "grundbok.csv");
           }}
@@ -94,10 +94,14 @@ export function Journal() {
                 ) : null}
                 <td>{line.accountNumber}</td>
                 <td>{line.accountName}</td>
-                <td className="text-right amount">{line.debit > 0 ? formatAmount(line.debit) : ""}</td>
-                <td className="text-right amount">{line.credit > 0 ? formatAmount(line.credit) : ""}</td>
+                <td className="text-right amount">
+                  {line.debit > 0 ? formatAmount(line.debit) : ""}
+                </td>
+                <td className="text-right amount">
+                  {line.credit > 0 ? formatAmount(line.credit) : ""}
+                </td>
               </tr>
-            ))
+            )),
           )}
         </tbody>
         <tfoot>

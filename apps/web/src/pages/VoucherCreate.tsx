@@ -172,11 +172,7 @@ export function VoucherCreate() {
         </table>
 
         <div className="flex justify-between items-center" style={{ marginTop: "1rem" }}>
-          <button
-            type="button"
-            className="secondary"
-            onClick={() => navigate("/vouchers")}
-          >
+          <button type="button" className="secondary" onClick={() => navigate("/vouchers")}>
             Avbryt
           </button>
           <button type="submit" disabled={!canSubmit}>

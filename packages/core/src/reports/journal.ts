@@ -37,7 +37,7 @@ export interface Journal {
  */
 export function generateJournal(
   vouchers: readonly Voucher[],
-  accounts: readonly Account[]
+  accounts: readonly Account[],
 ): Journal {
   const accountMap = new Map(accounts.map((a) => [a.number, a]));
 

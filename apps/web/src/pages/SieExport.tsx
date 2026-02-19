@@ -14,8 +14,7 @@ export function SieExport() {
   const [error, setError] = useState<string | null>(null);
 
   const importMutation = useMutation({
-    mutationFn: (content: string) =>
-      api.importSie(organization!.id, fiscalYear!.id, content),
+    mutationFn: (content: string) => api.importSie(organization!.id, fiscalYear!.id, content),
     onSuccess: (data) => {
       setImportResult(data.data);
       setError(null);
@@ -70,17 +69,15 @@ export function SieExport() {
         <div className="card" style={{ flex: 1 }}>
           <h3>Exportera</h3>
           <p className="mb-2">
-            Ladda ner bokföringen som en SIE4-fil för att använda i andra program
-            eller för revision.
+            Ladda ner bokföringen som en SIE4-fil för att använda i andra program eller för
+            revision.
           </p>
           <button onClick={handleExport}>Ladda ner SIE-fil</button>
         </div>
 
         <div className="card" style={{ flex: 1 }}>
           <h3>Importera</h3>
-          <p className="mb-2">
-            Importera verifikat från en SIE-fil. Appen stöder SIE4-format.
-          </p>
+          <p className="mb-2">Importera verifikat från en SIE-fil. Appen stöder SIE4-format.</p>
           <input
             type="file"
             accept=".se,.sie,.si"

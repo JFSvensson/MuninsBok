@@ -58,8 +58,17 @@ export function VoucherListReport() {
               }
             }
             const csv = toCsv(
-              ["Ver.nr", "Datum", "Beskrivning", "Skapad av", "Konto", "Kontonamn", "Debet", "Kredit"],
-              rows
+              [
+                "Ver.nr",
+                "Datum",
+                "Beskrivning",
+                "Skapad av",
+                "Konto",
+                "Kontonamn",
+                "Debet",
+                "Kredit",
+              ],
+              rows,
             );
             downloadCsv(csv, "verifikationslista.csv");
           }}
@@ -95,10 +104,14 @@ export function VoucherListReport() {
                 ) : null}
                 <td>{line.accountNumber}</td>
                 <td>{line.accountName}</td>
-                <td className="text-right amount">{line.debit > 0 ? formatAmount(line.debit) : ""}</td>
-                <td className="text-right amount">{line.credit > 0 ? formatAmount(line.credit) : ""}</td>
+                <td className="text-right amount">
+                  {line.debit > 0 ? formatAmount(line.debit) : ""}
+                </td>
+                <td className="text-right amount">
+                  {line.credit > 0 ? formatAmount(line.credit) : ""}
+                </td>
               </tr>
-            ))
+            )),
           )}
         </tbody>
         <tfoot>

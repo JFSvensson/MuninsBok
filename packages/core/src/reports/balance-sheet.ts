@@ -32,7 +32,7 @@ export interface BalanceSheet {
   readonly generatedAt: Date;
 }
 
-/** 
+/**
  * Account ranges (BAS standard)
  * Note: EQUITY_RANGE is a subset of 2xxx accounts.
  * The buildSection function uses excludeRange to prevent double-counting.
@@ -44,10 +44,7 @@ const EQUITY_RANGE = { start: 2000, end: 2099 }; // Eget kapital (BAS 20xx)
 // For year result calculation
 const INCOME_STATEMENT_RANGE = { start: 3000, end: 8999 };
 
-function isInRange(
-  accountNumber: string,
-  range: { start: number; end: number }
-): boolean {
+function isInRange(accountNumber: string, range: { start: number; end: number }): boolean {
   const num = parseInt(accountNumber, 10);
   return num >= range.start && num <= range.end;
 }
@@ -58,7 +55,7 @@ function isInRange(
  */
 export function calculateBalanceSheet(
   vouchers: readonly Voucher[],
-  accounts: readonly Account[]
+  accounts: readonly Account[],
 ): BalanceSheet {
   const accountMap = new Map(accounts.map((a) => [a.number, a]));
 
@@ -85,7 +82,7 @@ export function calculateBalanceSheet(
     title: string,
     range: { start: number; end: number },
     excludeRange?: { start: number; end: number },
-    naturalDebit: boolean = true
+    naturalDebit: boolean = true,
   ): BalanceSheetSection {
     const rows: BalanceSheetRow[] = [];
 
@@ -125,12 +122,7 @@ export function calculateBalanceSheet(
   const assets = buildSection("Tillgångar", ASSET_RANGE, undefined, true);
 
   // Liabilities exclude equity accounts
-  const liabilities = buildSection(
-    "Skulder",
-    LIABILITY_RANGE,
-    EQUITY_RANGE,
-    false
-  );
+  const liabilities = buildSection("Skulder", LIABILITY_RANGE, EQUITY_RANGE, false);
 
   const equity = buildSection("Eget kapital", EQUITY_RANGE, undefined, false);
 

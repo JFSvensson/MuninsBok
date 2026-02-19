@@ -45,8 +45,16 @@ export function VoucherDetail() {
       <div className="flex justify-between items-center mb-2">
         <h2>
           Verifikat #{voucher.number}
-          {isCorrected && <span className="badge badge-warning" style={{ marginLeft: 8 }}>Rättat</span>}
-          {isCorrection && <span className="badge badge-info" style={{ marginLeft: 8 }}>Rättelseverifikat</span>}
+          {isCorrected && (
+            <span className="badge badge-warning" style={{ marginLeft: 8 }}>
+              Rättat
+            </span>
+          )}
+          {isCorrection && (
+            <span className="badge badge-info" style={{ marginLeft: 8 }}>
+              Rättelseverifikat
+            </span>
+          )}
         </h2>
         <div className="flex gap-1">
           <button className="secondary" onClick={() => navigate("/vouchers")}>
@@ -97,7 +105,9 @@ export function VoucherDetail() {
         <tbody>
           {voucher.lines.map((line) => (
             <tr key={line.id}>
-              <td><strong>{line.accountNumber}</strong></td>
+              <td>
+                <strong>{line.accountNumber}</strong>
+              </td>
               <td>{line.description ?? ""}</td>
               <td className="text-right amount">
                 {line.debit > 0 ? `${formatAmount(oreToKronor(line.debit))} kr` : ""}
@@ -123,9 +133,9 @@ export function VoucherDetail() {
           <summary>Om rättelse av verifikat</summary>
           <p>
             Enligt bokföringslagen (BFL) får ett bokfört verifikat inte raderas eller ändras i
-            efterhand. Istället skapas ett <strong>rättelseverifikat</strong> som innehåller
-            omvända belopp — debet blir kredit och tvärtom. Originalverifikatet markeras då som
-            rättat och det nya rättelseverifikatet länkas till det.
+            efterhand. Istället skapas ett <strong>rättelseverifikat</strong> som innehåller omvända
+            belopp — debet blir kredit och tvärtom. Originalverifikatet markeras då som rättat och
+            det nya rättelseverifikatet länkas till det.
           </p>
           <p>
             Båda verifikaten finns kvar i bokföringen och kan granskas vid revision. Om du vill

@@ -13,8 +13,18 @@ const ACCOUNT_TYPE_LABELS: Record<string, string> = {
 };
 
 const MONTH_NAMES = [
-  "Jan", "Feb", "Mar", "Apr", "Maj", "Jun",
-  "Jul", "Aug", "Sep", "Okt", "Nov", "Dec",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "Maj",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Okt",
+  "Nov",
+  "Dec",
 ];
 
 function formatMonth(key: string): string {
@@ -53,10 +63,7 @@ export function Dashboard() {
   }
 
   // Compute max value for bar chart scaling
-  const maxBarValue = d.monthlyTrend.reduce(
-    (max, m) => Math.max(max, m.income, m.expense),
-    0,
-  );
+  const maxBarValue = d.monthlyTrend.reduce((max, m) => Math.max(max, m.income, m.expense), 0);
 
   const accountTypes = Object.entries(d.accountTypeCounts);
   const totalAccounts = accountTypes.reduce((s, [, v]) => s + v, 0);
@@ -96,7 +103,11 @@ export function Dashboard() {
       {d.monthlyTrend.length > 0 && (
         <div className="card">
           <h3 style={{ marginBottom: "0.75rem" }}>Månadsöversikt</h3>
-          <div className="chart-container" role="img" aria-label="Stapeldiagram med intäkter och kostnader per månad">
+          <div
+            className="chart-container"
+            role="img"
+            aria-label="Stapeldiagram med intäkter och kostnader per månad"
+          >
             {d.monthlyTrend.map((m) => (
               <div key={m.month} className="chart-column">
                 <div className="chart-bars">
@@ -121,8 +132,12 @@ export function Dashboard() {
             ))}
           </div>
           <div className="chart-legend">
-            <span className="legend-item"><span className="legend-swatch legend-income" /> Intäkter</span>
-            <span className="legend-item"><span className="legend-swatch legend-expense" /> Kostnader</span>
+            <span className="legend-item">
+              <span className="legend-swatch legend-income" /> Intäkter
+            </span>
+            <span className="legend-item">
+              <span className="legend-swatch legend-expense" /> Kostnader
+            </span>
           </div>
         </div>
       )}
@@ -140,7 +155,9 @@ export function Dashboard() {
                   <div className="dist-track">
                     <div
                       className="dist-fill"
-                      style={{ width: totalAccounts > 0 ? `${(count / totalAccounts) * 100}%` : "0%" }}
+                      style={{
+                        width: totalAccounts > 0 ? `${(count / totalAccounts) * 100}%` : "0%",
+                      }}
                     />
                   </div>
                   <span className="dist-count">{count}</span>
@@ -189,10 +206,18 @@ export function Dashboard() {
         <h3 style={{ marginBottom: "0.75rem" }}>Snabblänkar</h3>
         <div className="flex gap-1" style={{ flexWrap: "wrap" }}>
           <button onClick={() => navigate("/vouchers/new")}>+ Nytt verifikat</button>
-          <button className="secondary" onClick={() => navigate("/vouchers")}>Alla verifikat</button>
-          <button className="secondary" onClick={() => navigate("/reports/trial-balance")}>Råbalans</button>
-          <button className="secondary" onClick={() => navigate("/reports/income-statement")}>Resultaträkning</button>
-          <button className="secondary" onClick={() => navigate("/reports/balance-sheet")}>Balansräkning</button>
+          <button className="secondary" onClick={() => navigate("/vouchers")}>
+            Alla verifikat
+          </button>
+          <button className="secondary" onClick={() => navigate("/reports/trial-balance")}>
+            Råbalans
+          </button>
+          <button className="secondary" onClick={() => navigate("/reports/income-statement")}>
+            Resultaträkning
+          </button>
+          <button className="secondary" onClick={() => navigate("/reports/balance-sheet")}>
+            Balansräkning
+          </button>
         </div>
       </div>
     </div>

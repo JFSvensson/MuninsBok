@@ -72,11 +72,28 @@ export function BalanceSheet() {
           className="secondary"
           onClick={() => {
             const allRows = [
-              ...report.assets.rows.map((r) => [r.accountNumber, r.accountName, "Tillgång", csvAmount(r.amount)]),
+              ...report.assets.rows.map((r) => [
+                r.accountNumber,
+                r.accountName,
+                "Tillgång",
+                csvAmount(r.amount),
+              ]),
               ["", "Summa tillgångar", "", csvAmount(report.totalAssets)],
-              ...report.equity.rows.map((r) => [r.accountNumber, r.accountName, "Eget kapital", csvAmount(r.amount)]),
-              ...(report.yearResult !== 0 ? [["", "Årets resultat", "Eget kapital", csvAmount(report.yearResult)]] : []),
-              ...report.liabilities.rows.map((r) => [r.accountNumber, r.accountName, "Skuld", csvAmount(r.amount)]),
+              ...report.equity.rows.map((r) => [
+                r.accountNumber,
+                r.accountName,
+                "Eget kapital",
+                csvAmount(r.amount),
+              ]),
+              ...(report.yearResult !== 0
+                ? [["", "Årets resultat", "Eget kapital", csvAmount(report.yearResult)]]
+                : []),
+              ...report.liabilities.rows.map((r) => [
+                r.accountNumber,
+                r.accountName,
+                "Skuld",
+                csvAmount(r.amount),
+              ]),
               ["", "Summa EK + skulder", "", csvAmount(report.totalLiabilitiesAndEquity)],
             ];
             const csv = toCsv(["Konto", "Namn", "Kategori", "Saldo"], allRows);
@@ -106,9 +123,7 @@ export function BalanceSheet() {
               <Section section={report.assets} />
               <tr style={{ fontWeight: "bold", borderTop: "2px solid #333" }}>
                 <td colSpan={2}>Summa tillgångar</td>
-                <td className="text-right amount">
-                  {formatAmount(report.totalAssets)}
-                </td>
+                <td className="text-right amount">{formatAmount(report.totalAssets)}</td>
               </tr>
             </tbody>
           </table>
@@ -153,8 +168,7 @@ export function BalanceSheet() {
 
       {report.difference !== 0 && (
         <div className="error" style={{ marginTop: "1rem" }}>
-          Varning: Balansräkningen balanserar inte! Differens:{" "}
-          {formatAmount(report.difference)} kr
+          Varning: Balansräkningen balanserar inte! Differens: {formatAmount(report.difference)} kr
         </div>
       )}
     </div>

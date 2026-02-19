@@ -54,11 +54,26 @@ export function VatReport() {
           className="secondary"
           onClick={() => {
             const allRows = [
-              ...report.outputVat.map((r) => [r.accountNumber, r.accountName, "Utgående", csvAmount(r.amount)]),
+              ...report.outputVat.map((r) => [
+                r.accountNumber,
+                r.accountName,
+                "Utgående",
+                csvAmount(r.amount),
+              ]),
               ["", "Summa utgående moms", "", csvAmount(report.totalOutputVat)],
-              ...report.inputVat.map((r) => [r.accountNumber, r.accountName, "Ingående", csvAmount(r.amount)]),
+              ...report.inputVat.map((r) => [
+                r.accountNumber,
+                r.accountName,
+                "Ingående",
+                csvAmount(r.amount),
+              ]),
               ["", "Summa ingående moms", "", csvAmount(report.totalInputVat)],
-              ["", report.vatPayable >= 0 ? "Moms att betala" : "Momsfordran", "", csvAmount(report.vatPayable)],
+              [
+                "",
+                report.vatPayable >= 0 ? "Moms att betala" : "Momsfordran",
+                "",
+                csvAmount(report.vatPayable),
+              ],
             ];
             const csv = toCsv(["Konto", "Namn", "Typ", "Belopp"], allRows);
             downloadCsv(csv, "momsrapport.csv");
@@ -130,9 +145,7 @@ export function VatReport() {
 
           {/* Resultat */}
           <tr style={{ fontWeight: "bold", borderTop: "2px solid #333" }}>
-            <td colSpan={2}>
-              {report.vatPayable >= 0 ? "Moms att betala" : "Momsfordran"}
-            </td>
+            <td colSpan={2}>{report.vatPayable >= 0 ? "Moms att betala" : "Momsfordran"}</td>
             <td className={amountClassName(report.vatPayable)}>
               {formatAmount(Math.abs(report.vatPayable))} kr
             </td>
