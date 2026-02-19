@@ -429,6 +429,50 @@ button.danger:disabled {
   border: 1px solid #a5d6a7;
 }
 
+.badge-closed {
+  background-color: #f3e5f5;
+  color: #6a1b9a;
+  border: 1px solid #ce93d8;
+}
+
+.badge-open {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+
+/* Success message */
+.success {
+  color: #2e7d32;
+  padding: 1rem;
+  background-color: #e8f5e9;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  border: 1px solid #a5d6a7;
+}
+
+/* Small button */
+.btn-sm {
+  font-size: 0.85em;
+  padding: 0.3em 0.7em;
+}
+
+/* Danger button */
+.btn-danger {
+  background-color: #c62828;
+  color: #fff;
+  border-color: #c62828;
+}
+
+.btn-danger:hover {
+  background-color: #b71c1c;
+  border-color: #b71c1c;
+}
+
+.ml-1 {
+  margin-left: 0.5rem;
+}
+
 /* Corrected voucher row */
 .clickable-row.corrected {
   opacity: 0.6;
