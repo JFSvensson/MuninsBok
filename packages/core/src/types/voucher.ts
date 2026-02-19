@@ -34,6 +34,7 @@ export interface CreateVoucherInput {
   readonly description: string;
   readonly lines: readonly CreateVoucherLineInput[];
   readonly documentIds?: readonly string[];
+  readonly createdBy?: string;
 }
 
 export type VoucherErrorCode =

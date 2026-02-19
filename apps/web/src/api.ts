@@ -403,6 +403,7 @@ export const api = {
       date: string;
       description: string;
       lines: { accountNumber: string; debit: number; credit: number; description?: string }[];
+      createdBy?: string;
     },
   ) =>
     fetchJson<ApiResponse<Voucher>>(`${API_BASE}/organizations/${orgId}/vouchers`, {
