@@ -3,6 +3,7 @@ import { useOrganization } from "../context/OrganizationContext";
 import { CreateOrganizationDialog } from "./CreateOrganizationDialog";
 import { CreateFiscalYearDialog } from "./CreateFiscalYearDialog";
 import { DeleteOrganizationDialog } from "./DeleteOrganizationDialog";
+import { EditOrganizationDialog } from "./EditOrganizationDialog";
 
 export function OrganizationSelect() {
   const {
@@ -18,6 +19,7 @@ export function OrganizationSelect() {
   const [showCreateOrg, setShowCreateOrg] = useState(false);
   const [showCreateFy, setShowCreateFy] = useState(false);
   const [showDeleteOrg, setShowDeleteOrg] = useState(false);
+  const [showEditOrg, setShowEditOrg] = useState(false);
 
   if (isLoading) {
     return <span>Laddar...</span>;
@@ -45,6 +47,16 @@ export function OrganizationSelect() {
         <button className="btn-icon" title="Ny organisation" onClick={() => setShowCreateOrg(true)}>
           +
         </button>
+
+        {organization && (
+          <button
+            className="btn-icon"
+            title="Redigera organisation"
+            onClick={() => setShowEditOrg(true)}
+          >
+            ✏
+          </button>
+        )}
 
         {organization && (
           <button
@@ -107,6 +119,12 @@ export function OrganizationSelect() {
             organizationId={organization.id}
             organizationName={organization.name}
             onDeleted={() => setOrganization(null)}
+          />
+          <EditOrganizationDialog
+            open={showEditOrg}
+            onClose={() => setShowEditOrg(false)}
+            organization={organization}
+            onUpdated={(org) => setOrganization(org)}
           />
         </>
       )}
