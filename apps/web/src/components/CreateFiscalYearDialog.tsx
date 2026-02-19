@@ -87,6 +87,23 @@ export function CreateFiscalYearDialog({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    // Client-side validation
+    if (new Date(endDate) <= new Date(startDate)) {
+      setError("Slutdatum måste vara efter startdatum");
+      return;
+    }
+
+    // BFL: fiscal year max 18 months
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const months =
+      (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+    if (months > 18) {
+      setError("Ett räkenskapsår får vara högst 18 månader enligt BFL");
+      return;
+    }
+
     mutation.mutate();
   };
 
