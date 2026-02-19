@@ -10,8 +10,18 @@ interface Props {
 }
 
 const MONTHS = [
-  "Januari", "Februari", "Mars", "April", "Maj", "Juni",
-  "Juli", "Augusti", "September", "Oktober", "November", "December",
+  "Januari",
+  "Februari",
+  "Mars",
+  "April",
+  "Maj",
+  "Juni",
+  "Juli",
+  "Augusti",
+  "September",
+  "Oktober",
+  "November",
+  "December",
 ];
 
 export function CreateOrganizationDialog({ open, onClose, onCreated }: Props) {
@@ -59,7 +69,9 @@ export function CreateOrganizationDialog({ open, onClose, onCreated }: Props) {
       <div className="dialog" onClick={(e) => e.stopPropagation()}>
         <div className="dialog-header">
           <h3>Skapa ny organisation</h3>
-          <button className="btn-icon" onClick={resetAndClose} type="button">×</button>
+          <button className="btn-icon" onClick={resetAndClose} type="button">
+            ×
+          </button>
         </div>
 
         {error && <div className="error">{error}</div>}

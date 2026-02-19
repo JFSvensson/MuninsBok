@@ -43,7 +43,9 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
 
       const authHeader = request.headers.authorization;
       if (!authHeader || authHeader !== `Bearer ${options.apiKey}`) {
-        return reply.status(401).send({ error: "Ogiltig eller saknad API-nyckel", code: "UNAUTHORIZED" });
+        return reply
+          .status(401)
+          .send({ error: "Ogiltig eller saknad API-nyckel", code: "UNAUTHORIZED" });
       }
     });
   }

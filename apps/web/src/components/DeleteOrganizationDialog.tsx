@@ -10,7 +10,13 @@ interface Props {
   onDeleted: () => void;
 }
 
-export function DeleteOrganizationDialog({ open, onClose, organizationId, organizationName, onDeleted }: Props) {
+export function DeleteOrganizationDialog({
+  open,
+  onClose,
+  organizationId,
+  organizationName,
+  onDeleted,
+}: Props) {
   const queryClient = useQueryClient();
   const [confirmName, setConfirmName] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +54,9 @@ export function DeleteOrganizationDialog({ open, onClose, organizationId, organi
       <div className="dialog" onClick={(e) => e.stopPropagation()}>
         <div className="dialog-header">
           <h3>Radera organisation</h3>
-          <button className="btn-icon" onClick={resetAndClose} type="button">×</button>
+          <button className="btn-icon" onClick={resetAndClose} type="button">
+            ×
+          </button>
         </div>
 
         <p className="dialog-description" style={{ color: "#c62828" }}>

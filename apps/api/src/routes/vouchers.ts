@@ -38,11 +38,11 @@ export async function voucherRoutes(fastify: FastifyInstance) {
       const pageNum = Math.max(1, parseInt(page ?? "1", 10) || 1);
       const limitNum = Math.min(200, Math.max(1, parseInt(limit ?? "50", 10) || 50));
 
-      const result = await voucherRepo.findByFiscalYearPaginated(
-        fiscalYearId,
-        orgId,
-        { page: pageNum, limit: limitNum, ...(search != null && { search }) }
-      );
+      const result = await voucherRepo.findByFiscalYearPaginated(fiscalYearId, orgId, {
+        page: pageNum,
+        limit: limitNum,
+        ...(search != null && { search }),
+      });
 
       return {
         data: result.vouchers,
@@ -59,7 +59,7 @@ export async function voucherRoutes(fastify: FastifyInstance) {
       const vouchers = await voucherRepo.findByDateRange(
         orgId,
         new Date(startDate),
-        new Date(endDate)
+        new Date(endDate),
       );
       return { data: vouchers };
     }
@@ -73,46 +73,40 @@ export async function voucherRoutes(fastify: FastifyInstance) {
   fastify.get<{ Params: { orgId: string; voucherId: string } }>(
     "/:orgId/vouchers/:voucherId",
     async (request, reply) => {
-      const voucher = await voucherRepo.findById(
-        request.params.voucherId,
-        request.params.orgId
-      );
+      const voucher = await voucherRepo.findById(request.params.voucherId, request.params.orgId);
       if (!voucher) {
         return reply.status(404).send({ error: "Verifikatet hittades inte" });
       }
       return { data: voucher };
-    }
+    },
   );
 
   // Create voucher
-  fastify.post<{ Params: { orgId: string } }>(
-    "/:orgId/vouchers",
-    async (request, reply) => {
-      const parsed = createVoucherSchema.safeParse(request.body);
-      if (!parsed.success) {
-        return reply.status(400).send({ error: parsed.error.issues });
-      }
-
-      const { lines, documentIds, ...rest } = parsed.data;
-      const result = await voucherRepo.create({
-        ...rest,
-        organizationId: request.params.orgId,
-        lines: lines.map((l) => ({
-          accountNumber: l.accountNumber,
-          debit: l.debit,
-          credit: l.credit,
-          ...(l.description != null && { description: l.description }),
-        })),
-        ...(documentIds != null && { documentIds }),
-      });
-
-      if (!result.ok) {
-        return reply.status(400).send({ error: result.error });
-      }
-
-      return reply.status(201).send({ data: result.value });
+  fastify.post<{ Params: { orgId: string } }>("/:orgId/vouchers", async (request, reply) => {
+    const parsed = createVoucherSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: parsed.error.issues });
     }
-  );
+
+    const { lines, documentIds, ...rest } = parsed.data;
+    const result = await voucherRepo.create({
+      ...rest,
+      organizationId: request.params.orgId,
+      lines: lines.map((l) => ({
+        accountNumber: l.accountNumber,
+        debit: l.debit,
+        credit: l.credit,
+        ...(l.description != null && { description: l.description }),
+      })),
+      ...(documentIds != null && { documentIds }),
+    });
+
+    if (!result.ok) {
+      return reply.status(400).send({ error: result.error });
+    }
+
+    return reply.status(201).send({ data: result.value });
+  });
 
   // Create correction voucher (rättelseverifikat) — BFL 5:5
   fastify.post<{ Params: { orgId: string; voucherId: string } }>(
@@ -120,7 +114,7 @@ export async function voucherRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const result = await voucherRepo.createCorrection(
         request.params.voucherId,
-        request.params.orgId
+        request.params.orgId,
       );
 
       if (!result.ok) {
@@ -129,7 +123,7 @@ export async function voucherRoutes(fastify: FastifyInstance) {
       }
 
       return reply.status(201).send({ data: result.value });
-    }
+    },
   );
 
   // Check voucher number gaps (BFL 5:6 – löpnumrering)

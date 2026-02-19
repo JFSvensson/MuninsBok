@@ -11,16 +11,19 @@ interface Props {
   fiscalYears?: FiscalYear[];
 }
 
-export function CreateFiscalYearDialog({ open, onClose, onCreated, organization, fiscalYears = [] }: Props) {
+export function CreateFiscalYearDialog({
+  open,
+  onClose,
+  onCreated,
+  organization,
+  fiscalYears = [],
+}: Props) {
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [carryOverBalances, setCarryOverBalances] = useState(true);
 
   // Find closed fiscal years that can serve as source for opening balances
-  const closedYears = useMemo(
-    () => fiscalYears.filter((fy) => fy.isClosed),
-    [fiscalYears]
-  );
+  const closedYears = useMemo(() => fiscalYears.filter((fy) => fy.isClosed), [fiscalYears]);
 
   // Pre-fill dates based on org's fiscal year start month and current year
   const defaultDates = useMemo(() => {
@@ -94,7 +97,9 @@ export function CreateFiscalYearDialog({ open, onClose, onCreated, organization,
       <div className="dialog" onClick={(e) => e.stopPropagation()}>
         <div className="dialog-header">
           <h3>Nytt räkenskapsår</h3>
-          <button className="btn-icon" onClick={resetAndClose} type="button">×</button>
+          <button className="btn-icon" onClick={resetAndClose} type="button">
+            ×
+          </button>
         </div>
 
         <p className="dialog-description">
@@ -129,7 +134,9 @@ export function CreateFiscalYearDialog({ open, onClose, onCreated, organization,
 
           {closedYears.length > 0 && (
             <div className="form-group" style={{ marginTop: "0.5rem" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
+              <label
+                style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}
+              >
                 <input
                   type="checkbox"
                   checked={carryOverBalances}

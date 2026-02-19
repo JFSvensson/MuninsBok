@@ -5,7 +5,13 @@
 import { vi } from "vitest";
 import { buildApp } from "../app.js";
 import type { Repositories } from "../repositories.js";
-import type { OrganizationRepository, AccountRepository, VoucherRepository, FiscalYearRepository, DocumentRepository } from "@muninsbok/db";
+import type {
+  OrganizationRepository,
+  AccountRepository,
+  VoucherRepository,
+  FiscalYearRepository,
+  DocumentRepository,
+} from "@muninsbok/db";
 
 type MockedRepo<T> = {
   [K in keyof T]: T[K] extends (...args: any[]) => any ? ReturnType<typeof vi.fn> : T[K];
