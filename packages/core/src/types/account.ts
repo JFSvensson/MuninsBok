@@ -70,11 +70,12 @@ export function getAccountTypeFromNumber(accountNumber: string): AccountType {
     case "6":
     case "7":
       return "EXPENSE";
-    case "8":
+    case "8": {
       // 8xxx are financial items - can be income or expense
       // 8xxx < 8400 typically income, >= 8400 typically expense
       const finNum = parseInt(accountNumber, 10);
       return finNum >= 8400 ? "EXPENSE" : "REVENUE";
+    }
     default:
       return "EXPENSE"; // Default fallback
   }
