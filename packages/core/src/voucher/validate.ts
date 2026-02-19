@@ -1,9 +1,5 @@
 import type { Account } from "../types/account.js";
-import type {
-  CreateVoucherInput,
-  Voucher,
-  VoucherError,
-} from "../types/voucher.js";
+import type { CreateVoucherInput, Voucher, VoucherError } from "../types/voucher.js";
 import type { FiscalYear } from "../types/fiscal-year.js";
 import { isVoucherBalanced, calculateTotalDebit } from "../types/voucher.js";
 import { validateVoucherLine } from "../types/voucher-line.js";
@@ -22,7 +18,7 @@ export interface ValidateVoucherContext {
  */
 export function validateVoucher(
   input: CreateVoucherInput,
-  context: ValidateVoucherContext
+  context: ValidateVoucherContext,
 ): Result<true, VoucherError> {
   // Check for empty lines
   if (input.lines.length === 0) {
@@ -111,7 +107,7 @@ export interface CreateVoucherOptions {
 
 export function createVoucherFromInput(
   input: CreateVoucherInput,
-  options: CreateVoucherOptions
+  options: CreateVoucherOptions,
 ): Voucher {
   const now = new Date();
 

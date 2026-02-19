@@ -30,12 +30,12 @@ export function amountClassName(amount: number, includeBase = true): string {
  */
 export function parseAmountToOre(value: string): number {
   if (!value || value.trim() === "") return 0;
-  
+
   const normalized = value.replace(",", ".");
   const parsed = parseFloat(normalized);
-  
+
   if (isNaN(parsed)) return 0;
-  
+
   return Math.round(parsed * 100);
 }
 

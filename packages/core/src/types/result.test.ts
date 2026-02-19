@@ -1,16 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  ok,
-  err,
-  isOk,
-  isErr,
-  unwrap,
-  unwrapOr,
-  map,
-  mapErr,
-  andThen,
-  combine,
-} from "./result.js";
+import { ok, err, isOk, isErr, unwrap, unwrapOr, map, mapErr, andThen, combine } from "./result.js";
 import type { Result } from "./result.js";
 
 describe("ok", () => {

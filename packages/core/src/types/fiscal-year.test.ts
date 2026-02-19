@@ -2,11 +2,7 @@ import { describe, it, expect } from "vitest";
 import { isDateInFiscalYear, calculateFiscalYearDates } from "./fiscal-year.js";
 import type { FiscalYear } from "./fiscal-year.js";
 
-function makeFiscalYear(
-  start: string,
-  end: string,
-  overrides?: Partial<FiscalYear>
-): FiscalYear {
+function makeFiscalYear(start: string, end: string, overrides?: Partial<FiscalYear>): FiscalYear {
   return {
     id: "fy-test",
     organizationId: "org-test",

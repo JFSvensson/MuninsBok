@@ -67,7 +67,7 @@ describe("formatAmount", () => {
   });
 
   it("should format negative amounts", () => {
-    const result = formatAmount(-500.00);
+    const result = formatAmount(-500.0);
     expect(result).toMatch(/-?500,00/);
   });
 

@@ -183,7 +183,7 @@ describe("getVatAccounts", () => {
   it("should not include non-VAT accounts", () => {
     const vatAccounts = getVatAccounts(BAS_SIMPLIFIED);
     const nonVatAccounts = BAS_SIMPLIFIED.filter((a) => !a.isVatAccount);
-    
+
     for (const nonVat of nonVatAccounts) {
       expect(vatAccounts).not.toContain(nonVat);
     }

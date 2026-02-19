@@ -53,22 +53,16 @@ export interface VoucherError {
 }
 
 /** Calculate total debit for voucher lines */
-export function calculateTotalDebit(
-  lines: readonly CreateVoucherLineInput[]
-): number {
+export function calculateTotalDebit(lines: readonly CreateVoucherLineInput[]): number {
   return lines.reduce((sum, line) => sum + line.debit, 0);
 }
 
 /** Calculate total credit for voucher lines */
-export function calculateTotalCredit(
-  lines: readonly CreateVoucherLineInput[]
-): number {
+export function calculateTotalCredit(lines: readonly CreateVoucherLineInput[]): number {
   return lines.reduce((sum, line) => sum + line.credit, 0);
 }
 
 /** Check if voucher is balanced (debit === credit) */
-export function isVoucherBalanced(
-  lines: readonly CreateVoucherLineInput[]
-): boolean {
+export function isVoucherBalanced(lines: readonly CreateVoucherLineInput[]): boolean {
   return calculateTotalDebit(lines) === calculateTotalCredit(lines);
 }

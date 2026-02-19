@@ -21,18 +21,12 @@ export interface CreateVoucherLineInput {
 }
 
 export interface VoucherLineError {
-  readonly code:
-    | "INVALID_ACCOUNT"
-    | "NEGATIVE_AMOUNT"
-    | "BOTH_DEBIT_AND_CREDIT"
-    | "ZERO_AMOUNT";
+  readonly code: "INVALID_ACCOUNT" | "NEGATIVE_AMOUNT" | "BOTH_DEBIT_AND_CREDIT" | "ZERO_AMOUNT";
   readonly message: string;
 }
 
 /** Validate a voucher line */
-export function validateVoucherLine(
-  line: CreateVoucherLineInput
-): VoucherLineError | null {
+export function validateVoucherLine(line: CreateVoucherLineInput): VoucherLineError | null {
   if (line.debit < 0) {
     return { code: "NEGATIVE_AMOUNT", message: "Debet kan inte vara negativt" };
   }

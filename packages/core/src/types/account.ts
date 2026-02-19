@@ -39,11 +39,7 @@ export interface UpdateAccountInput {
 }
 
 export interface AccountError {
-  readonly code:
-    | "INVALID_NUMBER"
-    | "INVALID_NAME"
-    | "DUPLICATE_NUMBER"
-    | "NOT_FOUND";
+  readonly code: "INVALID_NUMBER" | "INVALID_NAME" | "DUPLICATE_NUMBER" | "NOT_FOUND";
   readonly message: string;
 }
 

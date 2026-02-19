@@ -37,7 +37,7 @@ export function isDateInFiscalYear(date: Date, fiscalYear: FiscalYear): boolean 
 /** Calculate fiscal year from start month and a given year */
 export function calculateFiscalYearDates(
   year: number,
-  startMonth: number
+  startMonth: number,
 ): { startDate: Date; endDate: Date } {
   // If fiscal year starts in January (month 1), it's a calendar year
   if (startMonth === 1) {

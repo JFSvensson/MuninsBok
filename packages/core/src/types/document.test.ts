@@ -1,8 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  isAllowedMimeType,
-  ALLOWED_MIME_TYPES,
-} from "./document.js";
+import { isAllowedMimeType, ALLOWED_MIME_TYPES } from "./document.js";
 
 describe("ALLOWED_MIME_TYPES", () => {
   it("should include PDF", () => {

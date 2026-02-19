@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  calculateTotalDebit,
-  calculateTotalCredit,
-  isVoucherBalanced,
-} from "./voucher.js";
+import { calculateTotalDebit, calculateTotalCredit, isVoucherBalanced } from "./voucher.js";
 import type { CreateVoucherLineInput } from "./voucher-line.js";
 
 const balancedLines: CreateVoucherLineInput[] = [
@@ -41,9 +37,7 @@ describe("calculateTotalDebit", () => {
   });
 
   it("should ignore credit amounts", () => {
-    expect(calculateTotalDebit([
-      { accountNumber: "3000", debit: 0, credit: 50000 },
-    ])).toBe(0);
+    expect(calculateTotalDebit([{ accountNumber: "3000", debit: 0, credit: 50000 }])).toBe(0);
   });
 });
 
@@ -61,9 +55,7 @@ describe("calculateTotalCredit", () => {
   });
 
   it("should ignore debit amounts", () => {
-    expect(calculateTotalCredit([
-      { accountNumber: "1910", debit: 50000, credit: 0 },
-    ])).toBe(0);
+    expect(calculateTotalCredit([{ accountNumber: "1910", debit: 50000, credit: 0 }])).toBe(0);
   });
 });
 

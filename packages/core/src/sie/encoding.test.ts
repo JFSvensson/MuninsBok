@@ -24,7 +24,7 @@ function cp437Bytes(parts: (string | number[])[]): Uint8Array {
 describe("decodeSieFile", () => {
   it("decodes a valid UTF-8 SIE file unchanged", () => {
     const input = utf8(
-      '#FLAGGA 0\n#FORMAT PC8\n#FNAMN "Företag AB"\n#KONTO 2610 "Preliminärskatt"\n'
+      '#FLAGGA 0\n#FORMAT PC8\n#FNAMN "Företag AB"\n#KONTO 2610 "Preliminärskatt"\n',
     );
     const result = decodeSieFile(input);
     expect(result).toContain("Företag AB");
@@ -100,9 +100,7 @@ describe("decodeSieFile", () => {
   });
 
   it("preserves ASCII content faithfully", () => {
-    const input = utf8(
-      '#FLAGGA 0\n#SIETYP 4\n#PROGRAM "Test" "1.0"\n#KONTO 1930 "Bank"\n'
-    );
+    const input = utf8('#FLAGGA 0\n#SIETYP 4\n#PROGRAM "Test" "1.0"\n#KONTO 1930 "Bank"\n');
     const result = decodeSieFile(input);
     expect(result).toContain("#FLAGGA 0");
     expect(result).toContain('#PROGRAM "Test" "1.0"');
@@ -127,7 +125,7 @@ describe("decodeSieFile", () => {
       'rskatt"\r\n',
       '#KONTO 3010 "F',
       [0x94], // ö
-      'rs',
+      "rs",
       [0x84], // ä
       "ljning varor 25%",
       '"\r\n',
