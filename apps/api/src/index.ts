@@ -34,9 +34,7 @@ const fastify = await buildApp({
   corsOrigin: process.env["CORS_ORIGIN"] ?? "http://localhost:5173",
   ...(apiKey != null && { apiKey }),
   fastifyOptions: {
-    logger: isProd
-      ? { level: "info" }
-      : { level: "debug", transport: { target: "pino-pretty" } },
+    logger: isProd ? { level: "info" } : { level: "debug", transport: { target: "pino-pretty" } },
   },
 });
 
