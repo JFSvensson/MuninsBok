@@ -81,27 +81,30 @@ function AppContent() {
 
           <main id="main-content">
             <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/vouchers" element={<VoucherList />} />
-            <Route path="/vouchers/new" element={<VoucherCreate />} />
-            <Route path="/vouchers/:voucherId" element={<VoucherDetail />} />
-            <Route path="/accounts" element={<AccountList />} />
-            <Route path="/reports/trial-balance" element={<TrialBalance />} />
-            <Route path="/reports/income-statement" element={<IncomeStatement />} />
-            <Route path="/reports/balance-sheet" element={<BalanceSheet />} />
-            <Route path="/reports/vat" element={<VatReport />} />
-            <Route path="/reports/journal" element={<Journal />} />
-            <Route path="/reports/general-ledger" element={<GeneralLedger />} />
-            <Route path="/reports/voucher-list" element={<VoucherListReport />} />
-            <Route path="/sie" element={<SieExport />} />
-          </Routes>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/vouchers" element={<VoucherList />} />
+              <Route path="/vouchers/new" element={<VoucherCreate />} />
+              <Route path="/vouchers/:voucherId" element={<VoucherDetail />} />
+              <Route path="/accounts" element={<AccountList />} />
+              <Route path="/reports/trial-balance" element={<TrialBalance />} />
+              <Route path="/reports/income-statement" element={<IncomeStatement />} />
+              <Route path="/reports/balance-sheet" element={<BalanceSheet />} />
+              <Route path="/reports/vat" element={<VatReport />} />
+              <Route path="/reports/journal" element={<Journal />} />
+              <Route path="/reports/general-ledger" element={<GeneralLedger />} />
+              <Route path="/reports/voucher-list" element={<VoucherListReport />} />
+              <Route path="/sie" element={<SieExport />} />
+            </Routes>
           </main>
         </>
       ) : organization ? (
         <main id="main-content">
           <div className="card">
-            <p>Skapa ett räkenskapsår för att börja bokföra. Klicka <strong>+</strong> bredvid räkenskapsår-listan.</p>
+            <p>
+              Skapa ett räkenskapsår för att börja bokföra. Klicka <strong>+</strong> bredvid
+              räkenskapsår-listan.
+            </p>
           </div>
         </main>
       ) : (

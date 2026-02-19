@@ -60,7 +60,7 @@ describe("Voucher routes", () => {
       expect(repos.vouchers.findByDateRange).toHaveBeenCalledWith(
         orgId,
         expect.any(Date),
-        expect.any(Date)
+        expect.any(Date),
       );
     });
 
@@ -113,7 +113,7 @@ describe("Voucher routes", () => {
         expect.objectContaining({
           organizationId: orgId,
           fiscalYearId: "fy-1",
-        })
+        }),
       );
     });
 

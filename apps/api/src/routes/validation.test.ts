@@ -198,8 +198,8 @@ describe("Voucher validation schema", () => {
       date: "2025-03-15",
       description: "Test",
       lines: [
-        { accountNumber: "1910", debit: 100.50, credit: 0 },
-        { accountNumber: "3000", debit: 0, credit: 100.50 },
+        { accountNumber: "1910", debit: 100.5, credit: 0 },
+        { accountNumber: "3000", debit: 0, credit: 100.5 },
       ],
     };
     const result = createVoucherSchema.safeParse(input);

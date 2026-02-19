@@ -42,11 +42,7 @@ export function OrganizationSelect() {
           ))}
         </select>
 
-        <button
-          className="btn-icon"
-          title="Ny organisation"
-          onClick={() => setShowCreateOrg(true)}
-        >
+        <button className="btn-icon" title="Ny organisation" onClick={() => setShowCreateOrg(true)}>
           +
         </button>
 

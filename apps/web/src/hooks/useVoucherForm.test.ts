@@ -17,14 +17,8 @@ interface VoucherLineInput {
 }
 
 function computeTotals(lines: VoucherLineInput[]) {
-  const totalDebit = lines.reduce(
-    (sum, l) => sum + parseFloat(l.debit || "0"),
-    0
-  );
-  const totalCredit = lines.reduce(
-    (sum, l) => sum + parseFloat(l.credit || "0"),
-    0
-  );
+  const totalDebit = lines.reduce((sum, l) => sum + parseFloat(l.debit || "0"), 0);
+  const totalCredit = lines.reduce((sum, l) => sum + parseFloat(l.credit || "0"), 0);
   const isBalanced = Math.abs(totalDebit - totalCredit) < 0.01;
   const canSubmit = isBalanced && totalDebit > 0;
   return { totalDebit, totalCredit, isBalanced, canSubmit };
@@ -167,9 +161,7 @@ describe("Voucher form - line operations", () => {
 
   it("updateLine modifies correct field", () => {
     const lines = [createEmptyLine(), createEmptyLine()];
-    const updated = lines.map((line, i) =>
-      i === 0 ? { ...line, accountNumber: "1930" } : line
-    );
+    const updated = lines.map((line, i) => (i === 0 ? { ...line, accountNumber: "1930" } : line));
 
     expect(updated[0]!.accountNumber).toBe("1930");
     expect(updated[1]!.accountNumber).toBe("");

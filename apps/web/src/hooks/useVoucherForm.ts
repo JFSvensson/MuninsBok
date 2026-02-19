@@ -25,13 +25,10 @@ interface UseVoucherFormOptions {
 
 export function useVoucherForm({ organizationId, fiscalYearId, onSuccess }: UseVoucherFormOptions) {
   const queryClient = useQueryClient();
-  
+
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [description, setDescription] = useState("");
-  const [lines, setLines] = useState<VoucherLineInput[]>([
-    createEmptyLine(),
-    createEmptyLine(),
-  ]);
+  const [lines, setLines] = useState<VoucherLineInput[]>([createEmptyLine(), createEmptyLine()]);
   const [error, setError] = useState<string | null>(null);
 
   const createMutation = useMutation({
@@ -47,31 +44,23 @@ export function useVoucherForm({ organizationId, fiscalYearId, onSuccess }: UseV
   });
 
   const updateLine = useCallback((index: number, field: keyof VoucherLineInput, value: string) => {
-    setLines(prev => prev.map((line, i) =>
-      i === index ? { ...line, [field]: value } : line
-    ));
+    setLines((prev) => prev.map((line, i) => (i === index ? { ...line, [field]: value } : line)));
   }, []);
 
   const addLine = useCallback(() => {
-    setLines(prev => [...prev, createEmptyLine()]);
+    setLines((prev) => [...prev, createEmptyLine()]);
   }, []);
 
   const removeLine = useCallback((index: number) => {
-    setLines(prev => {
+    setLines((prev) => {
       if (prev.length <= 2) return prev;
       return prev.filter((_, i) => i !== index);
     });
   }, []);
 
   const { totalDebit, totalCredit, isBalanced } = useMemo(() => {
-    const totalDebit = lines.reduce(
-      (sum, l) => sum + parseFloat(l.debit || "0"),
-      0
-    );
-    const totalCredit = lines.reduce(
-      (sum, l) => sum + parseFloat(l.credit || "0"),
-      0
-    );
+    const totalDebit = lines.reduce((sum, l) => sum + parseFloat(l.debit || "0"), 0);
+    const totalCredit = lines.reduce((sum, l) => sum + parseFloat(l.credit || "0"), 0);
     const isBalanced = Math.abs(totalDebit - totalCredit) < 0.01;
     return { totalDebit, totalCredit, isBalanced };
   }, [lines]);
@@ -118,18 +107,18 @@ export function useVoucherForm({ organizationId, fiscalYearId, onSuccess }: UseV
     setDescription,
     lines,
     error,
-    
+
     // Line operations
     updateLine,
     addLine,
     removeLine,
-    
+
     // Computed values
     totalDebit,
     totalCredit,
     isBalanced,
     canSubmit,
-    
+
     // Actions
     submit,
     reset,

@@ -69,16 +69,17 @@ export function AccountList() {
   });
 
   const deactivateMutation = useMutation({
-    mutationFn: (accountNumber: string) =>
-      api.deactivateAccount(organization!.id, accountNumber),
+    mutationFn: (accountNumber: string) => api.deactivateAccount(organization!.id, accountNumber),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["accounts", organization?.id] });
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: (params: { accountNumber: string; data: { name?: string; type?: Account["type"]; isVatAccount?: boolean } }) =>
-      api.updateAccount(organization!.id, params.accountNumber, params.data),
+    mutationFn: (params: {
+      accountNumber: string;
+      data: { name?: string; type?: Account["type"]; isVatAccount?: boolean };
+    }) => api.updateAccount(organization!.id, params.accountNumber, params.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["accounts", organization?.id] });
       setEditingAccount(null);
@@ -170,7 +171,9 @@ export function AccountList() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontWeight: 400 }}>
+              <label
+                style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontWeight: 400 }}
+              >
                 <input
                   type="checkbox"
                   checked={newIsVat}
@@ -208,7 +211,15 @@ export function AccountList() {
             </option>
           ))}
         </select>
-        <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontWeight: 400, whiteSpace: "nowrap" }}>
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            fontWeight: 400,
+            whiteSpace: "nowrap",
+          }}
+        >
           <input
             type="checkbox"
             checked={showAll}
@@ -236,7 +247,9 @@ export function AccountList() {
           <tbody>
             {filtered.map((account) => (
               <tr key={account.number} style={!account.isActive ? { opacity: 0.5 } : undefined}>
-                <td><strong>{account.number}</strong></td>
+                <td>
+                  <strong>{account.number}</strong>
+                </td>
                 {editingAccount === account.number ? (
                   <>
                     <td>
@@ -288,12 +301,17 @@ export function AccountList() {
                         <button
                           className="secondary"
                           style={{ padding: "0.25rem 0.5rem", fontSize: "0.85rem" }}
-                          onClick={() => { setEditingAccount(null); setEditError(null); }}
+                          onClick={() => {
+                            setEditingAccount(null);
+                            setEditError(null);
+                          }}
                         >
                           Avbryt
                         </button>
                       </div>
-                      {editError && <div style={{ color: "red", fontSize: "0.8rem" }}>{editError}</div>}
+                      {editError && (
+                        <div style={{ color: "red", fontSize: "0.8rem" }}>{editError}</div>
+                      )}
                     </td>
                   </>
                 ) : (
@@ -317,7 +335,9 @@ export function AccountList() {
                               className="secondary"
                               style={{ padding: "0.25rem 0.5rem", fontSize: "0.85rem" }}
                               onClick={() => {
-                                if (confirm(`Inaktivera konto ${account.number} ${account.name}?`)) {
+                                if (
+                                  confirm(`Inaktivera konto ${account.number} ${account.name}?`)
+                                ) {
                                   deactivateMutation.mutate(account.number);
                                 }
                               }}
