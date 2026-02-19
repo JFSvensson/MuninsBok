@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { ToastProvider } from "./context/ToastContext";
 import "./index.css";
 
 const queryClient = new QueryClient({
@@ -23,9 +24,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        <ToastProvider>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </ToastProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   </React.StrictMode>,

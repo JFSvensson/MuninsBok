@@ -15,6 +15,7 @@ import { GeneralLedger } from "./pages/GeneralLedger";
 import { VoucherListReport } from "./pages/VoucherListReport";
 import { SieExport } from "./pages/SieExport";
 import { FiscalYears } from "./pages/FiscalYears";
+import { NotFound } from "./pages/NotFound";
 import { useState } from "react";
 import { CreateOrganizationDialog } from "./components/CreateOrganizationDialog";
 
@@ -98,6 +99,7 @@ function AppContent() {
               <Route path="/reports/voucher-list" element={<VoucherListReport />} />
               <Route path="/sie" element={<SieExport />} />
               <Route path="/fiscal-years" element={<FiscalYears />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
         </>
