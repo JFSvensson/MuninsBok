@@ -131,6 +131,7 @@ export class VoucherRepository {
         number: nextNumber,
         date: input.date,
         description: input.description,
+        ...(input.createdBy != null && { createdBy: input.createdBy }),
         lines: {
           create: input.lines.map((line) => ({
             accountId: accountMap.get(line.accountNumber)!,

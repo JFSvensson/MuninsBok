@@ -14,6 +14,7 @@ const createVoucherSchema = z.object({
   description: z.string().min(1).max(500),
   lines: z.array(createVoucherLineSchema).min(1),
   documentIds: z.array(z.string()).optional(),
+  createdBy: z.string().max(100).optional(),
 });
 
 export async function voucherRoutes(fastify: FastifyInstance) {
@@ -88,7 +89,7 @@ export async function voucherRoutes(fastify: FastifyInstance) {
       return reply.status(400).send({ error: parsed.error.issues });
     }
 
-    const { lines, documentIds, ...rest } = parsed.data;
+    const { lines, documentIds, createdBy, ...rest } = parsed.data;
     const result = await voucherRepo.create({
       ...rest,
       organizationId: request.params.orgId,
@@ -99,6 +100,7 @@ export async function voucherRoutes(fastify: FastifyInstance) {
         ...(l.description != null && { description: l.description }),
       })),
       ...(documentIds != null && { documentIds }),
+      ...(createdBy != null && { createdBy }),
     });
 
     if (!result.ok) {

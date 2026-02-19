@@ -28,6 +28,7 @@ export function useVoucherForm({ organizationId, fiscalYearId, onSuccess }: UseV
 
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [description, setDescription] = useState("");
+  const [createdBy, setCreatedBy] = useState("");
   const [lines, setLines] = useState<VoucherLineInput[]>([createEmptyLine(), createEmptyLine()]);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,6 +69,17 @@ export function useVoucherForm({ organizationId, fiscalYearId, onSuccess }: UseV
   const submit = useCallback(() => {
     setError(null);
 
+    // Client-side validation
+    if (!description.trim()) {
+      setError("Beskrivning krävs");
+      return;
+    }
+
+    if (!date) {
+      setError("Datum krävs");
+      return;
+    }
+
     const voucherLines = lines
       .filter((l) => l.accountNumber && (l.debit || l.credit))
       .map((l) => ({
@@ -78,7 +90,21 @@ export function useVoucherForm({ organizationId, fiscalYearId, onSuccess }: UseV
       }));
 
     if (voucherLines.length < 2) {
-      setError("Verifikatet måste ha minst två rader");
+      setError("Verifikatet måste ha minst två rader med konto och belopp");
+      return;
+    }
+
+    // Check that no line has both debit and credit
+    const hasDualEntry = voucherLines.some((l) => l.debit > 0 && l.credit > 0);
+    if (hasDualEntry) {
+      setError("En rad kan inte ha både debet och kredit");
+      return;
+    }
+
+    // Check that all lines with amounts have accounts
+    const missingAccount = lines.some((l) => (l.debit || l.credit) && !l.accountNumber);
+    if (missingAccount) {
+      setError("Alla rader med belopp måste ha ett konto valt");
       return;
     }
 
@@ -87,12 +113,14 @@ export function useVoucherForm({ organizationId, fiscalYearId, onSuccess }: UseV
       date,
       description,
       lines: voucherLines,
+      ...(createdBy.trim() && { createdBy: createdBy.trim() }),
     });
-  }, [lines, fiscalYearId, date, description, createMutation]);
+  }, [lines, fiscalYearId, date, description, createdBy, createMutation]);
 
   const reset = useCallback(() => {
     setDate(new Date().toISOString().slice(0, 10));
     setDescription("");
+    setCreatedBy("");
     setLines([createEmptyLine(), createEmptyLine()]);
     setError(null);
   }, []);
@@ -105,6 +133,8 @@ export function useVoucherForm({ organizationId, fiscalYearId, onSuccess }: UseV
     setDate,
     description,
     setDescription,
+    createdBy,
+    setCreatedBy,
     lines,
     error,
 

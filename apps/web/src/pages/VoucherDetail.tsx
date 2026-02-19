@@ -88,6 +88,11 @@ export function VoucherDetail() {
         <div>
           <strong>Beskrivning:</strong> {voucher.description}
         </div>
+        {voucher.createdBy && (
+          <div>
+            <strong>Signatur:</strong> {voucher.createdBy}
+          </div>
+        )}
         <div>
           <strong>Skapad:</strong> {formatDate(voucher.createdAt)}
         </div>
