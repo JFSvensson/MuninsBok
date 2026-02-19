@@ -13,11 +13,7 @@ import {
 // ── helpers ─────────────────────────────────────────────────
 
 /** Filter vouchers by optional date range */
-function filterByDateRange(
-  vouchers: Voucher[],
-  startDate?: string,
-  endDate?: string,
-): Voucher[] {
+function filterByDateRange(vouchers: Voucher[], startDate?: string, endDate?: string): Voucher[] {
   if (!startDate && !endDate) return vouchers;
   return vouchers.filter((v) => {
     const d = v.date instanceof Date ? v.date : new Date(v.date);

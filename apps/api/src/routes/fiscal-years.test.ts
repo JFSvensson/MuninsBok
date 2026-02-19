@@ -98,7 +98,7 @@ describe("Fiscal year routes", () => {
 
     it("returns 400 when dates overlap", async () => {
       repos.fiscalYears.create.mockResolvedValue(
-        err({ code: "OVERLAPPING_DATES" as const, message: "Overlapping fiscal year" })
+        err({ code: "OVERLAPPING_DATES" as const, message: "Overlapping fiscal year" }),
       );
 
       const res = await app.inject({
@@ -136,7 +136,7 @@ describe("Fiscal year routes", () => {
 
     it("returns 404 when fiscal year not found", async () => {
       repos.fiscalYears.close.mockResolvedValue(
-        err({ code: "NOT_FOUND" as const, message: "Not found" })
+        err({ code: "NOT_FOUND" as const, message: "Not found" }),
       );
 
       const res = await app.inject({
@@ -149,7 +149,7 @@ describe("Fiscal year routes", () => {
 
     it("returns 400 when already closed", async () => {
       repos.fiscalYears.close.mockResolvedValue(
-        err({ code: "ALREADY_CLOSED" as const, message: "Already closed" })
+        err({ code: "ALREADY_CLOSED" as const, message: "Already closed" }),
       );
 
       const res = await app.inject({

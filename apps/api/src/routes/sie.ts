@@ -106,7 +106,7 @@ export async function sieRoutes(fastify: FastifyInstance) {
     reply.header("Content-Type", "text/plain; charset=cp437");
     reply.header(
       "Content-Disposition",
-      `attachment; filename="${org.name.replace(/[^a-zA-Z0-9]/g, "_")}_${fiscalYear.startDate.getFullYear()}.se"`
+      `attachment; filename="${org.name.replace(/[^a-zA-Z0-9]/g, "_")}_${fiscalYear.startDate.getFullYear()}.se"`,
     );
 
     return sieContent;
@@ -148,9 +148,7 @@ export async function sieRoutes(fastify: FastifyInstance) {
     const existingAccountNumbers = new Set(existingAccounts.map((a) => a.number));
 
     // Import accounts that don't exist
-    const newAccounts = sieFile.accounts.filter(
-      (a) => !existingAccountNumbers.has(a.number)
-    );
+    const newAccounts = sieFile.accounts.filter((a) => !existingAccountNumbers.has(a.number));
 
     if (newAccounts.length > 0) {
       await accountRepo.createMany(
@@ -159,7 +157,7 @@ export async function sieRoutes(fastify: FastifyInstance) {
           number: a.number,
           name: a.name,
           type: getAccountTypeFromNumber(a.number),
-        }))
+        })),
       );
     }
 
@@ -184,7 +182,8 @@ export async function sieRoutes(fastify: FastifyInstance) {
             organizationId: orgId,
             fiscalYearId,
             date: sieVoucher.date,
-            description: sieVoucher.description || `Import ${sieVoucher.series}${sieVoucher.number}`,
+            description:
+              sieVoucher.description || `Import ${sieVoucher.series}${sieVoucher.number}`,
             lines,
           });
 
@@ -192,7 +191,9 @@ export async function sieRoutes(fastify: FastifyInstance) {
             importedCount++;
           } else {
             errorCount++;
-            errors.push(`Verifikat ${sieVoucher.series}${sieVoucher.number}: ${result.error.message}`);
+            errors.push(
+              `Verifikat ${sieVoucher.series}${sieVoucher.number}: ${result.error.message}`,
+            );
           }
         }
 

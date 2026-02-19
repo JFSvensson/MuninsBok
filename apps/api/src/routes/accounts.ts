@@ -39,37 +39,34 @@ export async function accountRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const account = await accountRepo.findByNumber(
         request.params.orgId,
-        request.params.accountNumber
+        request.params.accountNumber,
       );
       if (!account) {
         return reply.status(404).send({ error: "Kontot hittades inte" });
       }
       return { data: account };
-    }
+    },
   );
 
   // Create account
-  fastify.post<{ Params: { orgId: string } }>(
-    "/:orgId/accounts",
-    async (request, reply) => {
-      const parsed = createAccountSchema.safeParse(request.body);
-      if (!parsed.success) {
-        return reply.status(400).send({ error: parsed.error.issues });
-      }
-
-      const { isVatAccount, ...rest } = parsed.data;
-      const result = await accountRepo.create(request.params.orgId, {
-        ...rest,
-        ...(isVatAccount != null && { isVatAccount }),
-      });
-
-      if (!result.ok) {
-        return reply.status(400).send({ error: result.error });
-      }
-
-      return reply.status(201).send({ data: result.value });
+  fastify.post<{ Params: { orgId: string } }>("/:orgId/accounts", async (request, reply) => {
+    const parsed = createAccountSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: parsed.error.issues });
     }
-  );
+
+    const { isVatAccount, ...rest } = parsed.data;
+    const result = await accountRepo.create(request.params.orgId, {
+      ...rest,
+      ...(isVatAccount != null && { isVatAccount }),
+    });
+
+    if (!result.ok) {
+      return reply.status(400).send({ error: result.error });
+    }
+
+    return reply.status(201).send({ data: result.value });
+  });
 
   // Deactivate account
   fastify.delete<{ Params: { orgId: string; accountNumber: string } }>(
@@ -77,13 +74,13 @@ export async function accountRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const deactivated = await accountRepo.deactivate(
         request.params.orgId,
-        request.params.accountNumber
+        request.params.accountNumber,
       );
       if (!deactivated) {
         return reply.status(404).send({ error: "Kontot hittades inte" });
       }
       return reply.status(204).send();
-    }
+    },
   );
 
   // Update account
@@ -96,15 +93,11 @@ export async function accountRoutes(fastify: FastifyInstance) {
       }
 
       const { name, type, isVatAccount } = parsed.data;
-      const result = await accountRepo.update(
-        request.params.orgId,
-        request.params.accountNumber,
-        {
-          ...(name != null && { name }),
-          ...(type != null && { type }),
-          ...(isVatAccount != null && { isVatAccount }),
-        },
-      );
+      const result = await accountRepo.update(request.params.orgId, request.params.accountNumber, {
+        ...(name != null && { name }),
+        ...(type != null && { type }),
+        ...(isVatAccount != null && { isVatAccount }),
+      });
 
       if (!result.ok) {
         const statusCode = result.error.code === "NOT_FOUND" ? 404 : 400;
@@ -112,6 +105,6 @@ export async function accountRoutes(fastify: FastifyInstance) {
       }
 
       return { data: result.value };
-    }
+    },
   );
 }

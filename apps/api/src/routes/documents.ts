@@ -15,12 +15,9 @@ export async function documentRoutes(fastify: FastifyInstance) {
   fastify.get<{ Params: { orgId: string; voucherId: string } }>(
     "/:orgId/vouchers/:voucherId/documents",
     async (request) => {
-      const docs = await documentRepo.findByVoucher(
-        request.params.voucherId,
-        request.params.orgId
-      );
+      const docs = await documentRepo.findByVoucher(request.params.voucherId, request.params.orgId);
       return { data: docs };
-    }
+    },
   );
 
   // Upload document to a voucher
@@ -39,10 +36,7 @@ export async function documentRoutes(fastify: FastifyInstance) {
       }
 
       const data = await file.toBuffer();
-      const storageKey = storage.generateStorageKey(
-        request.params.orgId,
-        file.filename
-      );
+      const storageKey = storage.generateStorageKey(request.params.orgId, file.filename);
 
       await storage.store(storageKey, data);
 
@@ -62,17 +56,14 @@ export async function documentRoutes(fastify: FastifyInstance) {
       }
 
       return reply.status(201).send({ data: result.value });
-    }
+    },
   );
 
   // Download document
   fastify.get<{ Params: { orgId: string; documentId: string } }>(
     "/:orgId/documents/:documentId/download",
     async (request, reply) => {
-      const doc = await documentRepo.findById(
-        request.params.documentId,
-        request.params.orgId
-      );
+      const doc = await documentRepo.findById(request.params.documentId, request.params.orgId);
       if (!doc) {
         return reply.status(404).send({ error: "Dokumentet hittades inte" });
       }
@@ -80,22 +71,16 @@ export async function documentRoutes(fastify: FastifyInstance) {
       const data = await storage.read(doc.storageKey);
       return reply
         .header("Content-Type", doc.mimeType)
-        .header(
-          "Content-Disposition",
-          `attachment; filename="${encodeURIComponent(doc.filename)}"`
-        )
+        .header("Content-Disposition", `attachment; filename="${encodeURIComponent(doc.filename)}"`)
         .send(data);
-    }
+    },
   );
 
   // Delete document
   fastify.delete<{ Params: { orgId: string; documentId: string } }>(
     "/:orgId/documents/:documentId",
     async (request, reply) => {
-      const doc = await documentRepo.findById(
-        request.params.documentId,
-        request.params.orgId
-      );
+      const doc = await documentRepo.findById(request.params.documentId, request.params.orgId);
       if (!doc) {
         return reply.status(404).send({ error: "Dokumentet hittades inte" });
       }
@@ -124,6 +109,6 @@ export async function documentRoutes(fastify: FastifyInstance) {
       await documentRepo.delete(doc.id, request.params.orgId);
 
       return reply.status(204).send();
-    }
+    },
   );
 }

@@ -64,7 +64,7 @@ export async function organizationRoutes(fastify: FastifyInstance) {
         name: a.name,
         type: a.type,
         isVatAccount: a.isVatAccount,
-      }))
+      })),
     );
 
     return reply.status(201).send({ data: org });

@@ -76,7 +76,10 @@ describe("Account routes", () => {
       });
 
       expect(res.statusCode).toBe(201);
-      expect(repos.accounts.create).toHaveBeenCalledWith(orgId, expect.objectContaining({ number: "1930" }));
+      expect(repos.accounts.create).toHaveBeenCalledWith(
+        orgId,
+        expect.objectContaining({ number: "1930" }),
+      );
     });
 
     it("returns 400 for invalid account number", async () => {
@@ -135,7 +138,10 @@ describe("Account routes", () => {
 
   describe("PUT /:orgId/accounts/:accountNumber", () => {
     it("updates account name", async () => {
-      repos.accounts.update.mockResolvedValue({ ok: true, value: { ...sampleAccount, name: "Nytt namn" } });
+      repos.accounts.update.mockResolvedValue({
+        ok: true,
+        value: { ...sampleAccount, name: "Nytt namn" },
+      });
 
       const res = await app.inject({
         method: "PUT",

@@ -15,8 +15,20 @@ describe("Organization routes", () => {
   describe("GET /api/organizations", () => {
     it("returns all organizations", async () => {
       const orgs = [
-        { id: "1", orgNumber: "5561234567", name: "Test AB", fiscalYearStartMonth: 1, createdAt: new Date() },
-        { id: "2", orgNumber: "5567654321", name: "Demo AB", fiscalYearStartMonth: 7, createdAt: new Date() },
+        {
+          id: "1",
+          orgNumber: "5561234567",
+          name: "Test AB",
+          fiscalYearStartMonth: 1,
+          createdAt: new Date(),
+        },
+        {
+          id: "2",
+          orgNumber: "5567654321",
+          name: "Demo AB",
+          fiscalYearStartMonth: 7,
+          createdAt: new Date(),
+        },
       ];
       repos.organizations.findAll.mockResolvedValue(orgs);
 
@@ -59,7 +71,12 @@ describe("Organization routes", () => {
 
   describe("POST /api/organizations", () => {
     it("creates organization and initializes BAS chart", async () => {
-      const org = { id: "1", orgNumber: "5561234567", name: "Ny Förening", fiscalYearStartMonth: 1 };
+      const org = {
+        id: "1",
+        orgNumber: "5561234567",
+        name: "Ny Förening",
+        fiscalYearStartMonth: 1,
+      };
       repos.organizations.create.mockResolvedValue({ ok: true, value: org });
       repos.accounts.createMany.mockResolvedValue(50);
 
@@ -120,7 +137,12 @@ describe("Organization routes", () => {
 
   describe("PATCH /api/organizations/:orgId", () => {
     it("updates organization name", async () => {
-      const org = { id: "1", orgNumber: "5561234567", name: "Uppdaterat AB", fiscalYearStartMonth: 1 };
+      const org = {
+        id: "1",
+        orgNumber: "5561234567",
+        name: "Uppdaterat AB",
+        fiscalYearStartMonth: 1,
+      };
       repos.organizations.update.mockResolvedValue(org);
 
       const res = await app.inject({
