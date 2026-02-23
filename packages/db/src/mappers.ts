@@ -7,11 +7,12 @@ import type {
   VoucherLine as CoreVoucherLine,
   Document as CoreDocument,
   AccountType,
-} from "@muninsbok/core";
+} from "@muninsbok/core/types";
 
 /**
  * Map Prisma Organization to Core Organization
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- Prisma GetPayload generic
 export function toOrganization(org: Prisma.OrganizationGetPayload<{}>): CoreOrganization {
   return {
     id: org.id,
@@ -26,6 +27,7 @@ export function toOrganization(org: Prisma.OrganizationGetPayload<{}>): CoreOrga
 /**
  * Map Prisma FiscalYear to Core FiscalYear
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- Prisma GetPayload generic
 export function toFiscalYear(fy: Prisma.FiscalYearGetPayload<{}>): CoreFiscalYear {
   return {
     id: fy.id,
@@ -41,6 +43,7 @@ export function toFiscalYear(fy: Prisma.FiscalYearGetPayload<{}>): CoreFiscalYea
 /**
  * Map Prisma Account to Core Account
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- Prisma GetPayload generic
 export function toAccount(account: Prisma.AccountGetPayload<{}>): CoreAccount {
   return {
     number: account.number,
@@ -81,6 +84,7 @@ export function toVoucher(
 /**
  * Map Prisma VoucherLine to Core VoucherLine
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- Prisma GetPayload generic
 export function toVoucherLine(line: Prisma.VoucherLineGetPayload<{}>): CoreVoucherLine {
   return {
     id: line.id,
@@ -95,6 +99,7 @@ export function toVoucherLine(line: Prisma.VoucherLineGetPayload<{}>): CoreVouch
 /**
  * Map Prisma Document to Core Document
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- Prisma GetPayload generic
 export function toDocument(doc: Prisma.DocumentGetPayload<{}>): CoreDocument {
   return {
     id: doc.id,
