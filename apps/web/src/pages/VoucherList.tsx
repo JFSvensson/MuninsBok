@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useOrganization } from "../context/OrganizationContext";
+import { defined } from "../utils/assert";
 import { api } from "../api";
 import { formatAmount, formatDate, oreToKronor } from "../utils/formatting";
 
@@ -16,7 +17,7 @@ export function VoucherList() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["vouchers", organization?.id, fiscalYear?.id, page, limit, search],
     queryFn: () =>
-      api.getVouchers(organization!.id, fiscalYear!.id, {
+      api.getVouchers(defined(organization).id, defined(fiscalYear).id, {
         page,
         limit,
         search: search || undefined,
@@ -26,7 +27,7 @@ export function VoucherList() {
 
   const { data: gapsData } = useQuery({
     queryKey: ["voucher-gaps", organization?.id, fiscalYear?.id],
-    queryFn: () => api.getVoucherGaps(organization!.id, fiscalYear!.id),
+    queryFn: () => api.getVoucherGaps(defined(organization).id, defined(fiscalYear).id),
     enabled: !!organization && !!fiscalYear,
   });
 
