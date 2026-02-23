@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 import type { Organization, FiscalYear } from "../api";
+import dialogStyles from "./Dialog.module.css";
 
 interface Props {
   open: boolean;
@@ -55,12 +56,14 @@ export function CreateFiscalYearDialog({
 
       // Auto-create opening balances from most recent closed year
       if (carryOverBalances && closedYears.length > 0) {
-        const previousFy = closedYears[closedYears.length - 1]!;
-        try {
-          await api.createOpeningBalances(organization.id, created.data.id, previousFy.id);
-        } catch {
-          // Non-fatal — the FY was created successfully, opening balances just failed
-          console.warn("Kunde inte skapa ingående balanser");
+        const previousFy = closedYears[closedYears.length - 1];
+        if (previousFy) {
+          try {
+            await api.createOpeningBalances(organization.id, created.data.id, previousFy.id);
+          } catch {
+            // Non-fatal — the FY was created successfully, opening balances just failed
+            console.warn("Kunde inte skapa ingående balanser");
+          }
         }
       }
 
@@ -110,16 +113,16 @@ export function CreateFiscalYearDialog({
   if (!open) return null;
 
   return (
-    <div className="dialog-overlay" onClick={resetAndClose}>
-      <div className="dialog" onClick={(e) => e.stopPropagation()}>
-        <div className="dialog-header">
+    <div className={dialogStyles.overlay} onClick={resetAndClose}>
+      <div className={dialogStyles.dialog} onClick={(e) => e.stopPropagation()}>
+        <div className={dialogStyles.header}>
           <h3>Nytt räkenskapsår</h3>
           <button className="btn-icon" onClick={resetAndClose} type="button">
             ×
           </button>
         </div>
 
-        <p className="dialog-description">
+        <p className={dialogStyles.description}>
           Skapa ett nytt räkenskapsår för <strong>{organization.name}</strong>.
         </p>
 
@@ -165,7 +168,7 @@ export function CreateFiscalYearDialog({
             </div>
           )}
 
-          <div className="dialog-actions">
+          <div className={dialogStyles.actions}>
             <button type="button" className="secondary" onClick={resetAndClose}>
               Avbryt
             </button>
