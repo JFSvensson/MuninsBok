@@ -42,11 +42,12 @@ const CP437_HIGH: string[] = [
 function decodeCp437(bytes: Uint8Array): string {
   let result = "";
   for (let i = 0; i < bytes.length; i++) {
-    const byte = bytes[i]!;
+    const byte = bytes[i];
+    if (byte === undefined) continue;
     if (byte < 0x80) {
       result += String.fromCharCode(byte);
     } else {
-      result += CP437_HIGH[byte - 0x80]!;
+      result += CP437_HIGH[byte - 0x80] ?? "?";
     }
   }
   return result;
@@ -76,7 +77,7 @@ function findAsciiTagValue(bytes: Uint8Array, tag: string): string | null {
       // Read value until end of line
       let value = "";
       while (pos < bytes.length && bytes[pos] !== 0x0a && bytes[pos] !== 0x0d) {
-        value += String.fromCharCode(bytes[pos]!);
+        value += String.fromCharCode(bytes[pos] ?? 0);
         pos++;
       }
 
