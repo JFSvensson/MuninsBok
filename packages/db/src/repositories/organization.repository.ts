@@ -1,9 +1,14 @@
 import type { PrismaClient } from "../generated/prisma/client.js";
-import type { Organization, CreateOrganizationInput, OrganizationError } from "@muninsbok/core";
-import { ok, err, type Result } from "@muninsbok/core";
+import type {
+  Organization,
+  CreateOrganizationInput,
+  OrganizationError,
+  IOrganizationRepository,
+} from "@muninsbok/core/types";
+import { ok, err, type Result } from "@muninsbok/core/types";
 import { toOrganization } from "../mappers.js";
 
-export class OrganizationRepository {
+export class OrganizationRepository implements IOrganizationRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
   async findById(id: string): Promise<Organization | null> {
