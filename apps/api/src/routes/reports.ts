@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyReply } from "fastify";
-import type { Voucher, Account } from "@muninsbok/core";
+import type { Voucher, Account } from "@muninsbok/core/types";
 import {
   calculateTrialBalance,
   calculateIncomeStatement,
@@ -8,7 +8,13 @@ import {
   generateJournal,
   generateGeneralLedger,
   generateVoucherListReport,
-} from "@muninsbok/core";
+} from "@muninsbok/core/reports";
+import {
+  öreToKronor,
+  convertDebitCredit,
+  convertAmountSection,
+  convertBalanceSection,
+} from "../utils/amount-conversion.js";
 
 // ── helpers ─────────────────────────────────────────────────
 
@@ -81,12 +87,12 @@ export async function reportRoutes(fastify: FastifyInstance) {
         ...report,
         rows: report.rows.map((row) => ({
           ...row,
-          debit: row.debit / 100,
-          credit: row.credit / 100,
-          balance: row.balance / 100,
+          debit: öreToKronor(row.debit),
+          credit: öreToKronor(row.credit),
+          balance: öreToKronor(row.balance),
         })),
-        totalDebit: report.totalDebit / 100,
-        totalCredit: report.totalCredit / 100,
+        totalDebit: öreToKronor(report.totalDebit),
+        totalCredit: öreToKronor(report.totalCredit),
       },
     };
   });
@@ -98,23 +104,14 @@ export async function reportRoutes(fastify: FastifyInstance) {
 
     const report = calculateIncomeStatement(ctx.vouchers, ctx.accounts);
 
-    const convertSection = (section: typeof report.revenues) => ({
-      ...section,
-      rows: section.rows.map((row) => ({
-        ...row,
-        amount: row.amount / 100,
-      })),
-      total: section.total / 100,
-    });
-
     return {
       data: {
-        revenues: convertSection(report.revenues),
-        expenses: convertSection(report.expenses),
-        operatingResult: report.operatingResult / 100,
-        financialIncome: convertSection(report.financialIncome),
-        financialExpenses: convertSection(report.financialExpenses),
-        netResult: report.netResult / 100,
+        revenues: convertAmountSection(report.revenues),
+        expenses: convertAmountSection(report.expenses),
+        operatingResult: öreToKronor(report.operatingResult),
+        financialIncome: convertAmountSection(report.financialIncome),
+        financialExpenses: convertAmountSection(report.financialExpenses),
+        netResult: öreToKronor(report.netResult),
         generatedAt: report.generatedAt,
       },
     };
@@ -127,25 +124,15 @@ export async function reportRoutes(fastify: FastifyInstance) {
 
     const report = calculateBalanceSheet(ctx.vouchers, ctx.accounts);
 
-    const convertSection = (section: typeof report.assets) => ({
-      ...section,
-      rows: section.rows.map((row) => ({
-        accountNumber: row.accountNumber,
-        accountName: row.accountName,
-        amount: row.balance / 100,
-      })),
-      total: section.total / 100,
-    });
-
     return {
       data: {
-        assets: convertSection(report.assets),
-        liabilities: convertSection(report.liabilities),
-        equity: convertSection(report.equity),
-        totalAssets: report.totalAssets / 100,
-        totalLiabilitiesAndEquity: report.totalLiabilitiesAndEquity / 100,
-        difference: report.difference / 100,
-        yearResult: report.yearResult / 100,
+        assets: convertBalanceSection(report.assets),
+        liabilities: convertBalanceSection(report.liabilities),
+        equity: convertBalanceSection(report.equity),
+        totalAssets: öreToKronor(report.totalAssets),
+        totalLiabilitiesAndEquity: öreToKronor(report.totalLiabilitiesAndEquity),
+        difference: öreToKronor(report.difference),
+        yearResult: öreToKronor(report.yearResult),
         generatedAt: report.generatedAt,
       },
     };
@@ -158,19 +145,13 @@ export async function reportRoutes(fastify: FastifyInstance) {
 
     const report = calculateVatReport(ctx.vouchers, ctx.accounts);
 
-    const convertRows = (rows: typeof report.outputVat) =>
-      rows.map((row) => ({
-        ...row,
-        amount: row.amount / 100,
-      }));
-
     return {
       data: {
-        outputVat: convertRows(report.outputVat),
-        totalOutputVat: report.totalOutputVat / 100,
-        inputVat: convertRows(report.inputVat),
-        totalInputVat: report.totalInputVat / 100,
-        vatPayable: report.vatPayable / 100,
+        outputVat: report.outputVat.map((row) => ({ ...row, amount: öreToKronor(row.amount) })),
+        totalOutputVat: öreToKronor(report.totalOutputVat),
+        inputVat: report.inputVat.map((row) => ({ ...row, amount: öreToKronor(row.amount) })),
+        totalInputVat: öreToKronor(report.totalInputVat),
+        vatPayable: öreToKronor(report.vatPayable),
         generatedAt: report.generatedAt,
       },
     };
@@ -187,16 +168,12 @@ export async function reportRoutes(fastify: FastifyInstance) {
       data: {
         entries: report.entries.map((entry) => ({
           ...entry,
-          lines: entry.lines.map((line) => ({
-            ...line,
-            debit: line.debit / 100,
-            credit: line.credit / 100,
-          })),
-          totalDebit: entry.totalDebit / 100,
-          totalCredit: entry.totalCredit / 100,
+          lines: entry.lines.map(convertDebitCredit),
+          totalDebit: öreToKronor(entry.totalDebit),
+          totalCredit: öreToKronor(entry.totalCredit),
         })),
-        totalDebit: report.totalDebit / 100,
-        totalCredit: report.totalCredit / 100,
+        totalDebit: öreToKronor(report.totalDebit),
+        totalCredit: öreToKronor(report.totalCredit),
         generatedAt: report.generatedAt,
       },
     };
@@ -214,14 +191,12 @@ export async function reportRoutes(fastify: FastifyInstance) {
         accounts: report.accounts.map((account) => ({
           ...account,
           transactions: account.transactions.map((txn) => ({
-            ...txn,
-            debit: txn.debit / 100,
-            credit: txn.credit / 100,
-            balance: txn.balance / 100,
+            ...convertDebitCredit(txn),
+            balance: öreToKronor(txn.balance),
           })),
-          totalDebit: account.totalDebit / 100,
-          totalCredit: account.totalCredit / 100,
-          closingBalance: account.closingBalance / 100,
+          totalDebit: öreToKronor(account.totalDebit),
+          totalCredit: öreToKronor(account.totalCredit),
+          closingBalance: öreToKronor(account.closingBalance),
         })),
         generatedAt: report.generatedAt,
       },
@@ -239,16 +214,12 @@ export async function reportRoutes(fastify: FastifyInstance) {
       data: {
         entries: report.entries.map((entry) => ({
           ...entry,
-          lines: entry.lines.map((line) => ({
-            ...line,
-            debit: line.debit / 100,
-            credit: line.credit / 100,
-          })),
-          totalDebit: entry.totalDebit / 100,
-          totalCredit: entry.totalCredit / 100,
+          lines: entry.lines.map(convertDebitCredit),
+          totalDebit: öreToKronor(entry.totalDebit),
+          totalCredit: öreToKronor(entry.totalCredit),
         })),
-        totalDebit: report.totalDebit / 100,
-        totalCredit: report.totalCredit / 100,
+        totalDebit: öreToKronor(report.totalDebit),
+        totalCredit: öreToKronor(report.totalCredit),
         count: report.count,
         generatedAt: report.generatedAt,
       },
