@@ -1,18 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { z } from "zod";
-import { ACCOUNT_NUMBER_PATTERN } from "@muninsbok/core";
-
-/**
- * Tests for API validation schemas.
- * These test the Zod schemas used for request validation.
- */
-
-const createAccountSchema = z.object({
-  number: z.string().regex(ACCOUNT_NUMBER_PATTERN, "Kontonummer måste vara 4 siffror (1000-8999)"),
-  name: z.string().min(1).max(255),
-  type: z.enum(["ASSET", "LIABILITY", "EQUITY", "REVENUE", "EXPENSE"]),
-  isVatAccount: z.boolean().optional(),
-});
+import { createAccountSchema, createVoucherSchema } from "../schemas/index.js";
 
 describe("Account validation schema", () => {
   describe("valid inputs", () => {
@@ -131,21 +118,10 @@ describe("Account validation schema", () => {
   });
 });
 
-const createVoucherLineSchema = z.object({
-  accountNumber: z.string().regex(ACCOUNT_NUMBER_PATTERN),
-  debit: z.number().int().min(0),
-  credit: z.number().int().min(0),
-});
-
-const createVoucherSchema = z.object({
-  date: z.string(),
-  description: z.string().min(1),
-  lines: z.array(createVoucherLineSchema).min(2),
-});
-
 describe("Voucher validation schema", () => {
   it("should accept a valid balanced voucher", () => {
     const input = {
+      fiscalYearId: "fy-1",
       date: "2025-03-15",
       description: "Test bokföringspost",
       lines: [
@@ -157,11 +133,12 @@ describe("Voucher validation schema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("should reject voucher with less than 2 lines", () => {
+  it("should reject voucher with empty lines", () => {
     const input = {
+      fiscalYearId: "fy-1",
       date: "2025-03-15",
       description: "Test",
-      lines: [{ accountNumber: "1910", debit: 10000, credit: 0 }],
+      lines: [],
     };
     const result = createVoucherSchema.safeParse(input);
     expect(result.success).toBe(false);
@@ -169,6 +146,7 @@ describe("Voucher validation schema", () => {
 
   it("should reject voucher with empty description", () => {
     const input = {
+      fiscalYearId: "fy-1",
       date: "2025-03-15",
       description: "",
       lines: [
@@ -182,6 +160,7 @@ describe("Voucher validation schema", () => {
 
   it("should reject negative amounts", () => {
     const input = {
+      fiscalYearId: "fy-1",
       date: "2025-03-15",
       description: "Test",
       lines: [
@@ -195,6 +174,7 @@ describe("Voucher validation schema", () => {
 
   it("should reject decimal amounts (must be integers in öre)", () => {
     const input = {
+      fiscalYearId: "fy-1",
       date: "2025-03-15",
       description: "Test",
       lines: [
