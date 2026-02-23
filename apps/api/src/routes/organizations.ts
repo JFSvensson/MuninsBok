@@ -1,10 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { BAS_SIMPLIFIED } from "@muninsbok/core/chart-of-accounts";
 import { isValidOrgNumber } from "@muninsbok/core/types";
-import {
-  createOrganizationSchema,
-  updateOrganizationSchema,
-} from "../schemas/index.js";
+import { createOrganizationSchema, updateOrganizationSchema } from "../schemas/index.js";
 
 export async function organizationRoutes(fastify: FastifyInstance) {
   const orgRepo = fastify.repos.organizations;
