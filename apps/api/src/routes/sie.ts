@@ -167,8 +167,7 @@ export async function sieRoutes(fastify: FastifyInstance) {
         organizationId: orgId,
         fiscalYearId,
         date: sieVoucher.date,
-        description:
-          sieVoucher.description || `Import ${sieVoucher.series}${sieVoucher.number}`,
+        description: sieVoucher.description || `Import ${sieVoucher.series}${sieVoucher.number}`,
         lines,
       });
 
@@ -176,9 +175,7 @@ export async function sieRoutes(fastify: FastifyInstance) {
         importedCount++;
       } else {
         errorCount++;
-        errors.push(
-          `Verifikat ${sieVoucher.series}${sieVoucher.number}: ${result.error.message}`,
-        );
+        errors.push(`Verifikat ${sieVoucher.series}${sieVoucher.number}: ${result.error.message}`);
       }
     }
 
