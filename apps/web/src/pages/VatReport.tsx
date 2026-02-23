@@ -1,20 +1,14 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useOrganization } from "../context/OrganizationContext";
 import { api } from "../api";
 import { formatAmount, amountClassName } from "../utils/formatting";
 import { toCsv, downloadCsv, csvAmount } from "../utils/csv";
-import { DateFilter, type DateRange } from "../components/DateFilter";
+import { DateFilter } from "../components/DateFilter";
+import { useReportQuery } from "../hooks/useReportQuery";
 
 export function VatReport() {
-  const { organization, fiscalYear } = useOrganization();
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
-
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["vat-report", organization?.id, fiscalYear?.id, dateRange],
-    queryFn: () => api.getVatReport(organization!.id, fiscalYear!.id, dateRange),
-    enabled: !!organization && !!fiscalYear,
-  });
+  const { data, isLoading, error, setDateRange } = useReportQuery(
+    "vat-report",
+    api.getVatReport,
+  );
 
   if (isLoading) {
     return <div className="loading">Laddar momsrapport...</div>;
