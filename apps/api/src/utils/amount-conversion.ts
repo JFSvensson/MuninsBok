@@ -40,7 +40,11 @@ export function convertBalanceSection(section: {
   title: string;
   rows: readonly { accountNumber: string; accountName: string; balance: number }[];
   total: number;
-}): { title: string; rows: { accountNumber: string; accountName: string; amount: number }[]; total: number } {
+}): {
+  title: string;
+  rows: { accountNumber: string; accountName: string; amount: number }[];
+  total: number;
+} {
   return {
     title: section.title,
     rows: section.rows.map((row) => ({
