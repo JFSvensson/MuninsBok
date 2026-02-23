@@ -1,17 +1,10 @@
 import type { FastifyInstance } from "fastify";
-import { z } from "zod";
-import { BAS_SIMPLIFIED, isValidOrgNumber } from "@muninsbok/core";
-
-const createOrganizationSchema = z.object({
-  orgNumber: z.string().min(10).max(12),
-  name: z.string().min(1).max(255),
-  fiscalYearStartMonth: z.number().int().min(1).max(12).optional(),
-});
-
-const updateOrganizationSchema = z.object({
-  name: z.string().min(1).max(255).optional(),
-  fiscalYearStartMonth: z.number().int().min(1).max(12).optional(),
-});
+import { BAS_SIMPLIFIED } from "@muninsbok/core/chart-of-accounts";
+import { isValidOrgNumber } from "@muninsbok/core/types";
+import {
+  createOrganizationSchema,
+  updateOrganizationSchema,
+} from "../schemas/index.js";
 
 export async function organizationRoutes(fastify: FastifyInstance) {
   const orgRepo = fastify.repos.organizations;
@@ -23,13 +16,9 @@ export async function organizationRoutes(fastify: FastifyInstance) {
     return { data: organizations };
   });
 
-  // Get single organization
-  fastify.get<{ Params: { orgId: string } }>("/:orgId", async (request, reply) => {
-    const org = await orgRepo.findById(request.params.orgId);
-    if (!org) {
-      return reply.status(404).send({ error: "Organisationen hittades inte" });
-    }
-    return { data: org };
+  // Get single organization (org validated by preHandler hook)
+  fastify.get<{ Params: { orgId: string } }>("/:orgId", async (request) => {
+    return { data: request.org };
   });
 
   // Create organization
