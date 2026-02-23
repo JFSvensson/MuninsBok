@@ -8,7 +8,15 @@ import {
   toDocument,
 } from "./mappers.js";
 
-// Prisma-like stub data matching Prisma.XxxGetPayload<{}>
+// Derive mapper input types — avoids importing Prisma generics directly
+type OrgRow = Parameters<typeof toOrganization>[0];
+type FyRow = Parameters<typeof toFiscalYear>[0];
+type AccountRow = Parameters<typeof toAccount>[0];
+type VoucherRow = Parameters<typeof toVoucher>[0];
+type LineRow = Parameters<typeof toVoucherLine>[0];
+type DocRow = Parameters<typeof toDocument>[0];
+
+// Prisma-like stub data matching the mapper input types
 // These mirror what Prisma would actually return (plain objects with Date fields)
 
 const now = new Date("2025-06-15T12:00:00Z");
@@ -24,7 +32,7 @@ describe("toOrganization", () => {
   };
 
   it("should map all fields correctly", () => {
-    const result = toOrganization(prismaOrg as any);
+    const result = toOrganization(prismaOrg as unknown as OrgRow);
     expect(result).toEqual({
       id: "org-1",
       orgNumber: "5560360793",
@@ -36,7 +44,7 @@ describe("toOrganization", () => {
   });
 
   it("should preserve date types", () => {
-    const result = toOrganization(prismaOrg as any);
+    const result = toOrganization(prismaOrg as unknown as OrgRow);
     expect(result.createdAt).toBeInstanceOf(Date);
     expect(result.updatedAt).toBeInstanceOf(Date);
   });
@@ -54,7 +62,7 @@ describe("toFiscalYear", () => {
   };
 
   it("should map all fields correctly", () => {
-    const result = toFiscalYear(prismaFy as any);
+    const result = toFiscalYear(prismaFy as unknown as FyRow);
     expect(result).toEqual({
       id: "fy-1",
       organizationId: "org-1",
@@ -68,7 +76,7 @@ describe("toFiscalYear", () => {
 
   it("should handle closed fiscal year", () => {
     const closed = { ...prismaFy, isClosed: true };
-    const result = toFiscalYear(closed as any);
+    const result = toFiscalYear(closed as unknown as FyRow);
     expect(result.isClosed).toBe(true);
   });
 });
@@ -87,7 +95,7 @@ describe("toAccount", () => {
   };
 
   it("should map core fields (excludes id and organizationId)", () => {
-    const result = toAccount(prismaAccount as any);
+    const result = toAccount(prismaAccount as unknown as AccountRow);
     expect(result).toEqual({
       number: "1910",
       name: "Kassa",
@@ -105,14 +113,14 @@ describe("toAccount", () => {
       number: "2610",
       name: "Utgående moms 25%",
     };
-    const result = toAccount(vatAccount as any);
+    const result = toAccount(vatAccount as unknown as AccountRow);
     expect(result.type).toBe("LIABILITY");
     expect(result.isVatAccount).toBe(true);
   });
 
   it("should handle inactive accounts", () => {
     const inactive = { ...prismaAccount, isActive: false };
-    const result = toAccount(inactive as any);
+    const result = toAccount(inactive as unknown as AccountRow);
     expect(result.isActive).toBe(false);
   });
 });
@@ -130,7 +138,7 @@ describe("toVoucherLine", () => {
   };
 
   it("should map all fields correctly", () => {
-    const result = toVoucherLine(prismaLine as any);
+    const result = toVoucherLine(prismaLine as unknown as LineRow);
     expect(result).toEqual({
       id: "line-1",
       voucherId: "v-1",
@@ -143,12 +151,12 @@ describe("toVoucherLine", () => {
 
   it("should convert null description to undefined", () => {
     const noDesc = { ...prismaLine, description: null };
-    const result = toVoucherLine(noDesc as any);
+    const result = toVoucherLine(noDesc as unknown as LineRow);
     expect(result.description).toBeUndefined();
   });
 
   it("should preserve description when present", () => {
-    const result = toVoucherLine(prismaLine as any);
+    const result = toVoucherLine(prismaLine as unknown as LineRow);
     expect(result.description).toBe("Kontantförsäljning");
   });
 });
@@ -189,7 +197,7 @@ describe("toVoucher", () => {
   };
 
   it("should map voucher with lines and document IDs", () => {
-    const result = toVoucher(prismaVoucher as any);
+    const result = toVoucher(prismaVoucher as unknown as VoucherRow);
     expect(result.id).toBe("v-1");
     expect(result.number).toBe(1);
     expect(result.description).toBe("Test verifikat");
@@ -198,7 +206,7 @@ describe("toVoucher", () => {
   });
 
   it("should map nested lines via toVoucherLine", () => {
-    const result = toVoucher(prismaVoucher as any);
+    const result = toVoucher(prismaVoucher as unknown as VoucherRow);
     expect(result.lines[0]).toEqual({
       id: "line-1",
       voucherId: "v-1",
@@ -211,13 +219,13 @@ describe("toVoucher", () => {
 
   it("should handle voucher with no documents", () => {
     const noDocVoucher = { ...prismaVoucher, documents: [] };
-    const result = toVoucher(noDocVoucher as any);
+    const result = toVoucher(noDocVoucher as unknown as VoucherRow);
     expect(result.documentIds).toEqual([]);
   });
 
   it("should handle voucher with empty lines", () => {
     const noLinesVoucher = { ...prismaVoucher, lines: [], documents: [] };
-    const result = toVoucher(noLinesVoucher as any);
+    const result = toVoucher(noLinesVoucher as unknown as VoucherRow);
     expect(result.lines).toEqual([]);
   });
 });
@@ -236,7 +244,7 @@ describe("toDocument", () => {
   };
 
   it("should map all fields correctly", () => {
-    const result = toDocument(prismaDoc as any);
+    const result = toDocument(prismaDoc as unknown as DocRow);
     expect(result).toEqual({
       id: "doc-1",
       organizationId: "org-1",
@@ -251,12 +259,12 @@ describe("toDocument", () => {
 
   it("should convert null voucherId to undefined", () => {
     const noVoucher = { ...prismaDoc, voucherId: null };
-    const result = toDocument(noVoucher as any);
+    const result = toDocument(noVoucher as unknown as DocRow);
     expect(result.voucherId).toBeUndefined();
   });
 
   it("should preserve voucherId when present", () => {
-    const result = toDocument(prismaDoc as any);
+    const result = toDocument(prismaDoc as unknown as DocRow);
     expect(result.voucherId).toBe("v-1");
   });
 });
