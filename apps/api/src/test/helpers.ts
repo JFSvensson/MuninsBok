@@ -14,9 +14,7 @@ import type {
 } from "@muninsbok/core/types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- conditional type guard requires `any` for function detection
-type MockedRepo<T> = {
-  [K in keyof T]: T[K] extends (...args: any[]) => any ? ReturnType<typeof vi.fn> : T[K];
-};
+type MockedRepo<T> = {[K in keyof T]: T[K] extends (...args: any[]) => any ? ReturnType<typeof vi.fn> : T[K];};
 
 /** Default mock organization returned by the org-scope preHandler. */
 const DEFAULT_ORG = {
