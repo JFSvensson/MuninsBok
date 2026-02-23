@@ -1,19 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { z } from "zod";
-import { ACCOUNT_NUMBER_PATTERN } from "@muninsbok/core";
-
-const createAccountSchema = z.object({
-  number: z.string().regex(ACCOUNT_NUMBER_PATTERN, "Kontonummer måste vara 4 siffror (1000-8999)"),
-  name: z.string().min(1).max(255),
-  type: z.enum(["ASSET", "LIABILITY", "EQUITY", "REVENUE", "EXPENSE"]),
-  isVatAccount: z.boolean().optional(),
-});
-
-const updateAccountSchema = z.object({
-  name: z.string().min(1).max(255).optional(),
-  type: z.enum(["ASSET", "LIABILITY", "EQUITY", "REVENUE", "EXPENSE"]).optional(),
-  isVatAccount: z.boolean().optional(),
-});
+import { createAccountSchema, updateAccountSchema } from "../schemas/index.js";
 
 export async function accountRoutes(fastify: FastifyInstance) {
   const accountRepo = fastify.repos.accounts;
