@@ -1,6 +1,12 @@
 import type { PrismaClient } from "../generated/prisma/client.js";
-import type { FiscalYear, CreateFiscalYearInput, FiscalYearError, Voucher } from "@muninsbok/core";
-import { ok, err, type Result } from "@muninsbok/core";
+import type {
+  FiscalYear,
+  CreateFiscalYearInput,
+  FiscalYearError,
+  Voucher,
+  IFiscalYearRepository,
+} from "@muninsbok/core/types";
+import { ok, err, type Result } from "@muninsbok/core/types";
 import { toFiscalYear, toVoucher } from "../mappers.js";
 
 const voucherInclude = {
@@ -9,7 +15,7 @@ const voucherInclude = {
   correctedByVoucher: true,
 } as const;
 
-export class FiscalYearRepository {
+export class FiscalYearRepository implements IFiscalYearRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
   async findByOrganization(organizationId: string): Promise<FiscalYear[]> {
@@ -23,6 +29,20 @@ export class FiscalYearRepository {
   async findById(id: string, organizationId: string): Promise<FiscalYear | null> {
     const fy = await this.prisma.fiscalYear.findFirst({
       where: { id, organizationId },
+    });
+    return fy ? toFiscalYear(fy) : null;
+  }
+
+  async findPreviousByDate(
+    organizationId: string,
+    beforeDate: Date,
+  ): Promise<FiscalYear | null> {
+    const fy = await this.prisma.fiscalYear.findFirst({
+      where: {
+        organizationId,
+        endDate: { lt: beforeDate },
+      },
+      orderBy: { endDate: "desc" },
     });
     return fy ? toFiscalYear(fy) : null;
   }
