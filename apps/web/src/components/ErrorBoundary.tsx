@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import styles from "./ErrorBoundary.module.css";
 
 interface Props {
   children: ReactNode;
@@ -30,8 +31,8 @@ export class ErrorBoundary extends Component<Props, State> {
   override render() {
     if (this.state.hasError) {
       return (
-        <div className="error-boundary">
-          <div className="error-boundary-content">
+        <div className={styles.errorBoundary}>
+          <div className={styles.content}>
             <h2>Något gick fel</h2>
             <p>Ett oväntat fel uppstod. Försök ladda om sidan.</p>
             {this.state.error && (
