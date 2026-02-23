@@ -2,6 +2,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useOrganization } from "../context/OrganizationContext";
+import { defined } from "../utils/assert";
 import { api } from "../api";
 import { formatAmount, formatDate, oreToKronor } from "../utils/formatting";
 import { ConfirmDialog } from "../components/ConfirmDialog";
@@ -16,12 +17,12 @@ export function VoucherDetail() {
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["voucher", organization?.id, voucherId],
-    queryFn: () => api.getVoucher(organization!.id, voucherId!),
+    queryFn: () => api.getVoucher(defined(organization).id, defined(voucherId)),
     enabled: !!organization && !!voucherId,
   });
 
   const correctMutation = useMutation({
-    mutationFn: () => api.correctVoucher(organization!.id, voucherId!),
+    mutationFn: () => api.correctVoucher(defined(organization).id, defined(voucherId)),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["vouchers", organization?.id, fiscalYear?.id] });
       queryClient.invalidateQueries({ queryKey: ["voucher", organization?.id, voucherId] });
@@ -130,7 +131,7 @@ export function VoucherDetail() {
         </tbody>
       </table>
 
-      <DocumentSection organizationId={organization!.id} voucherId={voucher.id} />
+      <DocumentSection organizationId={defined(organization).id} voucherId={voucher.id} />
 
       {/* Help text about corrections */}
       {!isCorrected && !isCorrection && (
