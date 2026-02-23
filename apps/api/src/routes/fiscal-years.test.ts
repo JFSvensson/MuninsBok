@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { buildTestApp, type MockRepos } from "../test/helpers.js";
-import { ok, err } from "@muninsbok/core";
+import { ok, err } from "@muninsbok/core/types";
 
 describe("Fiscal year routes", () => {
   let app: FastifyInstance;
