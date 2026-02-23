@@ -1,7 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import multipart from "@fastify/multipart";
-import { isAllowedMimeType } from "@muninsbok/core";
-import { DocumentStorage } from "../services/document-storage.js";
+import { isAllowedMimeType } from "@muninsbok/core/types";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
@@ -9,7 +8,7 @@ export async function documentRoutes(fastify: FastifyInstance) {
   await fastify.register(multipart, { limits: { fileSize: MAX_FILE_SIZE } });
 
   const documentRepo = fastify.repos.documents;
-  const storage = new DocumentStorage();
+  const storage = fastify.documentStorage;
 
   // List documents for a voucher
   fastify.get<{ Params: { orgId: string; voucherId: string } }>(
