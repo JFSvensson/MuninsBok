@@ -1,10 +1,8 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useOrganization } from "../context/OrganizationContext";
 import { api, type ReportSection } from "../api";
 import { formatAmount, amountClassName } from "../utils/formatting";
 import { toCsv, downloadCsv, csvAmount } from "../utils/csv";
-import { DateFilter, type DateRange } from "../components/DateFilter";
+import { DateFilter } from "../components/DateFilter";
+import { useReportQuery } from "../hooks/useReportQuery";
 
 function Section({ section }: { section: ReportSection }) {
   if (section.rows.length === 0) {
@@ -36,14 +34,10 @@ function Section({ section }: { section: ReportSection }) {
 }
 
 export function BalanceSheet() {
-  const { organization, fiscalYear } = useOrganization();
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
-
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["balance-sheet", organization?.id, fiscalYear?.id, dateRange],
-    queryFn: () => api.getBalanceSheet(organization!.id, fiscalYear!.id, dateRange),
-    enabled: !!organization && !!fiscalYear,
-  });
+  const { data, isLoading, error, setDateRange } = useReportQuery(
+    "balance-sheet",
+    api.getBalanceSheet,
+  );
 
   if (isLoading) {
     return <div className="loading">Laddar balansräkning...</div>;
