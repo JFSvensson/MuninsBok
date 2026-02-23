@@ -3,8 +3,5 @@
 // Prisma client
 export { prisma, PrismaClient } from "./client.js";
 
-// Mappers
-export * from "./mappers.js";
-
-// Repositories
+// Repositories (mappers are internal – not re-exported)
 export * from "./repositories/index.js";
