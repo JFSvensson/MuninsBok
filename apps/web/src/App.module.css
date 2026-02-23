@@ -1,0 +1,147 @@
+/* App layout — header, nav, skip-link */
+
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 1rem;
+  z-index: 200;
+  padding: 0.75rem 1.5rem;
+  background-color: #1976d2;
+  color: white;
+  border-radius: 0 0 4px 4px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: top 0.15s;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.header h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.nav a {
+  color: #213547;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.nav a:hover {
+  background-color: #e0e0e0;
+}
+
+.nav a:global(.active) {
+  background-color: #1976d2;
+  color: white;
+}
+
+.nav-group {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.nav-separator {
+  width: 1px;
+  background-color: #ddd;
+  margin: 0 0.5rem;
+  align-self: stretch;
+}
+
+/* Tablet (≤ 900px) */
+@media screen and (max-width: 900px) {
+  .app {
+    padding: 1rem;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+
+  .nav {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .nav-separator {
+    display: none;
+  }
+
+  .nav-group {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+}
+
+/* Mobile (≤ 600px) */
+@media screen and (max-width: 600px) {
+  .app {
+    padding: 0.75rem;
+  }
+
+  .header h1 {
+    font-size: 1.25rem;
+  }
+
+  .nav {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .nav a {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .nav-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid #eee;
+  }
+
+  .nav-group:last-of-type {
+    border-bottom: none;
+  }
+}
+
+/* Print */
+@media print {
+  .header,
+  .nav {
+    display: none !important;
+  }
+
+  .app {
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+  }
+}
