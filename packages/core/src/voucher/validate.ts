@@ -49,7 +49,8 @@ export function validateVoucher(
 
   // Validate each line
   for (let i = 0; i < input.lines.length; i++) {
-    const line = input.lines[i]!;
+    const line = input.lines[i];
+    if (!line) continue;
 
     // Validate line amounts
     const lineError = validateVoucherLine(line);
