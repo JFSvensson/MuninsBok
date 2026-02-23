@@ -70,7 +70,8 @@ export function AccountList() {
   });
 
   const deactivateMutation = useMutation({
-    mutationFn: (accountNumber: string) => api.deactivateAccount(defined(organization).id, accountNumber),
+    mutationFn: (accountNumber: string) =>
+      api.deactivateAccount(defined(organization).id, accountNumber),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["accounts", organization?.id] });
     },
