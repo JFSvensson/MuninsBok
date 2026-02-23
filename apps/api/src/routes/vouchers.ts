@@ -1,21 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { z } from "zod";
-
-const createVoucherLineSchema = z.object({
-  accountNumber: z.string().regex(/^[1-8]\d{3}$/),
-  debit: z.number().int().min(0),
-  credit: z.number().int().min(0),
-  description: z.string().optional(),
-});
-
-const createVoucherSchema = z.object({
-  fiscalYearId: z.string(),
-  date: z.string().transform((s) => new Date(s)),
-  description: z.string().min(1).max(500),
-  lines: z.array(createVoucherLineSchema).min(1),
-  documentIds: z.array(z.string()).optional(),
-  createdBy: z.string().max(100).optional(),
-});
+import { createVoucherSchema } from "../schemas/index.js";
 
 export async function voucherRoutes(fastify: FastifyInstance) {
   const voucherRepo = fastify.repos.vouchers;
@@ -46,7 +30,7 @@ export async function voucherRoutes(fastify: FastifyInstance) {
       });
 
       return {
-        data: result.vouchers,
+        data: result.data,
         pagination: {
           page: result.page,
           limit: result.limit,
