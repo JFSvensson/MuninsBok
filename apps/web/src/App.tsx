@@ -1,23 +1,46 @@
 import { Routes, Route, NavLink, Navigate } from "react-router-dom";
 import { OrganizationProvider, useOrganization } from "./context/OrganizationContext";
+import styles from "./App.module.css";
 import { OrganizationSelect } from "./components/OrganizationSelect";
-import { VoucherList } from "./pages/VoucherList";
-import { VoucherCreate } from "./pages/VoucherCreate";
-import { VoucherDetail } from "./pages/VoucherDetail";
-import { AccountList } from "./pages/AccountList";
-import { Dashboard } from "./pages/Dashboard";
-import { TrialBalance } from "./pages/TrialBalance";
-import { IncomeStatement } from "./pages/IncomeStatement";
-import { BalanceSheet } from "./pages/BalanceSheet";
-import { VatReport } from "./pages/VatReport";
-import { Journal } from "./pages/Journal";
-import { GeneralLedger } from "./pages/GeneralLedger";
-import { VoucherListReport } from "./pages/VoucherListReport";
-import { SieExport } from "./pages/SieExport";
-import { FiscalYears } from "./pages/FiscalYears";
-import { NotFound } from "./pages/NotFound";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { CreateOrganizationDialog } from "./components/CreateOrganizationDialog";
+
+// Lazy-loaded page components (code-split per route)
+const Dashboard = lazy(() => import("./pages/Dashboard").then((m) => ({ default: m.Dashboard })));
+const VoucherList = lazy(() =>
+  import("./pages/VoucherList").then((m) => ({ default: m.VoucherList })),
+);
+const VoucherCreate = lazy(() =>
+  import("./pages/VoucherCreate").then((m) => ({ default: m.VoucherCreate })),
+);
+const VoucherDetail = lazy(() =>
+  import("./pages/VoucherDetail").then((m) => ({ default: m.VoucherDetail })),
+);
+const AccountList = lazy(() =>
+  import("./pages/AccountList").then((m) => ({ default: m.AccountList })),
+);
+const TrialBalance = lazy(() =>
+  import("./pages/TrialBalance").then((m) => ({ default: m.TrialBalance })),
+);
+const IncomeStatement = lazy(() =>
+  import("./pages/IncomeStatement").then((m) => ({ default: m.IncomeStatement })),
+);
+const BalanceSheet = lazy(() =>
+  import("./pages/BalanceSheet").then((m) => ({ default: m.BalanceSheet })),
+);
+const VatReport = lazy(() => import("./pages/VatReport").then((m) => ({ default: m.VatReport })));
+const Journal = lazy(() => import("./pages/Journal").then((m) => ({ default: m.Journal })));
+const GeneralLedger = lazy(() =>
+  import("./pages/GeneralLedger").then((m) => ({ default: m.GeneralLedger })),
+);
+const VoucherListReport = lazy(() =>
+  import("./pages/VoucherListReport").then((m) => ({ default: m.VoucherListReport })),
+);
+const SieExport = lazy(() => import("./pages/SieExport").then((m) => ({ default: m.SieExport })));
+const FiscalYears = lazy(() =>
+  import("./pages/FiscalYears").then((m) => ({ default: m.FiscalYears })),
+);
+const NotFound = lazy(() => import("./pages/NotFound").then((m) => ({ default: m.NotFound })));
 
 function WelcomePage() {
   const { setOrganization } = useOrganization();
@@ -43,11 +66,11 @@ function AppContent() {
   const { organization, fiscalYear, organizations } = useOrganization();
 
   return (
-    <div className="app">
-      <a href="#main-content" className="skip-link">
+    <div className={styles.app}>
+      <a href="#main-content" className={styles.skipLink}>
         Hoppa till innehåll
       </a>
-      <header className="header" role="banner">
+      <header className={styles.header} role="banner">
         <h1>Munins bok</h1>
         <OrganizationSelect />
       </header>
@@ -58,49 +81,51 @@ function AppContent() {
         </main>
       ) : organization && fiscalYear ? (
         <>
-          <nav className="nav mb-2" aria-label="Huvudnavigation">
-            <span className="nav-group">
+          <nav className={`${styles.nav} mb-2`} aria-label="Huvudnavigation">
+            <span className={styles.navGroup}>
               <NavLink to="/dashboard">Översikt</NavLink>
               <NavLink to="/vouchers">Verifikat</NavLink>
               <NavLink to="/accounts">Kontoplan</NavLink>
             </span>
-            <span className="nav-separator" aria-hidden="true" />
-            <span className="nav-group">
+            <span className={styles.navSeparator} aria-hidden="true" />
+            <span className={styles.navGroup}>
               <NavLink to="/reports/trial-balance">Råbalans</NavLink>
               <NavLink to="/reports/income-statement">Resultaträkning</NavLink>
               <NavLink to="/reports/balance-sheet">Balansräkning</NavLink>
               <NavLink to="/reports/vat">Moms</NavLink>
             </span>
-            <span className="nav-separator" aria-hidden="true" />
-            <span className="nav-group">
+            <span className={styles.navSeparator} aria-hidden="true" />
+            <span className={styles.navGroup}>
               <NavLink to="/reports/journal">Grundbok</NavLink>
               <NavLink to="/reports/general-ledger">Huvudbok</NavLink>
               <NavLink to="/reports/voucher-list">Verifikationslista</NavLink>
             </span>
-            <span className="nav-separator" aria-hidden="true" />
+            <span className={styles.navSeparator} aria-hidden="true" />
             <NavLink to="/sie">SIE</NavLink>
             <NavLink to="/fiscal-years">Räkenskapsår</NavLink>
           </nav>
 
           <main id="main-content">
-            <Routes>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/vouchers" element={<VoucherList />} />
-              <Route path="/vouchers/new" element={<VoucherCreate />} />
-              <Route path="/vouchers/:voucherId" element={<VoucherDetail />} />
-              <Route path="/accounts" element={<AccountList />} />
-              <Route path="/reports/trial-balance" element={<TrialBalance />} />
-              <Route path="/reports/income-statement" element={<IncomeStatement />} />
-              <Route path="/reports/balance-sheet" element={<BalanceSheet />} />
-              <Route path="/reports/vat" element={<VatReport />} />
-              <Route path="/reports/journal" element={<Journal />} />
-              <Route path="/reports/general-ledger" element={<GeneralLedger />} />
-              <Route path="/reports/voucher-list" element={<VoucherListReport />} />
-              <Route path="/sie" element={<SieExport />} />
-              <Route path="/fiscal-years" element={<FiscalYears />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <Suspense fallback={<div className="loading">Laddar…</div>}>
+              <Routes>
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/vouchers" element={<VoucherList />} />
+                <Route path="/vouchers/new" element={<VoucherCreate />} />
+                <Route path="/vouchers/:voucherId" element={<VoucherDetail />} />
+                <Route path="/accounts" element={<AccountList />} />
+                <Route path="/reports/trial-balance" element={<TrialBalance />} />
+                <Route path="/reports/income-statement" element={<IncomeStatement />} />
+                <Route path="/reports/balance-sheet" element={<BalanceSheet />} />
+                <Route path="/reports/vat" element={<VatReport />} />
+                <Route path="/reports/journal" element={<Journal />} />
+                <Route path="/reports/general-ledger" element={<GeneralLedger />} />
+                <Route path="/reports/voucher-list" element={<VoucherListReport />} />
+                <Route path="/sie" element={<SieExport />} />
+                <Route path="/fiscal-years" element={<FiscalYears />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
           </main>
         </>
       ) : organization ? (
