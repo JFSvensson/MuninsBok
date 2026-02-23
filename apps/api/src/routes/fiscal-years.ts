@@ -1,10 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { z } from "zod";
-
-const createFiscalYearSchema = z.object({
-  startDate: z.string().transform((s) => new Date(s)),
-  endDate: z.string().transform((s) => new Date(s)),
-});
+import { createFiscalYearSchema, openingBalancesSchema } from "../schemas/index.js";
 
 export async function fiscalYearRoutes(fastify: FastifyInstance) {
   const fyRepo = fastify.repos.fiscalYears;
@@ -69,7 +64,7 @@ export async function fiscalYearRoutes(fastify: FastifyInstance) {
     Params: { orgId: string; fyId: string };
     Body: { previousFiscalYearId: string };
   }>("/:orgId/fiscal-years/:fyId/opening-balances", async (request, reply) => {
-    const body = z.object({ previousFiscalYearId: z.string() }).safeParse(request.body);
+    const body = openingBalancesSchema.safeParse(request.body);
 
     if (!body.success) {
       return reply.status(400).send({ error: body.error.issues });
