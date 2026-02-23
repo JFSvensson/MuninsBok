@@ -73,7 +73,15 @@ export function generateGeneralLedger(
 
   const ledgerAccounts: GeneralLedgerAccount[] = sortedAccountNumbers.map((accountNumber) => {
     const txns = accountTransactions.get(accountNumber);
-    if (!txns) return { accountNumber, accountName: "", transactions: [], totalDebit: 0, totalCredit: 0, closingBalance: 0 };
+    if (!txns)
+      return {
+        accountNumber,
+        accountName: "",
+        transactions: [],
+        totalDebit: 0,
+        totalCredit: 0,
+        closingBalance: 0,
+      };
 
     // Sort transactions by date then voucher number
     txns.sort((a, b) => {
