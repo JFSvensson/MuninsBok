@@ -1,20 +1,14 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useOrganization } from "../context/OrganizationContext";
 import { api } from "../api";
 import { formatAmount, formatDate, amountClassName } from "../utils/formatting";
 import { toCsv, downloadCsv, csvAmount } from "../utils/csv";
-import { DateFilter, type DateRange } from "../components/DateFilter";
+import { DateFilter } from "../components/DateFilter";
+import { useReportQuery } from "../hooks/useReportQuery";
 
 export function GeneralLedger() {
-  const { organization, fiscalYear } = useOrganization();
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
-
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["general-ledger", organization?.id, fiscalYear?.id, dateRange],
-    queryFn: () => api.getGeneralLedger(organization!.id, fiscalYear!.id, dateRange),
-    enabled: !!organization && !!fiscalYear,
-  });
+  const { data, isLoading, error, setDateRange } = useReportQuery(
+    "general-ledger",
+    api.getGeneralLedger,
+  );
 
   if (isLoading) {
     return <div className="loading">Laddar huvudbok...</div>;
