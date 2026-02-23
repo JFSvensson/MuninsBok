@@ -2,18 +2,6 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { buildTestApp, type MockRepos } from "../test/helpers.js";
 
-// Mock DocumentStorage so tests never touch the file system
-vi.mock("../services/document-storage.js", () => {
-  return {
-    DocumentStorage: vi.fn().mockImplementation(() => ({
-      generateStorageKey: vi.fn().mockReturnValue("org-1/uuid.pdf"),
-      store: vi.fn().mockResolvedValue(undefined),
-      read: vi.fn().mockResolvedValue(Buffer.from("fake-file-data")),
-      remove: vi.fn().mockResolvedValue(undefined),
-    })),
-  };
-});
-
 describe("Document routes", () => {
   let app: FastifyInstance;
   let repos: MockRepos;
