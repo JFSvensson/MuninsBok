@@ -5,6 +5,7 @@
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from "fastify";
 import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
+import type { IDocumentStorage } from "@muninsbok/core/types";
 import { organizationRoutes } from "./routes/organizations.js";
 import { voucherRoutes } from "./routes/vouchers.js";
 import { reportRoutes } from "./routes/reports.js";
@@ -14,9 +15,12 @@ import { fiscalYearRoutes } from "./routes/fiscal-years.js";
 import { documentRoutes } from "./routes/documents.js";
 import { dashboardRoutes } from "./routes/dashboard.js";
 import type { Repositories } from "./repositories.js";
+// Side-effect import: augments FastifyRequest with `org` property
+import "./plugins/org-scope.js";
 
 export interface BuildAppOptions {
   repos: Repositories;
+  documentStorage: IDocumentStorage;
   fastifyOptions?: FastifyServerOptions;
   corsOrigin?: string;
   apiKey?: string;
@@ -67,16 +71,35 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
 
   // Decorate with repositories so routes can access them
   fastify.decorate("repos", options.repos);
+  fastify.decorate("documentStorage", options.documentStorage);
 
-  // Routes
-  await fastify.register(organizationRoutes, { prefix: "/api/organizations" });
-  await fastify.register(voucherRoutes, { prefix: "/api/organizations" });
-  await fastify.register(reportRoutes, { prefix: "/api/organizations" });
-  await fastify.register(sieRoutes, { prefix: "/api/organizations" });
-  await fastify.register(accountRoutes, { prefix: "/api/organizations" });
-  await fastify.register(fiscalYearRoutes, { prefix: "/api/organizations" });
-  await fastify.register(documentRoutes, { prefix: "/api/organizations" });
-  await fastify.register(dashboardRoutes, { prefix: "/api/organizations" });
+  // Routes — all org-scoped routes share the org-scope preHandler
+  await fastify.register(
+    async function orgScoped(instance) {
+      // Validate `:orgId` exists before any route handler in this scope
+      instance.addHook("preHandler", async (request, reply) => {
+        const orgId = (request.params as Record<string, string | undefined>)["orgId"];
+        if (!orgId) return; // List / create routes — no orgId to validate
+
+        const org = await instance.repos.organizations.findById(orgId);
+        if (!org) {
+          return reply.status(404).send({ error: "Organisationen hittades inte" });
+        }
+
+        request.org = org;
+      });
+
+      await instance.register(organizationRoutes);
+      await instance.register(voucherRoutes);
+      await instance.register(reportRoutes);
+      await instance.register(sieRoutes);
+      await instance.register(accountRoutes);
+      await instance.register(fiscalYearRoutes);
+      await instance.register(documentRoutes);
+      await instance.register(dashboardRoutes);
+    },
+    { prefix: "/api/organizations" },
+  );
 
   // Health check with database connectivity test
   fastify.get("/health", async () => {
@@ -99,5 +122,6 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
 declare module "fastify" {
   interface FastifyInstance {
     repos: Repositories;
+    documentStorage: IDocumentStorage;
   }
 }
