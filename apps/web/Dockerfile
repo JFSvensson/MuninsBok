@@ -23,7 +23,7 @@ RUN pnpm --filter @muninsbok/core build
 RUN pnpm --filter @muninsbok/web build
 
 # Production stage - nginx
-FROM nginx:1.27-alpine AS runner
+FROM nginx:1.29-alpine AS runner
 
 # Copy built files
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
