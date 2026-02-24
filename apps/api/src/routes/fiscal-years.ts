@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { createFiscalYearSchema, openingBalancesSchema } from "../schemas/index.js";
+import { parseBody } from "../utils/parse-body.js";
 
 export async function fiscalYearRoutes(fastify: FastifyInstance) {
   const fyRepo = fastify.repos.fiscalYears;
@@ -24,15 +25,12 @@ export async function fiscalYearRoutes(fastify: FastifyInstance) {
 
   // Create fiscal year
   fastify.post<{ Params: { orgId: string } }>("/:orgId/fiscal-years", async (request, reply) => {
-    const parsed = createFiscalYearSchema.safeParse(request.body);
-    if (!parsed.success) {
-      return reply.status(400).send({ error: parsed.error.issues });
-    }
+    const data = parseBody(createFiscalYearSchema, request.body);
 
     const result = await fyRepo.create({
       organizationId: request.params.orgId,
-      startDate: parsed.data.startDate,
-      endDate: parsed.data.endDate,
+      startDate: data.startDate,
+      endDate: data.endDate,
     });
 
     if (!result.ok) {
@@ -64,15 +62,11 @@ export async function fiscalYearRoutes(fastify: FastifyInstance) {
     Params: { orgId: string; fyId: string };
     Body: { previousFiscalYearId: string };
   }>("/:orgId/fiscal-years/:fyId/opening-balances", async (request, reply) => {
-    const body = openingBalancesSchema.safeParse(request.body);
-
-    if (!body.success) {
-      return reply.status(400).send({ error: body.error.issues });
-    }
+    const data = parseBody(openingBalancesSchema, request.body);
 
     const result = await fyRepo.createOpeningBalances(
       request.params.fyId,
-      body.data.previousFiscalYearId,
+      data.previousFiscalYearId,
       request.params.orgId,
     );
 
