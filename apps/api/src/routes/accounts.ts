@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { createAccountSchema, updateAccountSchema } from "../schemas/index.js";
+import { parseBody } from "../utils/parse-body.js";
 
 export async function accountRoutes(fastify: FastifyInstance) {
   const accountRepo = fastify.repos.accounts;
@@ -36,12 +37,9 @@ export async function accountRoutes(fastify: FastifyInstance) {
 
   // Create account
   fastify.post<{ Params: { orgId: string } }>("/:orgId/accounts", async (request, reply) => {
-    const parsed = createAccountSchema.safeParse(request.body);
-    if (!parsed.success) {
-      return reply.status(400).send({ error: parsed.error.issues });
-    }
+    const parsed = parseBody(createAccountSchema, request.body);
 
-    const { isVatAccount, ...rest } = parsed.data;
+    const { isVatAccount, ...rest } = parsed;
     const result = await accountRepo.create(request.params.orgId, {
       ...rest,
       ...(isVatAccount != null && { isVatAccount }),
@@ -73,12 +71,9 @@ export async function accountRoutes(fastify: FastifyInstance) {
   fastify.put<{ Params: { orgId: string; accountNumber: string } }>(
     "/:orgId/accounts/:accountNumber",
     async (request, reply) => {
-      const parsed = updateAccountSchema.safeParse(request.body);
-      if (!parsed.success) {
-        return reply.status(400).send({ error: parsed.error.issues });
-      }
+      const parsed = parseBody(updateAccountSchema, request.body);
 
-      const { name, type, isVatAccount } = parsed.data;
+      const { name, type, isVatAccount } = parsed;
       const result = await accountRepo.update(request.params.orgId, request.params.accountNumber, {
         ...(name != null && { name }),
         ...(type != null && { type }),
