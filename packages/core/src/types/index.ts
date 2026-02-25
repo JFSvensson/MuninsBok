@@ -6,4 +6,5 @@ export * from "./account.js";
 export * from "./voucher.js";
 export * from "./voucher-line.js";
 export * from "./document.js";
+export * from "./user.js";
 export * from "./repositories.js";
