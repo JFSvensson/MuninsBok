@@ -11,6 +11,15 @@ import type { FiscalYear, CreateFiscalYearInput, FiscalYearError } from "./fisca
 import type { Account, CreateAccountInput, UpdateAccountInput, AccountError } from "./account.js";
 import type { Voucher, CreateVoucherInput, VoucherError } from "./voucher.js";
 import type { Document, CreateDocumentInput, DocumentError } from "./document.js";
+import type {
+  User,
+  SafeUser,
+  CreateUserInput,
+  UserError,
+  MemberRole,
+  OrganizationMember,
+  OrganizationMemberWithUser,
+} from "./user.js";
 
 // ── Pagination ──────────────────────────────────────────────
 
@@ -110,4 +119,26 @@ export interface IDocumentStorage {
   store(storageKey: string, data: Uint8Array): Promise<void>;
   read(storageKey: string): Promise<Uint8Array>;
   remove(storageKey: string): Promise<boolean>;
+}
+
+// ── User ────────────────────────────────────────────────────
+
+export interface IUserRepository {
+  findById(id: string): Promise<User | null>;
+  findByEmail(email: string): Promise<User | null>;
+  create(input: CreateUserInput): Promise<Result<User, UserError>>;
+  /** Members of an organization, including user details. */
+  findMembersByOrganization(organizationId: string): Promise<OrganizationMemberWithUser[]>;
+  /** Get a specific membership. */
+  findMembership(userId: string, organizationId: string): Promise<OrganizationMember | null>;
+  /** Add a user to an organization with a given role. */
+  addMember(
+    userId: string,
+    organizationId: string,
+    role: MemberRole,
+  ): Promise<OrganizationMember>;
+  /** Remove a user from an organization. */
+  removeMember(userId: string, organizationId: string): Promise<boolean>;
+  /** Get all organizations a user is a member of (returns SafeUser-scoped data). */
+  findOrganizationsByUser(userId: string): Promise<OrganizationMember[]>;
 }
