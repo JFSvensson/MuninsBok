@@ -7,6 +7,11 @@ import type {
   VoucherLine as CoreVoucherLine,
   Document as CoreDocument,
   AccountType,
+  User as CoreUser,
+  SafeUser as CoreSafeUser,
+  MemberRole as CoreMemberRole,
+  OrganizationMember as CoreOrganizationMember,
+  OrganizationMemberWithUser as CoreOrganizationMemberWithUser,
 } from "@muninsbok/core/types";
 
 /**
@@ -110,5 +115,66 @@ export function toDocument(doc: Prisma.DocumentGetPayload<{}>): CoreDocument {
     storageKey: doc.storageKey,
     size: doc.size,
     createdAt: doc.createdAt,
+  };
+}
+
+/**
+ * Map Prisma User to Core User
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- Prisma GetPayload generic
+export function toUser(user: Prisma.UserGetPayload<{}>): CoreUser {
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    passwordHash: user.passwordHash,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
+}
+
+/**
+ * Map Prisma User to Core SafeUser (no passwordHash)
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- Prisma GetPayload generic
+export function toSafeUser(user: Prisma.UserGetPayload<{}>): CoreSafeUser {
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
+}
+
+/**
+ * Map Prisma OrganizationMember to Core OrganizationMember
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- Prisma GetPayload generic
+export function toOrganizationMember(
+  member: Prisma.OrganizationMemberGetPayload<{}>,
+): CoreOrganizationMember {
+  return {
+    id: member.id,
+    userId: member.userId,
+    organizationId: member.organizationId,
+    role: member.role as CoreMemberRole,
+    createdAt: member.createdAt,
+  };
+}
+
+/**
+ * Map Prisma OrganizationMember (with user) to Core OrganizationMemberWithUser
+ */
+export function toOrganizationMemberWithUser(
+  member: Prisma.OrganizationMemberGetPayload<{ include: { user: true } }>,
+): CoreOrganizationMemberWithUser {
+  return {
+    id: member.id,
+    userId: member.userId,
+    organizationId: member.organizationId,
+    role: member.role as CoreMemberRole,
+    createdAt: member.createdAt,
+    user: toSafeUser(member.user),
   };
 }
