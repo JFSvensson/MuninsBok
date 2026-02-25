@@ -11,6 +11,7 @@ import type {
   IVoucherRepository,
   IFiscalYearRepository,
   IDocumentRepository,
+  IUserRepository,
 } from "@muninsbok/core/types";
 
 type MockedRepo<T> = {
@@ -85,6 +86,19 @@ export function createMockDocumentRepo(): MockedRepo<IDocumentRepository> {
   } as MockedRepo<IDocumentRepository>;
 }
 
+export function createMockUserRepo(): MockedRepo<IUserRepository> {
+  return {
+    findById: vi.fn(),
+    findByEmail: vi.fn(),
+    create: vi.fn(),
+    findMembersByOrganization: vi.fn(),
+    findMembership: vi.fn(),
+    addMember: vi.fn(),
+    removeMember: vi.fn(),
+    findOrganizationsByUser: vi.fn(),
+  } as MockedRepo<IUserRepository>;
+}
+
 interface MockPrismaModel {
   [method: string]: ReturnType<typeof vi.fn>;
 }
@@ -103,6 +117,7 @@ export interface MockRepos {
   vouchers: MockedRepo<IVoucherRepository>;
   fiscalYears: MockedRepo<IFiscalYearRepository>;
   documents: MockedRepo<IDocumentRepository>;
+  users: MockedRepo<IUserRepository>;
   prisma: MockPrisma;
 }
 
@@ -122,6 +137,7 @@ export function createMockRepos(): MockRepos {
     vouchers: createMockVoucherRepo(),
     fiscalYears: createMockFiscalYearRepo(),
     documents: createMockDocumentRepo(),
+    users: createMockUserRepo(),
     prisma: {
       organization: { findUnique: vi.fn() },
       fiscalYear: { findFirst: vi.fn() },
