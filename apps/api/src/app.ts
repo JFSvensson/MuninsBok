@@ -6,6 +6,8 @@ import Fastify, { type FastifyInstance, type FastifyServerOptions } from "fastif
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
+import swagger from "@fastify/swagger";
+import swaggerUi from "@fastify/swagger-ui";
 import type { IDocumentStorage } from "@muninsbok/core/types";
 import { AppError } from "./utils/app-error.js";
 import requestLogging from "./plugins/request-logging.js";
@@ -43,6 +45,31 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
 
   await fastify.register(cors, {
     origin: options.corsOrigin ?? "http://localhost:5173",
+  });
+
+  // OpenAPI / Swagger documentation
+  await fastify.register(swagger, {
+    openapi: {
+      info: {
+        title: "Munins bok API",
+        description: "REST API för svensk bokföring",
+        version: process.env["npm_package_version"] ?? "0.1.0",
+      },
+      tags: [
+        { name: "organizations", description: "Organisationer (tenants)" },
+        { name: "accounts", description: "Kontoplan" },
+        { name: "fiscal-years", description: "Räkenskapsår" },
+        { name: "vouchers", description: "Verifikat" },
+        { name: "reports", description: "Rapporter" },
+        { name: "sie", description: "SIE-import / export" },
+        { name: "documents", description: "Dokument / bilagor" },
+        { name: "dashboard", description: "Översikt" },
+      ],
+    },
+  });
+
+  await fastify.register(swaggerUi, {
+    routePrefix: "/docs",
   });
 
   await fastify.register(rateLimit, {
