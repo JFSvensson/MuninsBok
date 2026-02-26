@@ -150,8 +150,8 @@ export function toSafeUser(user: Prisma.UserGetPayload<{}>): CoreSafeUser {
 /**
  * Map Prisma OrganizationMember to Core OrganizationMember
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- Prisma GetPayload generic
 export function toOrganizationMember(
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- Prisma GetPayload generic
   member: Prisma.OrganizationMemberGetPayload<{}>,
 ): CoreOrganizationMember {
   return {

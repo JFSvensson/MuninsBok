@@ -13,7 +13,6 @@ import type { Voucher, CreateVoucherInput, VoucherError } from "./voucher.js";
 import type { Document, CreateDocumentInput, DocumentError } from "./document.js";
 import type {
   User,
-  SafeUser,
   CreateUserInput,
   UserError,
   MemberRole,
