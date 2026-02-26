@@ -35,7 +35,13 @@ DATABASE_URL=postgresql://user:lösenord@localhost:5432/muninsbok
 HOST=0.0.0.0
 PORT=3000
 CORS_ORIGIN=https://din-domän.se
-API_KEY=en-lång-slumpmässig-nyckel
+JWT_SECRET=en-lång-slumpmässig-hemlighet
+```
+
+Generera `JWT_SECRET` med:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
 ### Viktiga inställningar i produktion
@@ -44,10 +50,11 @@ API_KEY=en-lång-slumpmässig-nyckel
 |----------|-------|-------------|
 | `NODE_ENV` | Nej (default: `development`) | Sätts till `production` — styr loggformat och varningar |
 | `DATABASE_URL` | **Ja** | PostgreSQL-anslutningssträng |
-| `API_KEY` | Rekommenderat | Skyddar alla API-anrop med Bearer-token. **Varning visas om den saknas i produktion.** |
+| `JWT_SECRET` | **Rekommenderat** | Aktiverar JWT-autentisering (register/login). **Varning visas om den saknas i produktion.** |
 | `CORS_ORIGIN` | Rekommenderat | Frontend-URL (t.ex. `https://bok.example.se`) |
 | `HOST` | Nej (default: `0.0.0.0`) | Lyssningsadress |
 | `PORT` | Nej (default: `3000`) | Lyssningsport |
+| `API_KEY` | Nej | Enkel delad-hemlighet-auth. Ignoreras när `JWT_SECRET` är satt. |
 
 Servern validerar vid start att `DATABASE_URL` finns — saknas den avslutas processen direkt med felmeddelande.
 
