@@ -12,6 +12,7 @@ import type { IDocumentStorage } from "@muninsbok/core/types";
 import { AppError } from "./utils/app-error.js";
 import requestLogging from "./plugins/request-logging.js";
 import auditLogging from "./plugins/audit-logging.js";
+import jwtAuth from "./plugins/jwt-auth.js";
 import { organizationRoutes } from "./routes/organizations.js";
 import { voucherRoutes } from "./routes/vouchers.js";
 import { reportRoutes } from "./routes/reports.js";
@@ -30,6 +31,12 @@ export interface BuildAppOptions {
   fastifyOptions?: FastifyServerOptions;
   corsOrigin?: string;
   apiKey?: string;
+  /** JWT secret. When set, enables JWT authentication. */
+  jwtSecret?: string;
+  /** Access token TTL (default: "15m") */
+  accessTokenTtl?: string;
+  /** Refresh token TTL (default: "7d") */
+  refreshTokenTtl?: string;
 }
 
 export async function buildApp(options: BuildAppOptions): Promise<FastifyInstance> {
@@ -86,6 +93,15 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
 
   // Audit trail for write operations
   await fastify.register(auditLogging);
+
+  // JWT authentication (when secret is provided)
+  if (options.jwtSecret) {
+    await fastify.register(jwtAuth, {
+      secret: options.jwtSecret,
+      ...(options.accessTokenTtl != null && { accessTokenTtl: options.accessTokenTtl }),
+      ...(options.refreshTokenTtl != null && { refreshTokenTtl: options.refreshTokenTtl }),
+    });
+  }
 
   // Optional API key authentication
   if (options.apiKey) {
