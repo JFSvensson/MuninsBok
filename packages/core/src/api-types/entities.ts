@@ -69,3 +69,21 @@ export interface DocumentMeta {
   size: number;
   createdAt: string;
 }
+
+export type MemberRole = "OWNER" | "ADMIN" | "MEMBER";
+
+export interface OrgMember {
+  id: string;
+  userId: string;
+  organizationId: string;
+  role: MemberRole;
+  createdAt: string;
+}
+
+export interface OrgMemberWithUser extends OrgMember {
+  user: {
+    id: string;
+    email: string;
+    name: string;
+  };
+}
