@@ -9,3 +9,4 @@ export * from "./accounts.js";
 export * from "./vouchers.js";
 export * from "./fiscal-years.js";
 export * from "./auth.js";
+export * from "./members.js";
