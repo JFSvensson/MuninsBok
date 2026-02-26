@@ -21,6 +21,7 @@ import { accountRoutes } from "./routes/accounts.js";
 import { fiscalYearRoutes } from "./routes/fiscal-years.js";
 import { documentRoutes } from "./routes/documents.js";
 import { dashboardRoutes } from "./routes/dashboard.js";
+import { authRoutes } from "./routes/auth.js";
 import type { Repositories } from "./repositories.js";
 // Side-effect import: augments FastifyRequest with `org` property
 import "./plugins/org-scope.js";
@@ -63,6 +64,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
         version: process.env["npm_package_version"] ?? "0.1.0",
       },
       tags: [
+        { name: "auth", description: "Autentisering" },
         { name: "organizations", description: "Organisationer (tenants)" },
         { name: "accounts", description: "Kontoplan" },
         { name: "fiscal-years", description: "Räkenskapsår" },
@@ -151,6 +153,11 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   // Decorate with repositories so routes can access them
   fastify.decorate("repos", options.repos);
   fastify.decorate("documentStorage", options.documentStorage);
+
+  // Auth routes (register, login, refresh, me)
+  if (options.jwtSecret) {
+    await fastify.register(authRoutes, { prefix: "/api/auth" });
+  }
 
   // Routes — all org-scoped routes share the org-scope preHandler
   await fastify.register(
