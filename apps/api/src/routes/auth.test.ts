@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll} from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { buildTestApp, type MockRepos } from "../test/helpers.js";
 import type { FastifyInstance } from "fastify";
 import { hashPassword } from "../utils/password.js";
