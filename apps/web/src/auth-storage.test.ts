@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { getAccessToken, getRefreshToken, setTokens, clearTokens } from "./auth-storage";
+import {
+  getAccessToken,
+  getRefreshToken,
+  setTokens,
+  clearTokens,
+  onSessionExpired,
+} from "./auth-storage";
 
 describe("auth-storage", () => {
   // Mock localStorage
@@ -107,6 +113,58 @@ describe("auth-storage", () => {
       });
 
       expect(() => clearTokens()).not.toThrow();
+    });
+  });
+
+  describe("onSessionExpired", () => {
+    it("calls callback when clearTokens is called with notify: true", () => {
+      const cb = vi.fn();
+      onSessionExpired(cb);
+
+      clearTokens({ notify: true });
+
+      expect(cb).toHaveBeenCalledOnce();
+    });
+
+    it("does not call callback when clearTokens is called without notify", () => {
+      const cb = vi.fn();
+      onSessionExpired(cb);
+
+      clearTokens();
+
+      expect(cb).not.toHaveBeenCalled();
+    });
+
+    it("does not call callback when notify is false", () => {
+      const cb = vi.fn();
+      onSessionExpired(cb);
+
+      clearTokens({ notify: false });
+
+      expect(cb).not.toHaveBeenCalled();
+    });
+
+    it("unsubscribes when returned function is called", () => {
+      const cb = vi.fn();
+      const unsubscribe = onSessionExpired(cb);
+
+      unsubscribe();
+      clearTokens({ notify: true });
+
+      expect(cb).not.toHaveBeenCalled();
+    });
+
+    it("replaces previous callback when called again", () => {
+      const cb1 = vi.fn();
+      const cb2 = vi.fn();
+
+      onSessionExpired(cb1);
+      onSessionExpired(cb2);
+
+      clearTokens({ notify: true });
+
+      expect(cb1).not.toHaveBeenCalled();
+      expect(cb2).toHaveBeenCalledOnce();
     });
   });
 });
