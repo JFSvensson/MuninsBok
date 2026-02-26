@@ -81,9 +81,14 @@ function AppContent() {
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
           <OrganizationSelect />
           {user && (
-            <button className="secondary" onClick={logout} style={{ whiteSpace: "nowrap" }}>
-              Logga ut
-            </button>
+            <div className={styles.userArea}>
+              <span className={styles.userName} title={user.email}>
+                {user.name}
+              </span>
+              <button className="secondary" onClick={logout} style={{ whiteSpace: "nowrap" }}>
+                Logga ut
+              </button>
+            </div>
           )}
         </div>
       </header>
