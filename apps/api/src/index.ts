@@ -22,8 +22,17 @@ if (missing.length > 0) {
 const nodeEnv = process.env["NODE_ENV"] ?? "development";
 const isProd = nodeEnv === "production";
 
-if (isProd && !process.env["API_KEY"]) {
-  console.warn("VARNING: API_KEY är inte satt — API:et körs utan autentisering i produktion.");
+if (isProd && !process.env["JWT_SECRET"]) {
+  console.warn(
+    "VARNING: JWT_SECRET är inte satt — API:et körs utan användarautentisering i produktion!",
+  );
+  console.warn(
+    "Generera en hemlighet: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"",
+  );
+}
+
+if (isProd && !process.env["JWT_SECRET"] && !process.env["API_KEY"]) {
+  console.warn("VARNING: Varken JWT_SECRET eller API_KEY är satt — API:et är helt oskyddat!");
 }
 
 // ------ Build app ------
