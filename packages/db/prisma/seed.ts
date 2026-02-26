@@ -44,7 +44,12 @@ const SEED_ORG = {
 };
 
 /** Minimal chart of accounts for a meaningful demo. */
-const SEED_ACCOUNTS: { number: string; name: string; type: "ASSET" | "LIABILITY" | "EQUITY" | "REVENUE" | "EXPENSE"; isVatAccount?: boolean }[] = [
+const SEED_ACCOUNTS: {
+  number: string;
+  name: string;
+  type: "ASSET" | "LIABILITY" | "EQUITY" | "REVENUE" | "EXPENSE";
+  isVatAccount?: boolean;
+}[] = [
   // Tillgångar
   { number: "1510", name: "Kundfordringar", type: "ASSET" },
   { number: "1910", name: "Kassa", type: "ASSET" },
@@ -126,7 +131,9 @@ async function main(): Promise<void> {
       endDate: fyEnd,
     },
   });
-  console.log(`  Räkenskapsår: ${fy.startDate.toISOString().slice(0, 10)} – ${fy.endDate.toISOString().slice(0, 10)}`);
+  console.log(
+    `  Räkenskapsår: ${fy.startDate.toISOString().slice(0, 10)} – ${fy.endDate.toISOString().slice(0, 10)}`,
+  );
 
   // 4. Look up account IDs for voucher lines
   const accounts = await prisma.account.findMany({

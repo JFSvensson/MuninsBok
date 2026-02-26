@@ -38,8 +38,7 @@ describe("Audit logging plugin", () => {
 
     // Find the audit log call
     const auditCall = logSpy.mock.calls.find(
-      (call: unknown[]) =>
-        typeof call[0] === "object" && call[0] !== null && "audit" in call[0],
+      (call: unknown[]) => typeof call[0] === "object" && call[0] !== null && "audit" in call[0],
     );
     expect(auditCall).toBeDefined();
 
@@ -60,8 +59,7 @@ describe("Audit logging plugin", () => {
     await app.inject({ method: "GET", url: "/health" });
 
     const auditCall = logSpy.mock.calls.find(
-      (call: unknown[]) =>
-        typeof call[0] === "object" && call[0] !== null && "audit" in call[0],
+      (call: unknown[]) => typeof call[0] === "object" && call[0] !== null && "audit" in call[0],
     );
     expect(auditCall).toBeUndefined();
   });

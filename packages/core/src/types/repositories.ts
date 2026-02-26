@@ -131,11 +131,7 @@ export interface IUserRepository {
   /** Get a specific membership. */
   findMembership(userId: string, organizationId: string): Promise<OrganizationMember | null>;
   /** Add a user to an organization with a given role. */
-  addMember(
-    userId: string,
-    organizationId: string,
-    role: MemberRole,
-  ): Promise<OrganizationMember>;
+  addMember(userId: string, organizationId: string, role: MemberRole): Promise<OrganizationMember>;
   /** Remove a user from an organization. */
   removeMember(userId: string, organizationId: string): Promise<boolean>;
   /** Get all organizations a user is a member of (returns SafeUser-scoped data). */

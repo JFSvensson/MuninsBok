@@ -47,9 +47,7 @@ export class UserRepository implements IUserRepository {
     return ok(toUser(user));
   }
 
-  async findMembersByOrganization(
-    organizationId: string,
-  ): Promise<OrganizationMemberWithUser[]> {
+  async findMembersByOrganization(organizationId: string): Promise<OrganizationMemberWithUser[]> {
     const members = await this.prisma.organizationMember.findMany({
       where: { organizationId },
       include: { user: true },
@@ -58,10 +56,7 @@ export class UserRepository implements IUserRepository {
     return members.map(toOrganizationMemberWithUser);
   }
 
-  async findMembership(
-    userId: string,
-    organizationId: string,
-  ): Promise<OrganizationMember | null> {
+  async findMembership(userId: string, organizationId: string): Promise<OrganizationMember | null> {
     const member = await this.prisma.organizationMember.findUnique({
       where: { userId_organizationId: { userId, organizationId } },
     });

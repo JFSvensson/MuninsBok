@@ -29,7 +29,7 @@ function scryptAsync(
   password: string,
   salt: Buffer,
   keyLength: number,
-  options: ScryptOptions
+  options: ScryptOptions,
 ): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     scrypt(password, salt, keyLength, options, (err, derivedKey) => {
@@ -55,10 +55,7 @@ export async function hashPassword(password: string): Promise<string> {
  * @param stored    The stored `salt:hash` string from hashPassword().
  * @returns `true` if the password matches.
  */
-export async function verifyPassword(
-  password: string,
-  stored: string
-): Promise<boolean> {
+export async function verifyPassword(password: string, stored: string): Promise<boolean> {
   const [saltHex, hashHex] = stored.split(":");
   if (!saltHex || !hashHex) return false;
 
