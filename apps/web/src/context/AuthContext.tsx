@@ -15,7 +15,7 @@ import {
   type ReactNode,
 } from "react";
 import { api, type AuthUser } from "../api";
-import { setTokens, clearTokens, getRefreshToken } from "../auth-storage";
+import { setTokens, clearTokens, getRefreshToken, onSessionExpired } from "../auth-storage";
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -56,6 +56,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => {
         setIsLoading(false);
       });
+  }, []);
+
+  // Listen for session-expired events fired from fetchJson
+  // when a background 401-refresh cycle fails.
+  useEffect(() => {
+    return onSessionExpired(() => {
+      setUser(null);
+    });
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
