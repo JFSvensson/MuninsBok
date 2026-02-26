@@ -105,12 +105,16 @@ async function getAuthStorage() {
   return import("./auth-storage");
 }
 
-async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
+/**
+ * Core auth-aware fetch: injects access token, handles 401 → refresh → retry,
+ * and throws ApiError on non-ok responses.
+ * All higher-level helpers (fetchJson, fetchVoid) build on this.
+ */
+async function fetchWithAuth(url: string, options?: RequestInit): Promise<Response> {
   const storage = await getAuthStorage();
   const accessToken = storage.getAccessToken();
 
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...(options?.headers as Record<string, string>),
   };
 
@@ -157,7 +161,30 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
     );
   }
 
+  return response;
+}
+
+/** JSON request → JSON response (sets Content-Type: application/json). */
+async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
+  const response = await fetchWithAuth(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options?.headers as Record<string, string>),
+    },
+  });
   return response.json();
+}
+
+/** JSON request → no response body expected (DELETE, etc.). */
+async function fetchVoid(url: string, options?: RequestInit): Promise<void> {
+  await fetchWithAuth(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options?.headers as Record<string, string>),
+    },
+  });
 }
 
 export const api = {
@@ -181,15 +208,8 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
-  deleteOrganization: async (orgId: string) => {
-    const storage = await getAuthStorage();
-    const token = storage.getAccessToken();
-    const headers: Record<string, string> = {};
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-    const res = await fetch(`${API_BASE}/organizations/${orgId}`, { method: "DELETE", headers });
-    if (!res.ok)
-      throw new ApiError(res.status, "DELETE_FAILED", "Kunde inte radera organisationen");
-  },
+  deleteOrganization: (orgId: string) =>
+    fetchVoid(`${API_BASE}/organizations/${orgId}`, { method: "DELETE" }),
 
   // Fiscal Years
   getFiscalYears: (orgId: string) =>
@@ -230,17 +250,10 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
-  deactivateAccount: async (orgId: string, accountNumber: string) => {
-    const storage = await getAuthStorage();
-    const token = storage.getAccessToken();
-    const headers: Record<string, string> = {};
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-    const res = await fetch(`${API_BASE}/organizations/${orgId}/accounts/${accountNumber}`, {
+  deactivateAccount: (orgId: string, accountNumber: string) =>
+    fetchVoid(`${API_BASE}/organizations/${orgId}/accounts/${accountNumber}`, {
       method: "DELETE",
-      headers,
-    });
-    if (!res.ok) throw new ApiError(res.status, "DELETE_FAILED", "Kunde inte inaktivera kontot");
-  },
+    }),
 
   updateAccount: (
     orgId: string,
@@ -440,39 +453,22 @@ export const api = {
   uploadDocument: async (orgId: string, voucherId: string, file: File) => {
     const formData = new FormData();
     formData.append("file", file);
-    const storage = await getAuthStorage();
-    const token = storage.getAccessToken();
-    const headers: Record<string, string> = {};
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-    const response = await fetch(
+    // fetchWithAuth handles auth + refresh; no Content-Type so the browser
+    // sets the correct multipart boundary automatically.
+    const response = await fetchWithAuth(
       `${API_BASE}/organizations/${orgId}/vouchers/${voucherId}/documents`,
-      { method: "POST", body: formData, headers },
+      { method: "POST", body: formData },
     );
-    if (!response.ok) {
-      const errorBody = await response.json().catch(() => ({}));
-      throw new ApiError(
-        response.status,
-        errorBody.code ?? "UPLOAD_FAILED",
-        errorBody.error?.message ?? errorBody.error ?? "Kunde inte ladda upp fil",
-      );
-    }
     return response.json() as Promise<ApiResponse<DocumentMeta>>;
   },
 
   downloadDocumentUrl: (orgId: string, documentId: string) =>
     `${API_BASE}/organizations/${orgId}/documents/${documentId}/download`,
 
-  deleteDocument: async (orgId: string, documentId: string) => {
-    const storage = await getAuthStorage();
-    const token = storage.getAccessToken();
-    const headers: Record<string, string> = {};
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-    const res = await fetch(`${API_BASE}/organizations/${orgId}/documents/${documentId}`, {
+  deleteDocument: (orgId: string, documentId: string) =>
+    fetchVoid(`${API_BASE}/organizations/${orgId}/documents/${documentId}`, {
       method: "DELETE",
-      headers,
-    });
-    if (!res.ok) throw new ApiError(res.status, "DELETE_FAILED", "Kunde inte radera dokumentet");
-  },
+    }),
 
   // ── Auth ──────────────────────────────────────────────────
 
@@ -516,15 +512,6 @@ export const api = {
       body: JSON.stringify({ role }),
     }),
 
-  removeMember: async (orgId: string, userId: string) => {
-    const storage = await getAuthStorage();
-    const token = storage.getAccessToken();
-    const headers: Record<string, string> = {};
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-    const res = await fetch(`${API_BASE}/organizations/${orgId}/members/${userId}`, {
-      method: "DELETE",
-      headers,
-    });
-    if (!res.ok) throw new ApiError(res.status, "DELETE_FAILED", "Kunde inte ta bort medlemmen");
-  },
+  removeMember: (orgId: string, userId: string) =>
+    fetchVoid(`${API_BASE}/organizations/${orgId}/members/${userId}`, { method: "DELETE" }),
 };
