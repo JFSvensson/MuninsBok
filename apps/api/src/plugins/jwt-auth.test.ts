@@ -76,9 +76,13 @@ describe("jwt-auth plugin", () => {
   it("authenticate rejects expired token", async () => {
     // Sign a token with exp set to 60 seconds in the past
     const expiredAt = Math.floor(Date.now() / 1000) - 60;
-    const token = app.jwt.sign(
-      { sub: "user-1", email: "a@b.com", type: "access", iat: expiredAt - 60, exp: expiredAt },
-    );
+    const token = app.jwt.sign({
+      sub: "user-1",
+      email: "a@b.com",
+      type: "access",
+      iat: expiredAt - 60,
+      exp: expiredAt,
+    } as unknown as JwtPayload);
 
     const response = await app.inject({
       method: "GET",
