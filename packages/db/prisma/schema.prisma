@@ -45,9 +45,29 @@ model User {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   // Relations
-  memberships OrganizationMember[]
+  memberships   OrganizationMember[]
+  refreshTokens RefreshToken[]
 
   @@map("users")
+}
+
+// ============================================
+// REFRESH TOKEN (for token revocation)
+// ============================================
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  jti       String   @unique
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
 }
 
 // ============================================
