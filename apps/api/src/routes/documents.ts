@@ -8,6 +8,7 @@ export async function documentRoutes(fastify: FastifyInstance) {
   await fastify.register(multipart, { limits: { fileSize: MAX_FILE_SIZE } });
 
   const documentRepo = fastify.repos.documents;
+  const voucherRepo = fastify.repos.vouchers;
   const storage = fastify.documentStorage;
 
   // List documents for a voucher
@@ -86,21 +87,15 @@ export async function documentRoutes(fastify: FastifyInstance) {
 
       // BFL: Prevent deletion of documents attached to vouchers in closed fiscal years
       if (doc.voucherId) {
-        const voucher = await fastify.repos.prisma.voucher.findFirst({
-          where: { id: doc.voucherId, organizationId: request.params.orgId },
-          select: { fiscalYearId: true },
-        });
-        if (voucher) {
-          const fiscalYear = await fastify.repos.prisma.fiscalYear.findFirst({
-            where: { id: voucher.fiscalYearId, organizationId: request.params.orgId },
-            select: { isClosed: true },
+        const isClosed = await voucherRepo.isVoucherInClosedFiscalYear(
+          doc.voucherId,
+          request.params.orgId,
+        );
+        if (isClosed) {
+          return reply.status(403).send({
+            error: "Kan inte radera dokument som tillhör ett stängt räkenskapsår",
+            code: "FISCAL_YEAR_CLOSED",
           });
-          if (fiscalYear?.isClosed) {
-            return reply.status(403).send({
-              error: "Kan inte radera dokument som tillhör ett stängt räkenskapsår",
-              code: "FISCAL_YEAR_CLOSED",
-            });
-          }
         }
       }
 
