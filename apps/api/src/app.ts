@@ -127,7 +127,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   }
 
   // Global error handler — structured JSON for all errors
-  fastify.setErrorHandler((error, request, reply) => {
+  fastify.setErrorHandler((error: Error & { statusCode?: number; code?: string }, request, reply) => {
     // AppError carries its own status code and error code
     if (error instanceof AppError) {
       if (error.statusCode >= 500) {
