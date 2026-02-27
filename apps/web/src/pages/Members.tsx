@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, useCallback, type FormEvent } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOrganization } from "../context/OrganizationContext";
 import { useAuth } from "../context/AuthContext";
@@ -6,6 +6,7 @@ import { useToast } from "../context/ToastContext";
 import { defined } from "../utils/assert";
 import { api, ApiError, type MemberRole, type OrgMemberWithUser } from "../api";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { useDialogFocus } from "../hooks/useDialogFocus";
 import dialogStyles from "../components/Dialog.module.css";
 
 const ROLE_LABELS: Record<MemberRole, string> = {
@@ -30,6 +31,11 @@ export function Members() {
   const [editRole, setEditRole] = useState<MemberRole>("MEMBER");
 
   const [removingMember, setRemovingMember] = useState<OrgMemberWithUser | null>(null);
+
+  const closeAdd = useCallback(() => setShowAdd(false), []);
+  const closeEdit = useCallback(() => setEditingMember(null), []);
+  const addDialogRef = useDialogFocus(showAdd, closeAdd);
+  const editDialogRef = useDialogFocus(!!editingMember, closeEdit);
 
   const membersQuery = useQuery({
     queryKey: ["members", orgId],
@@ -165,10 +171,23 @@ export function Members() {
       {/* Add member dialog */}
       {showAdd && (
         <div className={dialogStyles.overlay} onClick={() => setShowAdd(false)}>
-          <div className={dialogStyles.dialog} onClick={(e) => e.stopPropagation()}>
+          <div
+            ref={addDialogRef}
+            className={dialogStyles.dialog}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-member-title"
+            tabIndex={-1}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className={dialogStyles.header}>
-              <h3>Lägg till medlem</h3>
-              <button className="btn-icon" onClick={() => setShowAdd(false)} type="button">
+              <h3 id="add-member-title">Lägg till medlem</h3>
+              <button
+                className="btn-icon"
+                onClick={() => setShowAdd(false)}
+                type="button"
+                aria-label="Stäng"
+              >
                 ×
               </button>
             </div>
@@ -218,10 +237,23 @@ export function Members() {
       {/* Edit role dialog */}
       {editingMember && (
         <div className={dialogStyles.overlay} onClick={() => setEditingMember(null)}>
-          <div className={dialogStyles.dialog} onClick={(e) => e.stopPropagation()}>
+          <div
+            ref={editDialogRef}
+            className={dialogStyles.dialog}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-role-title"
+            tabIndex={-1}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className={dialogStyles.header}>
-              <h3>Ändra roll</h3>
-              <button className="btn-icon" onClick={() => setEditingMember(null)} type="button">
+              <h3 id="edit-role-title">Ändra roll</h3>
+              <button
+                className="btn-icon"
+                onClick={() => setEditingMember(null)}
+                type="button"
+                aria-label="Stäng"
+              >
                 ×
               </button>
             </div>
