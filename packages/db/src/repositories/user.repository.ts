@@ -74,6 +74,22 @@ export class UserRepository implements IUserRepository {
     return toOrganizationMember(member);
   }
 
+  async updateMemberRole(
+    userId: string,
+    organizationId: string,
+    role: MemberRole,
+  ): Promise<OrganizationMember | null> {
+    try {
+      const member = await this.prisma.organizationMember.update({
+        where: { userId_organizationId: { userId, organizationId } },
+        data: { role },
+      });
+      return toOrganizationMember(member);
+    } catch {
+      return null;
+    }
+  }
+
   async removeMember(userId: string, organizationId: string): Promise<boolean> {
     try {
       await this.prisma.organizationMember.delete({
