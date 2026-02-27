@@ -41,6 +41,7 @@ export interface IOrganizationRepository {
   findById(id: string): Promise<Organization | null>;
   findByOrgNumber(orgNumber: string): Promise<Organization | null>;
   findAll(): Promise<Organization[]>;
+  findByUserMembership(userId: string): Promise<Organization[]>;
   create(input: CreateOrganizationInput): Promise<Result<Organization, OrganizationError>>;
   update(
     id: string,
