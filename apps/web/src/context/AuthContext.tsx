@@ -79,6 +79,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    // Fire-and-forget server-side logout (revokes refresh tokens)
+    api.logout().catch(() => {
+      // Best-effort — even if the server call fails, clear local tokens
+    });
     clearTokens();
     setUser(null);
   }, []);
