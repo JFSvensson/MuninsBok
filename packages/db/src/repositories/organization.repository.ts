@@ -32,6 +32,14 @@ export class OrganizationRepository implements IOrganizationRepository {
     return orgs.map(toOrganization);
   }
 
+  async findByUserMembership(userId: string): Promise<Organization[]> {
+    const orgs = await this.prisma.organization.findMany({
+      where: { members: { some: { userId } } },
+      orderBy: { name: "asc" },
+    });
+    return orgs.map(toOrganization);
+  }
+
   async create(input: CreateOrganizationInput): Promise<Result<Organization, OrganizationError>> {
     // Validate
     if (!input.name || input.name.trim().length === 0) {
