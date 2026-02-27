@@ -1,6 +1,15 @@
 import type { FastifyInstance } from "fastify";
 import { parseSie, exportSie } from "@muninsbok/core/sie";
 import { getAccountTypeFromNumber } from "@muninsbok/core/types";
+import { type PrismaClient, AccountRepository, VoucherRepository } from "@muninsbok/db";
+
+/** Thrown inside the import transaction to trigger rollback and report errors. */
+class SieImportError extends Error {
+  constructor(public readonly details: string[]) {
+    super(`SIE-import misslyckades: ${details.length} fel`);
+    this.name = "SieImportError";
+  }
+}
 
 export async function sieRoutes(fastify: FastifyInstance) {
   const fyRepo = fastify.repos.fiscalYears;
@@ -141,61 +150,80 @@ export async function sieRoutes(fastify: FastifyInstance) {
     // Import accounts that don't exist
     const newAccounts = sieFile.accounts.filter((a) => !existingAccountNumbers.has(a.number));
 
-    if (newAccounts.length > 0) {
-      await accountRepo.createMany(
-        orgId,
-        newAccounts.map((a) => ({
-          number: a.number,
-          name: a.name,
-          type: getAccountTypeFromNumber(a.number),
-        })),
-      );
-    }
+    // Wrap entire import in a transaction to ensure atomicity
+    const prisma = fastify.repos.prisma;
+    try {
+      const result = await prisma.$transaction(async (tx) => {
+        // tx is Omit<PrismaClient, ...> — safe to cast for repository constructors
+        // which only use model accessors
+        const txAccountRepo = new AccountRepository(tx as unknown as PrismaClient);
+        const txVoucherRepo = new VoucherRepository(tx as unknown as PrismaClient);
 
-    // Import vouchers (sequential creates via repository)
-    let importedCount = 0;
-    let errorCount = 0;
-    const errors: string[] = [];
+        if (newAccounts.length > 0) {
+          await txAccountRepo.createMany(
+            orgId,
+            newAccounts.map((a) => ({
+              number: a.number,
+              name: a.name,
+              type: getAccountTypeFromNumber(a.number),
+            })),
+          );
+        }
 
-    for (const sieVoucher of sieFile.vouchers) {
-      // Convert SIE transactions to voucher lines
-      const lines = sieVoucher.transactions.map((t) => ({
-        accountNumber: t.accountNumber,
-        debit: t.amount > 0 ? t.amount : 0,
-        credit: t.amount < 0 ? -t.amount : 0,
-        ...(t.description != null && { description: t.description }),
-      }));
+        // Import vouchers (sequential creates via repository)
+        let importedCount = 0;
+        const errors: string[] = [];
 
-      const result = await voucherRepo.create({
-        organizationId: orgId,
-        fiscalYearId,
-        date: sieVoucher.date,
-        description: sieVoucher.description || `Import ${sieVoucher.series}${sieVoucher.number}`,
-        lines,
+        for (const sieVoucher of sieFile.vouchers) {
+          // Convert SIE transactions to voucher lines
+          const lines = sieVoucher.transactions.map((t) => ({
+            accountNumber: t.accountNumber,
+            debit: t.amount > 0 ? t.amount : 0,
+            credit: t.amount < 0 ? -t.amount : 0,
+            ...(t.description != null && { description: t.description }),
+          }));
+
+          const vResult = await txVoucherRepo.create({
+            organizationId: orgId,
+            fiscalYearId,
+            date: sieVoucher.date,
+            description:
+              sieVoucher.description || `Import ${sieVoucher.series}${sieVoucher.number}`,
+            lines,
+          });
+
+          if (vResult.ok) {
+            importedCount++;
+          } else {
+            errors.push(
+              `Verifikat ${sieVoucher.series}${sieVoucher.number}: ${vResult.error.message}`,
+            );
+          }
+        }
+
+        if (errors.length > 0) {
+          throw new SieImportError(errors);
+        }
+
+        return { importedCount };
       });
 
-      if (result.ok) {
-        importedCount++;
-      } else {
-        errorCount++;
-        errors.push(`Verifikat ${sieVoucher.series}${sieVoucher.number}: ${result.error.message}`);
+      return {
+        data: {
+          companyName: sieFile.companyName,
+          accountsImported: newAccounts.length,
+          vouchersImported: result.importedCount,
+          vouchersWithErrors: 0,
+        },
+      };
+    } catch (err) {
+      if (err instanceof SieImportError) {
+        return reply.status(400).send({
+          error: `Import avbruten — ${err.details.length} verifikat med fel`,
+          details: err.details,
+        });
       }
+      throw err;
     }
-
-    if (errorCount > 0) {
-      return reply.status(400).send({
-        error: `Import avbruten — ${errorCount} verifikat med fel`,
-        details: errors,
-      });
-    }
-
-    return {
-      data: {
-        companyName: sieFile.companyName,
-        accountsImported: newAccounts.length,
-        vouchersImported: importedCount,
-        vouchersWithErrors: errorCount,
-      },
-    };
   });
 }
