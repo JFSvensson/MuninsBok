@@ -1,0 +1,37 @@
+# Version control
+.git
+.github
+.gitignore
+
+# Dependencies (reinstalled in container)
+node_modules
+
+# Build outputs (rebuilt in container)
+**/dist
+packages/db/src/generated
+
+# Test & dev tooling
+coverage
+*.lcov
+e2e
+playwright.config.ts
+playwright-report
+test-results
+
+# IDE & OS
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Documentation & misc
+docs
+*.md
+LICENSE
