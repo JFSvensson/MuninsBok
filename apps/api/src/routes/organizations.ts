@@ -7,9 +7,15 @@ import { parseBody } from "../utils/parse-body.js";
 export async function organizationRoutes(fastify: FastifyInstance) {
   const orgRepo = fastify.repos.organizations;
   const accountRepo = fastify.repos.accounts;
+  const userRepo = fastify.repos.users;
 
-  // List all organizations
-  fastify.get("/", async () => {
+  // List organizations (filtered by membership when authenticated)
+  fastify.get("/", async (request) => {
+    const userId = request.user?.sub;
+    if (userId) {
+      const organizations = await orgRepo.findByUserMembership(userId);
+      return { data: organizations };
+    }
     const organizations = await orgRepo.findAll();
     return { data: organizations };
   });
@@ -50,6 +56,12 @@ export async function organizationRoutes(fastify: FastifyInstance) {
         isVatAccount: a.isVatAccount,
       })),
     );
+
+    // Auto-assign creator as OWNER
+    const userId = request.user?.sub;
+    if (userId) {
+      await userRepo.addMember(userId, org.id, "OWNER");
+    }
 
     return reply.status(201).send({ data: org });
   });
