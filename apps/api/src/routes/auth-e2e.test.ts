@@ -419,4 +419,68 @@ describe("auth E2E flow", () => {
       expect(res.statusCode).toBe(401);
     });
   });
+
+  describe("token revocation + logout", () => {
+    it("rejects refresh when token has been revoked", async () => {
+      // Generate a valid refresh token
+      const { refreshToken } = app.generateTokens(testUser.id, testUser.email);
+
+      // Mark the jti as revoked (existsByJti returns false)
+      repos.refreshTokens.existsByJti.mockResolvedValueOnce(false);
+
+      const res = await app.inject({
+        method: "POST",
+        url: "/api/auth/refresh",
+        headers: { authorization: `Bearer ${refreshToken}` },
+      });
+
+      expect(res.statusCode).toBe(401);
+      expect(res.json().code).toBe("TOKEN_REVOKED");
+    });
+
+    it("logout revokes all tokens and returns 204", async () => {
+      const { accessToken } = app.generateTokens(testUser.id, testUser.email);
+
+      const res = await app.inject({
+        method: "POST",
+        url: "/api/auth/logout",
+        headers: { authorization: `Bearer ${accessToken}` },
+      });
+
+      expect(res.statusCode).toBe(204);
+      expect(repos.refreshTokens.revokeAllByUserId).toHaveBeenCalledWith(testUser.id);
+    });
+
+    it("logout requires authentication", async () => {
+      const res = await app.inject({
+        method: "POST",
+        url: "/api/auth/logout",
+      });
+
+      expect(res.statusCode).toBe(401);
+    });
+
+    it("refresh rotates tokens (revokes old, creates new)", async () => {
+      const { refreshToken } = app.generateTokens(testUser.id, testUser.email);
+
+      // Token is still valid (not revoked)
+      repos.refreshTokens.existsByJti.mockResolvedValueOnce(true);
+
+      const res = await app.inject({
+        method: "POST",
+        url: "/api/auth/refresh",
+        headers: { authorization: `Bearer ${refreshToken}` },
+      });
+
+      expect(res.statusCode).toBe(200);
+      const body = res.json();
+      expect(body.data.accessToken).toEqual(expect.any(String));
+      expect(body.data.refreshToken).toEqual(expect.any(String));
+
+      // Old jti should have been revoked
+      expect(repos.refreshTokens.revokeByJti).toHaveBeenCalled();
+      // New token should have been stored
+      expect(repos.refreshTokens.create).toHaveBeenCalled();
+    });
+  });
 });
