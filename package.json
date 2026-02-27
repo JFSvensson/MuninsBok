@@ -30,11 +30,11 @@
     "@playwright/test": "^1.58.2",
     "@types/node": "^25.3.2",
     "@vitest/coverage-v8": "1",
-    "eslint": "^10.0.0",
+    "eslint": "^10.0.2",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.56.0"
+    "typescript-eslint": "^8.56.1"
   },
   "engines": {
     "node": ">=22.0.0",
