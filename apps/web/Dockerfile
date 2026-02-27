@@ -31,6 +31,9 @@ COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
 # Copy nginx config
 COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
 
+# Run as non-root user
+USER nginx
+
 EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]
