@@ -16,12 +16,12 @@
     "@muninsbok/core": "workspace:*",
     "@tanstack/react-query": "^5.17.0",
     "react": "^19.2.4",
-    "react-dom": "^18.2.0",
+    "react-dom": "^19.2.4",
     "react-router-dom": "^6.21.0"
   },
   "devDependencies": {
     "@types/react": "^19.2.14",
-    "@types/react-dom": "^18.2.18",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.4",
     "typescript": "^5.3.3",
     "vite": "^5.0.12",
