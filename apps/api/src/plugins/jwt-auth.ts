@@ -3,14 +3,15 @@
  *
  * Wraps @fastify/jwt to provide:
  * - Access tokens  (short-lived, default 15 min)
- * - Refresh tokens (long-lived, default 7 days)
+ * - Refresh tokens (long-lived, default 7 days, tracked with jti for revocation)
  * - `authenticate` request decorator (preHandler)
  *
- * Token payload shape: { sub: string; email: string; type: "access" | "refresh" }
+ * Token payload shape: { sub: string; email: string; type: "access" | "refresh"; jti?: string }
  *
  * Usage in routes:
  *   fastify.get("/me", { preHandler: [fastify.authenticate] }, handler)
  */
+import { randomUUID } from "node:crypto";
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import fp from "fastify-plugin";
 import jwt from "@fastify/jwt";
@@ -22,11 +23,21 @@ export interface JwtPayload {
   email: string;
   /** Token type to prevent cross-use */
   type: "access" | "refresh";
+  /** Unique token id (present on refresh tokens, for server-side revocation) */
+  jti?: string;
 }
 
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
+}
+
+/** Extended result that includes jti + expiresAt so callers can persist the token. */
+export interface GeneratedTokens extends AuthTokens {
+  /** The unique identifier of the refresh token (for DB storage). */
+  refreshTokenJti: string;
+  /** When the refresh token expires. */
+  refreshTokenExpiresAt: Date;
 }
 
 export interface JwtAuthOptions {
@@ -38,25 +49,52 @@ export interface JwtAuthOptions {
   refreshTokenTtl?: string;
 }
 
+/** Parse a simple duration string like "15m", "7d", "1h" into milliseconds. */
+function parseDurationMs(dur: string): number {
+  const match = dur.match(/^(\d+)\s*([smhd])$/);
+  if (!match) throw new Error(`Invalid duration: ${dur}`);
+  const n = Number(match[1]);
+  switch (match[2]) {
+    case "s":
+      return n * 1_000;
+    case "m":
+      return n * 60_000;
+    case "h":
+      return n * 3_600_000;
+    case "d":
+      return n * 86_400_000;
+    default:
+      throw new Error(`Unknown unit: ${match[2]}`);
+  }
+}
+
 async function jwtAuth(fastify: FastifyInstance, options: JwtAuthOptions): Promise<void> {
   const accessTtl = options.accessTokenTtl ?? "15m";
   const refreshTtl = options.refreshTokenTtl ?? "7d";
+  const refreshTtlMs = parseDurationMs(refreshTtl);
 
   await fastify.register(jwt, {
     secret: options.secret,
   });
 
   /** Generate an access + refresh token pair for a user. */
-  fastify.decorate("generateTokens", function (userId: string, email: string): AuthTokens {
+  fastify.decorate("generateTokens", function (userId: string, email: string): GeneratedTokens {
+    const jti = randomUUID();
+
     const accessToken = fastify.jwt.sign(
       { sub: userId, email, type: "access" } satisfies JwtPayload,
       { expiresIn: accessTtl },
     );
     const refreshToken = fastify.jwt.sign(
-      { sub: userId, email, type: "refresh" } satisfies JwtPayload,
+      { sub: userId, email, type: "refresh", jti } satisfies JwtPayload,
       { expiresIn: refreshTtl },
     );
-    return { accessToken, refreshToken };
+    return {
+      accessToken,
+      refreshToken,
+      refreshTokenJti: jti,
+      refreshTokenExpiresAt: new Date(Date.now() + refreshTtlMs),
+    };
   });
 
   /** PreHandler that verifies an access token and sets request.user. */
@@ -114,7 +152,7 @@ export default fp(jwtAuth, { name: "jwt-auth" });
 // Augment Fastify types
 declare module "fastify" {
   interface FastifyInstance {
-    generateTokens: (userId: string, email: string) => AuthTokens;
+    generateTokens: (userId: string, email: string) => GeneratedTokens;
     authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
     verifyRefreshToken: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
   }
