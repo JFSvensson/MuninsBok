@@ -20,6 +20,9 @@ export async function sieRoutes(fastify: FastifyInstance) {
     }
 
     // All data via repository interfaces — no raw Prisma
+    // NOTE: Loads all vouchers into memory. Acceptable for SMB volumes
+    // (up to ~10 000 vouchers/year). For very large datasets, consider
+    // streaming or chunked processing in a future iteration.
     const org = request.org;
     if (!org) return reply.status(500).send({ error: "Missing org context" });
     const [fiscalYear, accounts, vouchers] = await Promise.all([
