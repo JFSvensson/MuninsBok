@@ -56,6 +56,21 @@ const fastify = await buildApp({
 const port = parseInt(process.env["PORT"] ?? "3000", 10);
 const host = process.env["HOST"] ?? "0.0.0.0";
 
+// ------ Graceful shutdown ------
+const shutdown = async (signal: string) => {
+  fastify.log.info(`${signal} received — shutting down gracefully`);
+  try {
+    await fastify.close();
+    process.exit(0);
+  } catch (err) {
+    fastify.log.error(err, "Error during shutdown");
+    process.exit(1);
+  }
+};
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
+
 try {
   await fastify.listen({ port, host });
   console.log(`Server listening on http://${host}:${port} [${nodeEnv}]`);
