@@ -1,8 +1,11 @@
 import { test, expect } from "@playwright/test";
+import { loginViaStorage } from "./helpers/auth";
 
 test.describe("Navigation & accessibility", () => {
-  test("skip link is visible on Tab and targets main content", async ({ page }) => {
+  test("skip link is visible on Tab and targets main content", async ({ page, request }) => {
+    await loginViaStorage(page, request);
     await page.goto("/");
+    await page.waitForSelector("[data-testid='skip-link']");
     // Press Tab to focus the skip link
     await page.keyboard.press("Tab");
     const skipLink = page.locator("a[data-testid='skip-link']");
@@ -13,8 +16,10 @@ test.describe("Navigation & accessibility", () => {
     await expect(target).toBeAttached();
   });
 
-  test("page has proper ARIA landmarks", async ({ page }) => {
+  test("page has proper ARIA landmarks", async ({ page, request }) => {
+    await loginViaStorage(page, request);
     await page.goto("/");
+    await page.waitForSelector("[role='banner']");
     // Banner role on header
     const banner = page.locator("[role='banner']");
     await expect(banner).toBeAttached();
@@ -41,16 +46,16 @@ test.describe("API endpoint validation", () => {
     expect(["ok", "degraded"]).toContain(body.status);
   });
 
-  test("API returns 400 for dashboard without fiscalYearId", async ({ request }) => {
+  test("API returns 401 for dashboard without auth", async ({ request }) => {
     const resp = await request.get("http://localhost:3000/api/organizations/nonexistent/dashboard");
-    expect(resp.status()).toBe(400);
+    expect(resp.status()).toBe(401);
   });
 
-  test("API returns 400 for reports without fiscalYearId", async ({ request }) => {
+  test("API returns 401 for reports without auth", async ({ request }) => {
     const resp = await request.get(
       "http://localhost:3000/api/organizations/nonexistent/reports/trial-balance",
     );
-    expect(resp.status()).toBe(400);
+    expect(resp.status()).toBe(401);
   });
 
   test("API returns proper error structure", async ({ request }) => {

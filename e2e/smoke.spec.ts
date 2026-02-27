@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { loginViaStorage } from "./helpers/auth";
 
 test.describe("Smoke tests", () => {
   test("app loads and shows header", async ({ page }) => {
@@ -15,16 +16,17 @@ test.describe("Smoke tests", () => {
     expect(body.timestamp).toBeTruthy();
   });
 
-  test("welcome page shows create button when no org exists", async ({ page }) => {
+  test("welcome page shows create button when no org exists", async ({ page, request }) => {
+    await loginViaStorage(page, request);
     await page.goto("/");
     const createBtn = page.getByText("Skapa organisation");
     await expect(createBtn).toBeVisible();
   });
 
-  test("API returns 400 for vouchers without fiscalYearId", async ({ request }) => {
+  test("API returns 401 for vouchers without auth", async ({ request }) => {
     const response = await request.get(
       "http://localhost:3000/api/organizations/nonexistent/vouchers",
     );
-    expect(response.status()).toBe(400);
+    expect(response.status()).toBe(401);
   });
 });
