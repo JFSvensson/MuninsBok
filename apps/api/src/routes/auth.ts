@@ -1,9 +1,10 @@
 /**
- * Authentication routes: register, login, refresh, me.
+ * Authentication routes: register, login, refresh, logout, me.
  *
  * POST /api/auth/register  — create a new user account
  * POST /api/auth/login     — authenticate with email + password
  * POST /api/auth/refresh   — exchange a refresh token for new token pair
+ * POST /api/auth/logout    — revoke all refresh tokens (server-side logout)
  * GET  /api/auth/me        — get current user info (requires access token)
  */
 import type { FastifyInstance } from "fastify";
@@ -14,6 +15,12 @@ import type { JwtPayload } from "../plugins/jwt-auth.js";
 
 export async function authRoutes(fastify: FastifyInstance) {
   const userRepo = fastify.repos.users;
+  const refreshTokenRepo = fastify.repos.refreshTokens;
+
+  /** Persist a refresh token in the database for later revocation. */
+  async function storeRefreshToken(userId: string, jti: string, expiresAt: Date): Promise<void> {
+    await refreshTokenRepo.create(userId, jti, expiresAt);
+  }
 
   // ── Register ────────────────────────────────────────────────
   fastify.post("/register", async (request, reply) => {
@@ -32,11 +39,13 @@ export async function authRoutes(fastify: FastifyInstance) {
 
     const user = result.value;
     const tokens = fastify.generateTokens(user.id, user.email);
+    await storeRefreshToken(user.id, tokens.refreshTokenJti, tokens.refreshTokenExpiresAt);
 
     return reply.status(201).send({
       data: {
         user: { id: user.id, email: user.email, name: user.name },
-        ...tokens,
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
       },
     });
   });
@@ -62,20 +71,49 @@ export async function authRoutes(fastify: FastifyInstance) {
     }
 
     const tokens = fastify.generateTokens(user.id, user.email);
+    await storeRefreshToken(user.id, tokens.refreshTokenJti, tokens.refreshTokenExpiresAt);
 
     return {
       data: {
         user: { id: user.id, email: user.email, name: user.name },
-        ...tokens,
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
       },
     };
   });
 
   // ── Refresh ─────────────────────────────────────────────────
-  fastify.post("/refresh", { preHandler: [fastify.verifyRefreshToken] }, async (request) => {
-    const { sub, email } = request.user as JwtPayload;
+  fastify.post("/refresh", { preHandler: [fastify.verifyRefreshToken] }, async (request, reply) => {
+    const { sub, email, jti } = request.user as JwtPayload;
+
+    // Verify the refresh token has not been revoked
+    if (!jti || !(await refreshTokenRepo.existsByJti(jti))) {
+      return reply.status(401).send({
+        error: "Refresh-token har återkallats",
+        code: "TOKEN_REVOKED",
+      });
+    }
+
+    // Revoke the old refresh token (rotate)
+    await refreshTokenRepo.revokeByJti(jti);
+
+    // Issue new token pair
     const tokens = fastify.generateTokens(sub, email);
-    return { data: tokens };
+    await storeRefreshToken(sub, tokens.refreshTokenJti, tokens.refreshTokenExpiresAt);
+
+    return {
+      data: {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      },
+    };
+  });
+
+  // ── Logout ──────────────────────────────────────────────────
+  fastify.post("/logout", { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const { sub } = request.user as JwtPayload;
+    await refreshTokenRepo.revokeAllByUserId(sub);
+    return reply.status(204).send();
   });
 
   // ── Me ──────────────────────────────────────────────────────
