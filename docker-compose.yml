@@ -4,10 +4,11 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: muninsbok-db
+    env_file: .env.docker
     environment:
-      POSTGRES_USER: muninsbok
-      POSTGRES_PASSWORD: muninsbok
-      POSTGRES_DB: muninsbok
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
@@ -25,12 +26,13 @@ services:
     container_name: muninsbok-api
     ports:
       - "3000:3000"
+    env_file: .env.docker
     environment:
-      DATABASE_URL: postgresql://muninsbok:muninsbok@postgres:5432/muninsbok
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       NODE_ENV: production
       HOST: 0.0.0.0
       PORT: 3000
-      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      JWT_SECRET: ${JWT_SECRET}
     volumes:
       - uploads_data:/app/uploads
     healthcheck:
