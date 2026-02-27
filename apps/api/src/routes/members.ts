@@ -55,17 +55,17 @@ export async function memberRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const { role } = parseBody(updateMemberRoleSchema, request.body);
 
-      const membership = await userRepo.findMembership(request.params.userId, request.params.orgId);
-      if (!membership) {
+      const updated = await userRepo.updateMemberRole(
+        request.params.userId,
+        request.params.orgId,
+        role,
+      );
+      if (!updated) {
         return reply.status(404).send({
           error: "Medlemskapet hittades inte",
           code: "MEMBER_NOT_FOUND",
         });
       }
-
-      // Remove and re-add with new role (simple approach; no update method in repo)
-      await userRepo.removeMember(request.params.userId, request.params.orgId);
-      const updated = await userRepo.addMember(request.params.userId, request.params.orgId, role);
 
       return { data: updated };
     },
