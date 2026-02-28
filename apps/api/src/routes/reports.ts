@@ -5,6 +5,7 @@ import {
   calculateIncomeStatement,
   calculateBalanceSheet,
   calculateVatReport,
+  calculateSkVatDeclaration,
   generateJournal,
   generateGeneralLedger,
   generateVoucherListReport,
@@ -153,6 +154,55 @@ export async function reportRoutes(fastify: FastifyInstance) {
         totalInputVat: öreToKronor(report.totalInputVat),
         vatPayable: öreToKronor(report.vatPayable),
         generatedAt: report.generatedAt,
+      },
+    };
+  });
+
+  // SKV Momsdeklaration (Skattedeklaration moms, blankett SKV 4700)
+  fastify.get<ReportParams>("/:orgId/reports/vat-declaration", async (request, reply) => {
+    const ctx = await loadReportData(fastify, request.params.orgId, request.query, reply);
+    if (!ctx) return;
+
+    const decl = calculateSkVatDeclaration(ctx.vouchers, ctx.accounts);
+
+    // SKV declarations use whole kronor (rounded)
+    const toWholeKronor = (öre: number) => Math.round(öre / 100);
+
+    return {
+      data: {
+        ruta05: toWholeKronor(decl.ruta05),
+        ruta06: toWholeKronor(decl.ruta06),
+        ruta07: toWholeKronor(decl.ruta07),
+        ruta08: toWholeKronor(decl.ruta08),
+        ruta10: toWholeKronor(decl.ruta10),
+        ruta11: toWholeKronor(decl.ruta11),
+        ruta12: toWholeKronor(decl.ruta12),
+        ruta20: toWholeKronor(decl.ruta20),
+        ruta21: toWholeKronor(decl.ruta21),
+        ruta22: toWholeKronor(decl.ruta22),
+        ruta23: toWholeKronor(decl.ruta23),
+        ruta24: toWholeKronor(decl.ruta24),
+        ruta30: toWholeKronor(decl.ruta30),
+        ruta31: toWholeKronor(decl.ruta31),
+        ruta32: toWholeKronor(decl.ruta32),
+        ruta33: toWholeKronor(decl.ruta33),
+        ruta35: toWholeKronor(decl.ruta35),
+        ruta36: toWholeKronor(decl.ruta36),
+        ruta37: toWholeKronor(decl.ruta37),
+        ruta38: toWholeKronor(decl.ruta38),
+        ruta39: toWholeKronor(decl.ruta39),
+        ruta40: toWholeKronor(decl.ruta40),
+        ruta41: toWholeKronor(decl.ruta41),
+        ruta42: toWholeKronor(decl.ruta42),
+        ruta48: toWholeKronor(decl.ruta48),
+        ruta49: toWholeKronor(decl.ruta49),
+        ruta50: toWholeKronor(decl.ruta50),
+        boxes: decl.boxes.map((b) => ({
+          box: b.box,
+          label: b.label,
+          amount: toWholeKronor(b.amount),
+        })),
+        generatedAt: decl.generatedAt,
       },
     };
   });
