@@ -31,3 +31,9 @@ export {
   type VoucherListReportEntry,
   type VoucherListReportLine,
 } from "./voucher-list-report.js";
+
+export {
+  calculateSkVatDeclaration,
+  type SkVatDeclaration,
+  type SkVatBox,
+} from "./skv-vat-declaration.js";
