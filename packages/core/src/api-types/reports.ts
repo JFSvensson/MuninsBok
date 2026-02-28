@@ -264,6 +264,39 @@ export interface VoucherGaps {
   count: number;
 }
 
+// --- Period Report (Periodrapport) ---
+
+export type PeriodType = "month" | "quarter";
+
+export interface PeriodRowResponse {
+  /** Human-readable label, e.g. "2024-01" or "2024 Q1" */
+  label: string;
+  /** ISO start date of the period (inclusive) */
+  startDate: string;
+  /** ISO end date of the period (inclusive) */
+  endDate: string;
+  /** Kronor */
+  income: number;
+  /** Kronor */
+  expenses: number;
+  /** Kronor */
+  result: number;
+  /** Kronor */
+  cumulativeResult: number;
+}
+
+export interface PeriodReportResponse {
+  periodType: PeriodType;
+  periods: PeriodRowResponse[];
+  /** Kronor */
+  totalIncome: number;
+  /** Kronor */
+  totalExpenses: number;
+  /** Kronor */
+  totalResult: number;
+  generatedAt: string;
+}
+
 // --- Dashboard ---
 
 export interface DashboardSummary {
