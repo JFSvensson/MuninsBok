@@ -31,6 +31,9 @@ const BalanceSheet = lazy(() =>
   import("./pages/BalanceSheet").then((m) => ({ default: m.BalanceSheet })),
 );
 const VatReport = lazy(() => import("./pages/VatReport").then((m) => ({ default: m.VatReport })));
+const VatDeclaration = lazy(() =>
+  import("./pages/VatDeclaration").then((m) => ({ default: m.VatDeclaration })),
+);
 const Journal = lazy(() => import("./pages/Journal").then((m) => ({ default: m.Journal })));
 const GeneralLedger = lazy(() =>
   import("./pages/GeneralLedger").then((m) => ({ default: m.GeneralLedger })),
@@ -111,6 +114,7 @@ function AppContent() {
               <NavLink to="/reports/income-statement">Resultaträkning</NavLink>
               <NavLink to="/reports/balance-sheet">Balansräkning</NavLink>
               <NavLink to="/reports/vat">Moms</NavLink>
+              <NavLink to="/reports/vat-declaration">SKV 4700</NavLink>
             </span>
             <span className={styles.navSeparator} aria-hidden="true" />
             <span className={styles.navGroup}>
@@ -137,6 +141,7 @@ function AppContent() {
                 <Route path="/reports/income-statement" element={<IncomeStatement />} />
                 <Route path="/reports/balance-sheet" element={<BalanceSheet />} />
                 <Route path="/reports/vat" element={<VatReport />} />
+                <Route path="/reports/vat-declaration" element={<VatDeclaration />} />
                 <Route path="/reports/journal" element={<Journal />} />
                 <Route path="/reports/general-ledger" element={<GeneralLedger />} />
                 <Route path="/reports/voucher-list" element={<VoucherListReport />} />
