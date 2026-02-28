@@ -227,4 +227,124 @@ describe("Report routes", () => {
       expect(res.statusCode).toBe(400);
     });
   });
+
+  describe("GET /:orgId/reports/vat-declaration (SKV Momsdeklaration)", () => {
+    const vatAccounts: Account[] = [
+      { number: "1910", name: "Kassa", type: "ASSET", isVatAccount: false, isActive: true },
+      {
+        number: "2610",
+        name: "Utgående moms 25%",
+        type: "LIABILITY",
+        isVatAccount: true,
+        isActive: true,
+      },
+      {
+        number: "2640",
+        name: "Ingående moms",
+        type: "LIABILITY",
+        isVatAccount: true,
+        isActive: true,
+      },
+      {
+        number: "3001",
+        name: "Försäljning 25%",
+        type: "REVENUE",
+        isVatAccount: false,
+        isActive: true,
+      },
+      { number: "4000", name: "Inköp", type: "EXPENSE", isVatAccount: false, isActive: true },
+      {
+        number: "2440",
+        name: "Leverantörsskulder",
+        type: "LIABILITY",
+        isVatAccount: false,
+        isActive: true,
+      },
+    ];
+
+    const vatVouchers: Voucher[] = [
+      {
+        id: "v1",
+        organizationId: orgId,
+        fiscalYearId: fyId,
+        number: 1,
+        date: new Date("2024-03-01"),
+        description: "Försäljning 25% moms",
+        lines: [
+          { id: "l1", voucherId: "v1", accountNumber: "1910", debit: 12500, credit: 0 },
+          { id: "l2", voucherId: "v1", accountNumber: "3001", debit: 0, credit: 10000 },
+          { id: "l3", voucherId: "v1", accountNumber: "2610", debit: 0, credit: 2500 },
+        ],
+        documentIds: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: "v2",
+        organizationId: orgId,
+        fiscalYearId: fyId,
+        number: 2,
+        date: new Date("2024-04-01"),
+        description: "Inköp",
+        lines: [
+          { id: "l4", voucherId: "v2", accountNumber: "4000", debit: 8000, credit: 0 },
+          { id: "l5", voucherId: "v2", accountNumber: "2640", debit: 2000, credit: 0 },
+          { id: "l6", voucherId: "v2", accountNumber: "2440", debit: 0, credit: 10000 },
+        ],
+        documentIds: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
+
+    it("returns SKV declaration with amounts in whole kronor", async () => {
+      repos.vouchers.findByFiscalYear.mockResolvedValue(vatVouchers);
+      repos.accounts.findByOrganization.mockResolvedValue(vatAccounts);
+
+      const res = await app.inject({
+        method: "GET",
+        url: `/api/organizations/${orgId}/reports/vat-declaration?fiscalYearId=${fyId}`,
+      });
+
+      expect(res.statusCode).toBe(200);
+      const data = JSON.parse(res.body).data;
+
+      // 2500 öre / 0.25 = 10000 öre = 100 kr
+      expect(data.ruta05).toBe(100);
+      // 2500 öre → 25 kr
+      expect(data.ruta10).toBe(25);
+      // 2000 öre → 20 kr
+      expect(data.ruta48).toBe(20);
+      // 25 - 20 = 5 kr
+      expect(data.ruta49).toBe(5);
+      expect(data.generatedAt).toBeDefined();
+      expect(data.boxes).toBeDefined();
+    });
+
+    it("returns zero declaration when no VAT activity", async () => {
+      repos.vouchers.findByFiscalYear.mockResolvedValue([]);
+      repos.accounts.findByOrganization.mockResolvedValue(vatAccounts);
+
+      const res = await app.inject({
+        method: "GET",
+        url: `/api/organizations/${orgId}/reports/vat-declaration?fiscalYearId=${fyId}`,
+      });
+
+      expect(res.statusCode).toBe(200);
+      const data = JSON.parse(res.body).data;
+      expect(data.ruta05).toBe(0);
+      expect(data.ruta10).toBe(0);
+      expect(data.ruta48).toBe(0);
+      expect(data.ruta49).toBe(0);
+      expect(data.boxes).toHaveLength(0);
+    });
+
+    it("returns 400 when fiscalYearId missing", async () => {
+      const res = await app.inject({
+        method: "GET",
+        url: `/api/organizations/${orgId}/reports/vat-declaration`,
+      });
+      expect(res.statusCode).toBe(400);
+    });
+  });
 });
