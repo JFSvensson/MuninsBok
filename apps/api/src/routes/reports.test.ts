@@ -347,4 +347,82 @@ describe("Report routes", () => {
       expect(res.statusCode).toBe(400);
     });
   });
+
+  // ── Period Report ──────────────────────────────────────────
+
+  describe("GET /:orgId/reports/period", () => {
+    it("returns monthly period report with amounts in kronor", async () => {
+      setupRepos();
+
+      const res = await app.inject({
+        method: "GET",
+        url: `/api/organizations/${orgId}/reports/period?fiscalYearId=${fyId}&periodType=month`,
+      });
+
+      expect(res.statusCode).toBe(200);
+      const data = JSON.parse(res.body).data;
+      expect(data.periodType).toBe("month");
+      expect(data.periods).toBeDefined();
+      expect(data.periods.length).toBeGreaterThanOrEqual(1);
+      // Voucher 1: 500 kr income in March, Voucher 2: 200 kr expense in April
+      const mar = data.periods.find((p: { label: string }) => p.label === "2024-03");
+      expect(mar).toBeDefined();
+      expect(mar.income).toBe(500);
+      const apr = data.periods.find((p: { label: string }) => p.label === "2024-04");
+      expect(apr).toBeDefined();
+      expect(apr.expenses).toBe(200);
+      expect(data.totalIncome).toBe(500);
+      expect(data.totalExpenses).toBe(200);
+      expect(data.totalResult).toBe(300);
+    });
+
+    it("returns quarterly period report", async () => {
+      setupRepos();
+
+      const res = await app.inject({
+        method: "GET",
+        url: `/api/organizations/${orgId}/reports/period?fiscalYearId=${fyId}&periodType=quarter`,
+      });
+
+      expect(res.statusCode).toBe(200);
+      const data = JSON.parse(res.body).data;
+      expect(data.periodType).toBe("quarter");
+      // March → Q1, April → Q2
+      expect(data.periods).toHaveLength(2);
+      expect(data.periods[0].label).toBe("2024 Q1");
+      expect(data.periods[1].label).toBe("2024 Q2");
+    });
+
+    it("defaults to month when periodType is omitted", async () => {
+      setupRepos();
+
+      const res = await app.inject({
+        method: "GET",
+        url: `/api/organizations/${orgId}/reports/period?fiscalYearId=${fyId}`,
+      });
+
+      expect(res.statusCode).toBe(200);
+      const data = JSON.parse(res.body).data;
+      expect(data.periodType).toBe("month");
+    });
+
+    it("returns 400 for invalid periodType", async () => {
+      setupRepos();
+
+      const res = await app.inject({
+        method: "GET",
+        url: `/api/organizations/${orgId}/reports/period?fiscalYearId=${fyId}&periodType=week`,
+      });
+
+      expect(res.statusCode).toBe(400);
+    });
+
+    it("returns 400 when fiscalYearId missing", async () => {
+      const res = await app.inject({
+        method: "GET",
+        url: `/api/organizations/${orgId}/reports/period`,
+      });
+      expect(res.statusCode).toBe(400);
+    });
+  });
 });
