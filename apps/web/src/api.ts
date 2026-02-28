@@ -13,6 +13,7 @@ import type {
   OrgMember,
   OrgMemberWithUser,
   PaginatedApiResponse,
+  PeriodReportResponse,
   SkVatDeclarationResponse,
   TrialBalance,
   VatReport,
@@ -35,6 +36,9 @@ export type {
   OrgMember,
   OrgMemberWithUser,
   Pagination,
+  PeriodReportResponse,
+  PeriodRowResponse,
+  PeriodType,
   ReportSection,
   SkVatDeclarationResponse,
   TrialBalance,
@@ -383,6 +387,22 @@ export const api = {
     }
     return fetchJson<ApiResponse<SkVatDeclarationResponse>>(
       `${API_BASE}/organizations/${orgId}/reports/vat-declaration?${params}`,
+    );
+  },
+
+  getPeriodReport: (
+    orgId: string,
+    fiscalYearId: string,
+    dateRange?: { startDate: string; endDate: string },
+    periodType: "month" | "quarter" = "month",
+  ) => {
+    const params = new URLSearchParams({ fiscalYearId, periodType });
+    if (dateRange) {
+      params.set("startDate", dateRange.startDate);
+      params.set("endDate", dateRange.endDate);
+    }
+    return fetchJson<ApiResponse<PeriodReportResponse>>(
+      `${API_BASE}/organizations/${orgId}/reports/period?${params}`,
     );
   },
 
