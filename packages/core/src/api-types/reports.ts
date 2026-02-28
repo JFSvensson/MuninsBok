@@ -188,6 +188,75 @@ export interface VoucherListReportData {
   generatedAt: string;
 }
 
+// --- SKV Momsdeklaration (Skattedeklaration moms, SKV 4700) ---
+
+export interface SkVatBoxResponse {
+  box: number;
+  label: string;
+  /** Hela kronor */
+  amount: number;
+}
+
+export interface SkVatDeclarationResponse {
+  /** Ruta 05 – Momspliktig försäljning (exkl. moms). Hela kronor. */
+  ruta05: number;
+  /** Ruta 06 – Momspliktiga uttag */
+  ruta06: number;
+  /** Ruta 07 – Beskattningsunderlag vid vinstmarginalbeskattning */
+  ruta07: number;
+  /** Ruta 08 – Hyresinkomster vid frivillig skattskyldighet */
+  ruta08: number;
+  /** Ruta 10 – Utgående moms 25 %. Hela kronor. */
+  ruta10: number;
+  /** Ruta 11 – Utgående moms 12 % */
+  ruta11: number;
+  /** Ruta 12 – Utgående moms 6 % */
+  ruta12: number;
+  /** Ruta 20 – Inköp varor EU */
+  ruta20: number;
+  /** Ruta 21 – Inköp tjänster EU */
+  ruta21: number;
+  /** Ruta 22 – Inköp varor omvänd skattskyldighet */
+  ruta22: number;
+  /** Ruta 23 – Inköp tjänster omvänd skattskyldighet */
+  ruta23: number;
+  /** Ruta 24 – Övriga inköp tjänster utanför EU */
+  ruta24: number;
+  /** Ruta 30 – Moms varuinköp EU */
+  ruta30: number;
+  /** Ruta 31 – Moms tjänsteinköp EU */
+  ruta31: number;
+  /** Ruta 32 – Moms varuinköp omvänd */
+  ruta32: number;
+  /** Ruta 33 – Moms tjänsteinköp omvänd */
+  ruta33: number;
+  /** Ruta 35 – Försäljning varor EU */
+  ruta35: number;
+  /** Ruta 36 – Försäljning varor utanför EU */
+  ruta36: number;
+  /** Ruta 37 – Mellanman inköp trepartshandel */
+  ruta37: number;
+  /** Ruta 38 – Mellanman försäljning trepartshandel */
+  ruta38: number;
+  /** Ruta 39 – Tjänsteförsäljning EU */
+  ruta39: number;
+  /** Ruta 40 – Övrig momsfri försäljning */
+  ruta40: number;
+  /** Ruta 41 – Momspliktiga inköp vid import */
+  ruta41: number;
+  /** Ruta 42 – Beskattningsunderlag vid import */
+  ruta42: number;
+  /** Ruta 48 – Ingående moms att dra av. Hela kronor. */
+  ruta48: number;
+  /** Ruta 49 – Moms att betala eller få tillbaka. Hela kronor. */
+  ruta49: number;
+  /** Ruta 50 – Moms på import */
+  ruta50: number;
+  /** Non-zero boxes for UI rendering */
+  boxes: SkVatBoxResponse[];
+  generatedAt: string;
+}
+
 // --- Voucher Gaps ---
 
 export interface VoucherGaps {
