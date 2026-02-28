@@ -6,10 +6,12 @@ import {
   calculateBalanceSheet,
   calculateVatReport,
   calculateSkVatDeclaration,
+  calculatePeriodReport,
   generateJournal,
   generateGeneralLedger,
   generateVoucherListReport,
 } from "@muninsbok/core/reports";
+import type { PeriodType } from "@muninsbok/core/reports";
 import {
   öreToKronor,
   convertDebitCredit,
@@ -203,6 +205,47 @@ export async function reportRoutes(fastify: FastifyInstance) {
           amount: toWholeKronor(b.amount),
         })),
         generatedAt: decl.generatedAt,
+      },
+    };
+  });
+
+  // Period Report (Periodrapport – månads-/kvartalssammanställning)
+  fastify.get<{
+    Params: { orgId: string };
+    Querystring: {
+      fiscalYearId: string;
+      startDate?: string;
+      endDate?: string;
+      periodType?: string;
+    };
+  }>("/:orgId/reports/period", async (request, reply) => {
+    const ctx = await loadReportData(fastify, request.params.orgId, request.query, reply);
+    if (!ctx) return;
+
+    const raw = request.query.periodType ?? "month";
+    if (raw !== "month" && raw !== "quarter") {
+      return reply.status(400).send({ error: "periodType måste vara 'month' eller 'quarter'" });
+    }
+    const periodType: PeriodType = raw;
+
+    const report = calculatePeriodReport(ctx.vouchers, ctx.accounts, periodType);
+
+    return {
+      data: {
+        periodType: report.periodType,
+        periods: report.periods.map((p) => ({
+          label: p.label,
+          startDate: p.startDate,
+          endDate: p.endDate,
+          income: öreToKronor(p.income),
+          expenses: öreToKronor(p.expenses),
+          result: öreToKronor(p.result),
+          cumulativeResult: öreToKronor(p.cumulativeResult),
+        })),
+        totalIncome: öreToKronor(report.totalIncome),
+        totalExpenses: öreToKronor(report.totalExpenses),
+        totalResult: öreToKronor(report.totalResult),
+        generatedAt: report.generatedAt,
       },
     };
   });
