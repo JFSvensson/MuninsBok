@@ -28,6 +28,7 @@ model Organization {
   vouchers    Voucher[]
   documents   Document[]
   members     OrganizationMember[]
+  voucherTemplates VoucherTemplate[]
 
   @@map("organizations")
 }
@@ -225,4 +226,44 @@ model Document {
   @@index([organizationId])
   @@index([voucherId])
   @@map("documents")
+}
+
+// ============================================
+// VOUCHER TEMPLATE (verifikatmall)
+// ============================================
+
+model VoucherTemplate {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  name           String
+  description    String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  organization Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  lines        VoucherTemplateLine[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@map("voucher_templates")
+}
+
+// ============================================
+// VOUCHER TEMPLATE LINE (verifikatmallrad)
+// ============================================
+
+model VoucherTemplateLine {
+  id            String  @id @default(cuid())
+  templateId    String  @map("template_id")
+  accountNumber String  @map("account_number")
+  debit         Int     @default(0)
+  credit        Int     @default(0)
+  description   String?
+
+  // Relations
+  template VoucherTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([templateId])
+  @@map("voucher_template_lines")
 }
