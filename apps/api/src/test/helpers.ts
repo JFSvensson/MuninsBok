@@ -9,6 +9,7 @@ import type {
   IOrganizationRepository,
   IAccountRepository,
   IVoucherRepository,
+  IVoucherTemplateRepository,
   IFiscalYearRepository,
   IDocumentRepository,
   IUserRepository,
@@ -113,6 +114,16 @@ export function createMockRefreshTokenRepo(): MockedRepo<IRefreshTokenRepository
   } as MockedRepo<IRefreshTokenRepository>;
 }
 
+export function createMockVoucherTemplateRepo(): MockedRepo<IVoucherTemplateRepository> {
+  return {
+    findByOrganization: vi.fn().mockResolvedValue([]),
+    findById: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+  } as MockedRepo<IVoucherTemplateRepository>;
+}
+
 interface MockPrismaModel {
   [method: string]: ReturnType<typeof vi.fn>;
 }
@@ -130,6 +141,7 @@ export interface MockRepos {
   organizations: MockedRepo<IOrganizationRepository>;
   accounts: MockedRepo<IAccountRepository>;
   vouchers: MockedRepo<IVoucherRepository>;
+  voucherTemplates: MockedRepo<IVoucherTemplateRepository>;
   fiscalYears: MockedRepo<IFiscalYearRepository>;
   documents: MockedRepo<IDocumentRepository>;
   users: MockedRepo<IUserRepository>;
@@ -164,6 +176,7 @@ export function createMockRepos(): MockRepos {
     organizations: createMockOrganizationRepo(),
     accounts: createMockAccountRepo(),
     vouchers: createMockVoucherRepo(),
+    voucherTemplates: createMockVoucherTemplateRepo(),
     fiscalYears: createMockFiscalYearRepo(),
     documents: createMockDocumentRepo(),
     users: createMockUserRepo(),
