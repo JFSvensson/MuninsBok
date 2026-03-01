@@ -1,7 +1,8 @@
 import { useState, useMemo, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
-import { parseAmountToOre } from "../utils/formatting";
+import type { VoucherTemplate } from "../api";
+import { parseAmountToOre, oreToKronor } from "../utils/formatting";
 
 export interface VoucherLineInput {
   accountNumber: string;
@@ -117,6 +118,19 @@ export function useVoucherForm({ organizationId, fiscalYearId, onSuccess }: UseV
     });
   }, [lines, fiscalYearId, date, description, createdBy, createMutation]);
 
+  const loadTemplate = useCallback((template: VoucherTemplate) => {
+    setDescription(template.description ?? template.name);
+    setLines(
+      template.lines.map((l) => ({
+        accountNumber: l.accountNumber,
+        debit: l.debit > 0 ? oreToKronor(l.debit).toString() : "",
+        credit: l.credit > 0 ? oreToKronor(l.credit).toString() : "",
+        description: l.description ?? "",
+      })),
+    );
+    setError(null);
+  }, []);
+
   const reset = useCallback(() => {
     setDate(new Date().toISOString().slice(0, 10));
     setDescription("");
@@ -152,6 +166,7 @@ export function useVoucherForm({ organizationId, fiscalYearId, onSuccess }: UseV
     // Actions
     submit,
     reset,
+    loadTemplate,
     isPending: createMutation.isPending,
   };
 }
