@@ -87,3 +87,26 @@ export interface OrgMemberWithUser extends OrgMember {
     name: string;
   };
 }
+
+// ── Voucher Templates ───────────────────────────────────────
+
+export interface VoucherTemplateLine {
+  id: string;
+  templateId: string;
+  accountNumber: string;
+  /** Amount in öre (cents) */
+  debit: number;
+  /** Amount in öre (cents) */
+  credit: number;
+  description?: string;
+}
+
+export interface VoucherTemplate {
+  id: string;
+  organizationId: string;
+  name: string;
+  description?: string;
+  lines: VoucherTemplateLine[];
+  createdAt: string;
+  updatedAt: string;
+}
