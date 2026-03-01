@@ -10,6 +10,8 @@ export function VoucherCreate() {
   const { organization, fiscalYear } = useOrganization();
   const navigate = useNavigate();
 
+  const orgId = defined(organization).id;
+
   const {
     date,
     setDate,
@@ -27,20 +29,28 @@ export function VoucherCreate() {
     isBalanced,
     canSubmit,
     submit,
+    loadTemplate,
     isPending,
   } = useVoucherForm({
-    organizationId: organization?.id ?? "",
+    organizationId: orgId,
     fiscalYearId: fiscalYear?.id ?? "",
     onSuccess: () => navigate("/vouchers"),
   });
 
   const { data: accountsData } = useQuery({
-    queryKey: ["accounts", organization?.id],
-    queryFn: () => api.getAccounts(defined(organization).id),
+    queryKey: ["accounts", orgId],
+    queryFn: () => api.getAccounts(orgId),
+    enabled: !!organization,
+  });
+
+  const { data: templatesData } = useQuery({
+    queryKey: ["voucher-templates", orgId],
+    queryFn: () => api.getVoucherTemplates(orgId),
     enabled: !!organization,
   });
 
   const accounts = accountsData?.data ?? [];
+  const templates = templatesData?.data ?? [];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +59,29 @@ export function VoucherCreate() {
 
   return (
     <div className="card">
-      <h2>Nytt verifikat</h2>
+      <div className="flex justify-between items-center mb-2">
+        <h2>Nytt verifikat</h2>
+        {templates.length > 0 && (
+          <select
+            onChange={(e) => {
+              const tpl = templates.find((t) => t.id === e.target.value);
+              if (tpl) loadTemplate(tpl);
+              e.target.value = "";
+            }}
+            defaultValue=""
+            style={{ maxWidth: "250px" }}
+          >
+            <option value="" disabled>
+              Fyll i från mall…
+            </option>
+            {templates.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
 
       {error && <div className="error">{error}</div>}
 
