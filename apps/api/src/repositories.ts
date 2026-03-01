@@ -6,6 +6,7 @@ import type {
   IOrganizationRepository,
   IAccountRepository,
   IVoucherRepository,
+  IVoucherTemplateRepository,
   IFiscalYearRepository,
   IDocumentRepository,
   IUserRepository,
@@ -16,6 +17,7 @@ import {
   OrganizationRepository,
   AccountRepository,
   VoucherRepository,
+  VoucherTemplateRepository,
   FiscalYearRepository,
   DocumentRepository,
   UserRepository,
@@ -26,6 +28,7 @@ export interface Repositories {
   readonly organizations: IOrganizationRepository;
   readonly accounts: IAccountRepository;
   readonly vouchers: IVoucherRepository;
+  readonly voucherTemplates: IVoucherTemplateRepository;
   readonly fiscalYears: IFiscalYearRepository;
   readonly documents: IDocumentRepository;
   readonly users: IUserRepository;
@@ -39,6 +42,7 @@ export function createRepositories(prisma: PrismaClient): Repositories {
     organizations: new OrganizationRepository(prisma),
     accounts: new AccountRepository(prisma),
     vouchers: new VoucherRepository(prisma),
+    voucherTemplates: new VoucherTemplateRepository(prisma),
     fiscalYears: new FiscalYearRepository(prisma),
     documents: new DocumentRepository(prisma),
     users: new UserRepository(prisma),
