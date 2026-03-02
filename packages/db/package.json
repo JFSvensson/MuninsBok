@@ -30,15 +30,15 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.4.1",
-    "@prisma/client": "^7.4.1",
+    "@prisma/adapter-pg": "^7.4.2",
+    "@prisma/client": "^7.4.2",
     "dotenv": "^17.3.1",
     "pg": "^8.19.0"
   },
   "devDependencies": {
     "@muninsbok/core": "workspace:*",
-    "@types/pg": "^8.16.0",
-    "prisma": "^7.4.1",
+    "@types/pg": "^8.18.0",
+    "prisma": "^7.4.2",
     "rimraf": "^5.0.5",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3",
