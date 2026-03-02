@@ -193,7 +193,7 @@ export async function buildTestApp(mocks?: MockRepos, options?: { jwtSecret?: st
   const documentStorage = createMockDocumentStorage();
   const app = await buildApp({
     repos: repos as unknown as Repositories,
-    documentStorage,
+    documentStorage: documentStorage as unknown as IDocumentStorage,
     ...(options?.jwtSecret != null && { jwtSecret: options.jwtSecret }),
   });
   return { app, repos, documentStorage };
