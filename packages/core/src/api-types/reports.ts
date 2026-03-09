@@ -416,3 +416,31 @@ export interface YearEndSummaryResponse {
   isDisposed: boolean;
   generatedAt: string;
 }
+
+// --- Budget vs Actual (Budget mot utfall) ---
+
+export interface BudgetVsActualRow {
+  accountNumber: string;
+  accountName: string;
+  /** Kronor */
+  budget: number;
+  /** Kronor */
+  actual: number;
+  /** Kronor (actual - budget) */
+  deviation: number;
+  /** Percentage deviation (deviation / budget * 100), null if budget is 0 */
+  deviationPercent: number | null;
+}
+
+export interface BudgetVsActualReport {
+  budgetId: string;
+  budgetName: string;
+  rows: BudgetVsActualRow[];
+  /** Kronor */
+  totalBudget: number;
+  /** Kronor */
+  totalActual: number;
+  /** Kronor */
+  totalDeviation: number;
+  generatedAt: string;
+}
