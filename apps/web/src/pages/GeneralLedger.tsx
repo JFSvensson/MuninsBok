@@ -1,11 +1,12 @@
 import { api } from "../api";
 import { formatAmount, formatDate, amountClassName } from "../utils/formatting";
 import { toCsv, downloadCsv, csvAmount } from "../utils/csv";
+import { exportGeneralLedgerPdf } from "../utils/pdf";
 import { DateFilter } from "../components/DateFilter";
 import { useReportQuery } from "../hooks/useReportQuery";
 
 export function GeneralLedger() {
-  const { data, isLoading, error, setDateRange } = useReportQuery(
+  const { data, isLoading, error, setDateRange, organization, fiscalYear } = useReportQuery(
     "general-ledger",
     api.getGeneralLedger,
   );
@@ -33,33 +34,58 @@ export function GeneralLedger() {
     <div className="card">
       <div className="flex justify-between items-center mb-2">
         <h2>Huvudbok</h2>
-        <button
-          className="secondary"
-          onClick={() => {
-            const rows: string[][] = [];
-            for (const account of report.accounts) {
-              for (const txn of account.transactions) {
-                rows.push([
-                  account.accountNumber,
-                  account.accountName,
-                  formatDate(txn.date),
-                  String(txn.voucherNumber),
-                  txn.description,
-                  csvAmount(txn.debit),
-                  csvAmount(txn.credit),
-                  csvAmount(txn.balance),
-                ]);
+        <div className="flex" style={{ gap: "0.5rem" }}>
+          <button
+            className="secondary"
+            onClick={() => {
+              const rows: string[][] = [];
+              for (const account of report.accounts) {
+                for (const txn of account.transactions) {
+                  rows.push([
+                    account.accountNumber,
+                    account.accountName,
+                    formatDate(txn.date),
+                    String(txn.voucherNumber),
+                    txn.description,
+                    csvAmount(txn.debit),
+                    csvAmount(txn.credit),
+                    csvAmount(txn.balance),
+                  ]);
+                }
               }
+              const csv = toCsv(
+                [
+                  "Konto",
+                  "Kontonamn",
+                  "Datum",
+                  "Ver.nr",
+                  "Beskrivning",
+                  "Debet",
+                  "Kredit",
+                  "Saldo",
+                ],
+                rows,
+              );
+              downloadCsv(csv, "huvudbok.csv");
+            }}
+          >
+            Exportera CSV
+          </button>
+          <button
+            className="secondary"
+            onClick={() =>
+              exportGeneralLedgerPdf(
+                report,
+                organization?.name ?? "",
+                fiscalYear
+                  ? formatDate(fiscalYear.startDate) + " – " + formatDate(fiscalYear.endDate)
+                  : "",
+              )
             }
-            const csv = toCsv(
-              ["Konto", "Kontonamn", "Datum", "Ver.nr", "Beskrivning", "Debet", "Kredit", "Saldo"],
-              rows,
-            );
-            downloadCsv(csv, "huvudbok.csv");
-          }}
-        >
-          Exportera CSV
-        </button>
+          >
+            Exportera PDF
+          </button>
+        </div>
       </div>
       <div className="mb-2">
         <DateFilter onFilter={setDateRange} />
