@@ -379,3 +379,40 @@ export interface DashboardSummary {
   }[];
   generatedAt: string;
 }
+
+// --- Result Disposition (Resultatdisposition) ---
+
+export interface ResultDispositionLineResponse {
+  accountNumber: string;
+  accountName: string;
+  /** Kronor */
+  debit: number;
+  /** Kronor */
+  credit: number;
+}
+
+export interface ResultDispositionPreviewResponse {
+  closedFiscalYearId: string;
+  targetFiscalYearId: string;
+  /** Kronor */
+  netResult: number;
+  lines: ResultDispositionLineResponse[];
+  isBalanced: boolean;
+  generatedAt: string;
+}
+
+// --- Year-End Summary (Sammanställning av årsbokslut) ---
+
+export interface YearEndSummaryResponse {
+  fiscalYear: {
+    id: string;
+    startDate: string;
+    endDate: string;
+    isClosed: boolean;
+  };
+  incomeStatement: IncomeStatement;
+  balanceSheet: BalanceSheet;
+  disposition: ResultDispositionPreviewResponse | null;
+  isDisposed: boolean;
+  generatedAt: string;
+}
