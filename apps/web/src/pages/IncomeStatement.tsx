@@ -1,6 +1,7 @@
 import { api, type ReportSection } from "../api";
-import { formatAmount, amountClassName } from "../utils/formatting";
+import { formatAmount, formatDate, amountClassName } from "../utils/formatting";
 import { toCsv, downloadCsv, csvAmount } from "../utils/csv";
+import { exportIncomeStatementPdf } from "../utils/pdf";
 import { DateFilter } from "../components/DateFilter";
 import { useReportQuery } from "../hooks/useReportQuery";
 
@@ -34,7 +35,7 @@ function Section({ section }: { section: ReportSection }) {
 }
 
 export function IncomeStatement() {
-  const { data, isLoading, error, setDateRange } = useReportQuery(
+  const { data, isLoading, error, setDateRange, organization, fiscalYear } = useReportQuery(
     "income-statement",
     api.getIncomeStatement,
   );
@@ -62,43 +63,59 @@ export function IncomeStatement() {
     <div className="card">
       <div className="flex justify-between items-center mb-2">
         <h2>Resultaträkning</h2>
-        <button
-          className="secondary"
-          onClick={() => {
-            const allRows = [
-              ...report.revenues.rows.map((r) => [
-                r.accountNumber,
-                r.accountName,
-                "Intäkt",
-                csvAmount(r.amount),
-              ]),
-              ...report.expenses.rows.map((r) => [
-                r.accountNumber,
-                r.accountName,
-                "Kostnad",
-                csvAmount(r.amount),
-              ]),
-              ...report.financialIncome.rows.map((r) => [
-                r.accountNumber,
-                r.accountName,
-                "Finansiell intäkt",
-                csvAmount(r.amount),
-              ]),
-              ...report.financialExpenses.rows.map((r) => [
-                r.accountNumber,
-                r.accountName,
-                "Finansiell kostnad",
-                csvAmount(r.amount),
-              ]),
-              ["", "Rörelseresultat", "", csvAmount(report.operatingResult)],
-              ["", "Årets resultat", "", csvAmount(report.netResult)],
-            ];
-            const csv = toCsv(["Konto", "Namn", "Kategori", "Belopp"], allRows);
-            downloadCsv(csv, "resultatrakning.csv");
-          }}
-        >
-          Exportera CSV
-        </button>
+        <div className="flex" style={{ gap: "0.5rem" }}>
+          <button
+            className="secondary"
+            onClick={() => {
+              const allRows = [
+                ...report.revenues.rows.map((r) => [
+                  r.accountNumber,
+                  r.accountName,
+                  "Intäkt",
+                  csvAmount(r.amount),
+                ]),
+                ...report.expenses.rows.map((r) => [
+                  r.accountNumber,
+                  r.accountName,
+                  "Kostnad",
+                  csvAmount(r.amount),
+                ]),
+                ...report.financialIncome.rows.map((r) => [
+                  r.accountNumber,
+                  r.accountName,
+                  "Finansiell intäkt",
+                  csvAmount(r.amount),
+                ]),
+                ...report.financialExpenses.rows.map((r) => [
+                  r.accountNumber,
+                  r.accountName,
+                  "Finansiell kostnad",
+                  csvAmount(r.amount),
+                ]),
+                ["", "Rörelseresultat", "", csvAmount(report.operatingResult)],
+                ["", "Årets resultat", "", csvAmount(report.netResult)],
+              ];
+              const csv = toCsv(["Konto", "Namn", "Kategori", "Belopp"], allRows);
+              downloadCsv(csv, "resultatrakning.csv");
+            }}
+          >
+            Exportera CSV
+          </button>
+          <button
+            className="secondary"
+            onClick={() =>
+              exportIncomeStatementPdf(
+                report,
+                organization?.name ?? "",
+                fiscalYear
+                  ? formatDate(fiscalYear.startDate) + " – " + formatDate(fiscalYear.endDate)
+                  : "",
+              )
+            }
+          >
+            Exportera PDF
+          </button>
+        </div>
       </div>
       <div className="mb-2">
         <DateFilter onFilter={setDateRange} />
