@@ -7,6 +7,7 @@ import { api } from "../api";
 import type { ClosingPreviewResponse, FiscalYear } from "../api";
 import { formatAmount, amountClassName, formatDate } from "../utils/formatting";
 import { toCsv, downloadCsv, csvAmount } from "../utils/csv";
+import { exportYearEndClosingPdf } from "../utils/pdf";
 import dialogStyles from "../components/Dialog.module.css";
 import styles from "./YearEndClosing.module.css";
 
@@ -156,6 +157,20 @@ export default function YearEndClosing() {
             <>
               <button className="secondary" onClick={handleExportCsv}>
                 Exportera CSV
+              </button>
+              <button
+                className="secondary"
+                onClick={() =>
+                  exportYearEndClosingPdf(
+                    preview,
+                    organization.name,
+                    activeFy
+                      ? formatDate(activeFy.startDate) + " – " + formatDate(activeFy.endDate)
+                      : "",
+                  )
+                }
+              >
+                Exportera PDF
               </button>
               <button className="secondary" onClick={() => window.print()}>
                 Skriv ut
