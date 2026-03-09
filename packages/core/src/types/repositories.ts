@@ -18,6 +18,10 @@ import type {
   VoucherTemplateError,
 } from "./voucher-template.js";
 import type {
+  ExecuteResultDispositionInput,
+  ResultDispositionError,
+} from "./result-disposition.js";
+import type {
   User,
   CreateUserInput,
   UserError,
@@ -108,6 +112,10 @@ export interface IFiscalYearRepository {
     previousFiscalYearId: string,
     organizationId: string,
   ): Promise<Result<Voucher, FiscalYearError>>;
+  /** Execute result disposition: transfer 2099 → 2091 in the target fiscal year. */
+  executeResultDisposition(
+    input: ExecuteResultDispositionInput,
+  ): Promise<Result<Voucher, ResultDispositionError>>;
 }
 
 // ── Voucher Template ────────────────────────────────────────
