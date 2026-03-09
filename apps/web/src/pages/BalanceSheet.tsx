@@ -1,6 +1,7 @@
 import { api, type ReportSection } from "../api";
-import { formatAmount, amountClassName } from "../utils/formatting";
+import { formatAmount, formatDate, amountClassName } from "../utils/formatting";
 import { toCsv, downloadCsv, csvAmount } from "../utils/csv";
+import { exportBalanceSheetPdf } from "../utils/pdf";
 import { DateFilter } from "../components/DateFilter";
 import { useReportQuery } from "../hooks/useReportQuery";
 
@@ -34,7 +35,7 @@ function Section({ section }: { section: ReportSection }) {
 }
 
 export function BalanceSheet() {
-  const { data, isLoading, error, setDateRange } = useReportQuery(
+  const { data, isLoading, error, setDateRange, organization, fiscalYear } = useReportQuery(
     "balance-sheet",
     api.getBalanceSheet,
   );
@@ -62,40 +63,56 @@ export function BalanceSheet() {
     <div className="card">
       <div className="flex justify-between items-center mb-2">
         <h2>Balansräkning</h2>
-        <button
-          className="secondary"
-          onClick={() => {
-            const allRows = [
-              ...report.assets.rows.map((r) => [
-                r.accountNumber,
-                r.accountName,
-                "Tillgång",
-                csvAmount(r.amount),
-              ]),
-              ["", "Summa tillgångar", "", csvAmount(report.totalAssets)],
-              ...report.equity.rows.map((r) => [
-                r.accountNumber,
-                r.accountName,
-                "Eget kapital",
-                csvAmount(r.amount),
-              ]),
-              ...(report.yearResult !== 0
-                ? [["", "Årets resultat", "Eget kapital", csvAmount(report.yearResult)]]
-                : []),
-              ...report.liabilities.rows.map((r) => [
-                r.accountNumber,
-                r.accountName,
-                "Skuld",
-                csvAmount(r.amount),
-              ]),
-              ["", "Summa EK + skulder", "", csvAmount(report.totalLiabilitiesAndEquity)],
-            ];
-            const csv = toCsv(["Konto", "Namn", "Kategori", "Saldo"], allRows);
-            downloadCsv(csv, "balansrakning.csv");
-          }}
-        >
-          Exportera CSV
-        </button>
+        <div className="flex" style={{ gap: "0.5rem" }}>
+          <button
+            className="secondary"
+            onClick={() => {
+              const allRows = [
+                ...report.assets.rows.map((r) => [
+                  r.accountNumber,
+                  r.accountName,
+                  "Tillgång",
+                  csvAmount(r.amount),
+                ]),
+                ["", "Summa tillgångar", "", csvAmount(report.totalAssets)],
+                ...report.equity.rows.map((r) => [
+                  r.accountNumber,
+                  r.accountName,
+                  "Eget kapital",
+                  csvAmount(r.amount),
+                ]),
+                ...(report.yearResult !== 0
+                  ? [["", "Årets resultat", "Eget kapital", csvAmount(report.yearResult)]]
+                  : []),
+                ...report.liabilities.rows.map((r) => [
+                  r.accountNumber,
+                  r.accountName,
+                  "Skuld",
+                  csvAmount(r.amount),
+                ]),
+                ["", "Summa EK + skulder", "", csvAmount(report.totalLiabilitiesAndEquity)],
+              ];
+              const csv = toCsv(["Konto", "Namn", "Kategori", "Saldo"], allRows);
+              downloadCsv(csv, "balansrakning.csv");
+            }}
+          >
+            Exportera CSV
+          </button>
+          <button
+            className="secondary"
+            onClick={() =>
+              exportBalanceSheetPdf(
+                report,
+                organization?.name ?? "",
+                fiscalYear
+                  ? formatDate(fiscalYear.startDate) + " – " + formatDate(fiscalYear.endDate)
+                  : "",
+              )
+            }
+          >
+            Exportera PDF
+          </button>
+        </div>
       </div>
       <div className="mb-2">
         <DateFilter onFilter={setDateRange} />
