@@ -49,6 +49,12 @@ const FiscalYears = lazy(() =>
   import("./pages/FiscalYears").then((m) => ({ default: m.FiscalYears })),
 );
 const YearEndClosing = lazy(() => import("./pages/YearEndClosing"));
+const ResultDisposition = lazy(() =>
+  import("./pages/ResultDisposition").then((m) => ({ default: m.ResultDisposition })),
+);
+const YearEndSummary = lazy(() =>
+  import("./pages/YearEndSummary").then((m) => ({ default: m.YearEndSummary })),
+);
 const VoucherTemplates = lazy(() =>
   import("./pages/VoucherTemplates").then((m) => ({ default: m.VoucherTemplates })),
 );
@@ -138,6 +144,8 @@ function AppContent() {
             <NavLink to="/sie">SIE</NavLink>
             <NavLink to="/fiscal-years">Räkenskapsår</NavLink>
             <NavLink to="/year-end-closing">Bokslut</NavLink>
+            <NavLink to="/result-disposition">Disposition</NavLink>
+            <NavLink to="/year-end-summary">Sammanställning</NavLink>
             <NavLink to="/members">Medlemmar</NavLink>
           </nav>
 
@@ -165,6 +173,8 @@ function AppContent() {
                 <Route path="/sie" element={<SieExport />} />
                 <Route path="/fiscal-years" element={<FiscalYears />} />
                 <Route path="/year-end-closing" element={<YearEndClosing />} />
+                <Route path="/result-disposition" element={<ResultDisposition />} />
+                <Route path="/year-end-summary" element={<YearEndSummary />} />
                 <Route path="/members" element={<Members />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
