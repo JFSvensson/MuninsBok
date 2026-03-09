@@ -48,6 +48,13 @@ Målet är att göra bokföring **enkel, transparent och självhostbar** — uta
 - Balanskontroll av bokslutsverifikatet
 - Stängning av räkenskapsår med bokslutsverifikat
 - Ingående balanser (IB) från föregående år
+- Resultatdisposition — automatisk överföring av 2099 (Årets resultat) → 2091 (Balanserat resultat)
+- Sammanställning av årsbokslut — kompilerad rapport med resultaträkning, balansräkning och dispositionsdetaljer
+
+### Verifikatmallar
+- Spara och återanvänd vanliga bokföringshändelser (t.ex. månadshyra, lön)
+- Skapa, redigera och radera mallar
+- Fyll i verifikat direkt från mall
 
 ### Import/export
 - SIE4 (med IB/UB/RES)
@@ -72,11 +79,9 @@ Målet är att göra bokföring **enkel, transparent och självhostbar** — uta
 
 Följande funktioner är planerade men ännu inte implementerade:
 
-- **Verifikatmallar** — spara och återanvänd vanliga bokföringshändelser (t.ex. månadshyra, lön)
 - **Budget** — budgetera per konto och period, jämför utfall mot budget i rapporter
 - **Kontoanalys** — djupanalys per konto med grafer, trender och saldo över tid
 - **PDF-export** — generera tryckfärdiga rapporter i PDF-format
-- **Resultatdisposition** — automatisk bokning av 2099 → 2091 (balanserat resultat) efter årsbokslut
 
 ### Icke-mål (för närvarande)
 - Bankkoppling
