@@ -48,18 +48,22 @@ export function VoucherTemplates() {
       </div>
 
       {templates.length === 0 ? (
-        <p style={{ color: "#666" }}>
+        <p style={{ color: "var(--color-text-muted)" }}>
           Inga mallar ännu. Skapa en mall för att snabbt fylla i återkommande verifikat.
         </p>
       ) : (
         <table>
           <thead>
             <tr>
-              <th>Namn</th>
-              <th>Beskrivning</th>
-              <th className="text-right">Rader</th>
-              <th className="text-right">Belopp (kr)</th>
-              <th></th>
+              <th scope="col">Namn</th>
+              <th scope="col">Beskrivning</th>
+              <th scope="col" className="text-right">
+                Rader
+              </th>
+              <th scope="col" className="text-right">
+                Belopp (kr)
+              </th>
+              <th scope="col"></th>
             </tr>
           </thead>
           <tbody>
@@ -72,7 +76,7 @@ export function VoucherTemplates() {
                   <td>
                     <Link to={`/templates/${tpl.id}/edit`}>{tpl.name}</Link>
                   </td>
-                  <td style={{ color: "#666" }}>{tpl.description || "—"}</td>
+                  <td style={{ color: "var(--color-text-muted)" }}>{tpl.description || "—"}</td>
                   <td className="text-right">{tpl.lines.length}</td>
                   <td className="text-right">{oreToKronor(totalDebit).toLocaleString("sv-SE")}</td>
                   <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
@@ -85,7 +89,9 @@ export function VoucherTemplates() {
                     </button>
                     {isDeleting ? (
                       <>
-                        <span style={{ marginRight: "0.5rem", color: "#c62828" }}>Ta bort?</span>
+                        <span style={{ marginRight: "0.5rem", color: "var(--color-negative)" }}>
+                          Ta bort?
+                        </span>
                         <button
                           style={{ padding: "0.25rem 0.5rem", marginRight: "0.25rem" }}
                           onClick={() => deleteMutation.mutate(tpl.id)}
@@ -104,7 +110,7 @@ export function VoucherTemplates() {
                     ) : (
                       <button
                         className="secondary"
-                        style={{ padding: "0.25rem 0.5rem", color: "#c62828" }}
+                        style={{ padding: "0.25rem 0.5rem", color: "var(--color-negative)" }}
                         onClick={() => setDeleteId(tpl.id)}
                       >
                         Ta bort
