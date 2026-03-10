@@ -126,10 +126,12 @@ export function Members() {
       <table className="table">
         <thead>
           <tr>
-            <th>Namn</th>
-            <th>E-post</th>
-            <th>Roll</th>
-            <th style={{ width: "120px" }}>Åtgärder</th>
+            <th scope="col">Namn</th>
+            <th scope="col">E-post</th>
+            <th scope="col">Roll</th>
+            <th scope="col" style={{ width: "120px" }}>
+              Åtgärder
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -160,7 +162,7 @@ export function Members() {
           ))}
           {members.length === 0 && (
             <tr>
-              <td colSpan={4} style={{ textAlign: "center", color: "#666" }}>
+              <td colSpan={4} style={{ textAlign: "center", color: "var(--color-text-muted)" }}>
                 Inga medlemmar hittades.
               </td>
             </tr>
