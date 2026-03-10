@@ -1,6 +1,7 @@
 import { api } from "../api";
 import type { SkVatDeclarationResponse } from "../api";
 import { DateFilter } from "../components/DateFilter";
+import { ReportPageTemplate } from "../components/ReportPageTemplate";
 import { useReportQuery } from "../hooks/useReportQuery";
 import { toCsv, downloadCsv } from "../utils/csv";
 
@@ -111,26 +112,10 @@ export function VatDeclaration() {
     api.getVatDeclaration,
   );
 
-  if (isLoading) {
-    return <div className="loading">Laddar momsdeklaration...</div>;
-  }
-
-  if (error) {
-    return <div className="error">Fel vid hämtning: {(error as Error).message}</div>;
-  }
-
   const decl = data?.data;
 
-  if (!decl) {
-    return (
-      <div className="card">
-        <h2>Momsdeklaration — SKV 4700</h2>
-        <div className="empty">Inga bokförda transaktioner ännu.</div>
-      </div>
-    );
-  }
-
   const handleExportCsv = () => {
+    if (!decl) return;
     const rows: string[][] = [];
     for (const section of SECTIONS) {
       rows.push([section.title, "", ""]);
@@ -146,105 +131,117 @@ export function VatDeclaration() {
   };
 
   return (
-    <div className="card skv-declaration">
-      <div className="flex justify-between items-center mb-2">
-        <div>
-          <h2 style={{ marginBottom: "0.25rem" }}>Momsdeklaration — SKV 4700</h2>
-          <p style={{ color: "#666", fontSize: "0.85rem", margin: 0 }}>
-            Skattedeklaration för moms. Belopp i hela kronor.
-          </p>
-        </div>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <button className="secondary" onClick={handleExportCsv}>
-            Exportera CSV
-          </button>
-          <button className="secondary" onClick={() => window.print()}>
-            Skriv ut
-          </button>
-        </div>
-      </div>
-
-      <div className="mb-2">
-        <DateFilter onFilter={setDateRange} />
-      </div>
-
-      {/* ── Sections A–F ── */}
-      {SECTIONS.map((section) => {
-        const hasValues = section.boxes.some((b) => (decl[b.key] as number) !== 0);
-        return (
-          <div key={section.title} style={{ marginBottom: "1.5rem" }}>
-            <h3
-              style={{
-                fontSize: "0.95rem",
-                fontWeight: 600,
-                borderBottom: "1px solid #ddd",
-                paddingBottom: "0.25rem",
-                marginBottom: "0.5rem",
-              }}
-            >
-              {section.title}
-            </h3>
-            <table>
-              <thead>
-                <tr>
-                  <th style={{ width: "3.5rem" }}>Ruta</th>
-                  <th>Beskrivning</th>
-                  <th className="text-right" style={{ width: "8rem" }}>
-                    Belopp (kr)
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {section.boxes.map((boxDef) => {
-                  const val = decl[boxDef.key] as number;
-                  return (
-                    <tr
-                      key={boxDef.box}
-                      style={{ color: val === 0 && hasValues ? "#aaa" : undefined }}
-                    >
-                      <td style={{ fontFamily: "monospace", fontWeight: "bold" }}>
-                        {String(boxDef.box).padStart(2, "0")}
-                      </td>
-                      <td>{boxDef.label}</td>
-                      <td className="text-right amount" style={{ fontFamily: "monospace" }}>
-                        {formatKr(val)}
-                      </td>
+    <ReportPageTemplate
+      title="Momsdeklaration — SKV 4700"
+      isLoading={isLoading}
+      error={error}
+      isEmpty={!decl}
+      loadingText="Laddar momsdeklaration..."
+      className="skv-declaration"
+      titleExtra={
+        <p style={{ color: "var(--color-text-muted)", fontSize: "0.85rem", margin: 0 }}>
+          Skattedeklaration för moms. Belopp i hela kronor.
+        </p>
+      }
+      actions={
+        decl && (
+          <>
+            <button className="secondary" onClick={handleExportCsv}>
+              Exportera CSV
+            </button>
+            <button className="secondary" onClick={() => window.print()}>
+              Skriv ut
+            </button>
+          </>
+        )
+      }
+      filters={<DateFilter onFilter={setDateRange} />}
+    >
+      {decl && (
+        <>
+          {/* ── Sections A–F ── */}
+          {SECTIONS.map((section) => {
+            const hasValues = section.boxes.some((b) => (decl[b.key] as number) !== 0);
+            return (
+              <div key={section.title} style={{ marginBottom: "1.5rem" }}>
+                <h3
+                  style={{
+                    fontSize: "0.95rem",
+                    fontWeight: 600,
+                    borderBottom: "1px solid #ddd",
+                    paddingBottom: "0.25rem",
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  {section.title}
+                </h3>
+                <table>
+                  <thead>
+                    <tr>
+                      <th scope="col" style={{ width: "3.5rem" }}>
+                        Ruta
+                      </th>
+                      <th scope="col">Beskrivning</th>
+                      <th scope="col" className="text-right" style={{ width: "8rem" }}>
+                        Belopp (kr)
+                      </th>
                     </tr>
-                  );
-                })}
+                  </thead>
+                  <tbody>
+                    {section.boxes.map((boxDef) => {
+                      const val = decl[boxDef.key] as number;
+                      return (
+                        <tr
+                          key={boxDef.box}
+                          style={{ color: val === 0 && hasValues ? "#aaa" : undefined }}
+                        >
+                          <td style={{ fontFamily: "monospace", fontWeight: "bold" }}>
+                            {String(boxDef.box).padStart(2, "0")}
+                          </td>
+                          <td>{boxDef.label}</td>
+                          <td className="text-right amount" style={{ fontFamily: "monospace" }}>
+                            {formatKr(val)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })}
+
+          {/* ── G. Resultat (ruta 49) ── */}
+          <div
+            style={{
+              borderTop: "2px solid var(--color-border-dark)",
+              paddingTop: "0.75rem",
+              marginTop: "0.5rem",
+            }}
+          >
+            <table>
+              <tbody>
+                <tr style={{ fontWeight: "bold", fontSize: "1.05rem" }}>
+                  <td style={{ width: "3.5rem", fontFamily: "monospace" }}>49</td>
+                  <td>
+                    {decl.ruta49 >= 0 ? "Moms att betala" : "Moms att få tillbaka (momsfordran)"}
+                  </td>
+                  <td
+                    className="text-right amount"
+                    style={{
+                      width: "8rem",
+                      fontFamily: "monospace",
+                      color: decl.ruta49 >= 0 ? "#b91c1c" : "#15803d",
+                    }}
+                  >
+                    {formatKr(Math.abs(decl.ruta49))} kr
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
-        );
-      })}
-
-      {/* ── G. Resultat (ruta 49) ── */}
-      <div
-        style={{
-          borderTop: "2px solid #333",
-          paddingTop: "0.75rem",
-          marginTop: "0.5rem",
-        }}
-      >
-        <table>
-          <tbody>
-            <tr style={{ fontWeight: "bold", fontSize: "1.05rem" }}>
-              <td style={{ width: "3.5rem", fontFamily: "monospace" }}>49</td>
-              <td>{decl.ruta49 >= 0 ? "Moms att betala" : "Moms att få tillbaka (momsfordran)"}</td>
-              <td
-                className="text-right amount"
-                style={{
-                  width: "8rem",
-                  fontFamily: "monospace",
-                  color: decl.ruta49 >= 0 ? "#b91c1c" : "#15803d",
-                }}
-              >
-                {formatKr(Math.abs(decl.ruta49))} kr
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+        </>
+      )}
+    </ReportPageTemplate>
   );
 }
