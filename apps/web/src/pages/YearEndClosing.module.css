@@ -8,8 +8,8 @@
 }
 
 .summaryCard {
-  background: var(--bg-card, #fff);
-  border: 1px solid var(--border, #e0e0e0);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 1rem 1.25rem;
   text-align: center;
@@ -18,7 +18,7 @@
 .summaryCard h3 {
   margin: 0 0 0.25rem;
   font-size: 0.85rem;
-  color: var(--text-muted, #666);
+  color: var(--color-text-muted);
   font-weight: 500;
 }
 
@@ -29,13 +29,13 @@
 }
 
 .profitResult {
-  border-color: #2e7d32;
-  background: #f1f8e9;
+  border-color: var(--color-positive);
+  background: var(--color-positive-light);
 }
 
 .lossResult {
-  border-color: #c62828;
-  background: #fef2f2;
+  border-color: var(--color-negative);
+  background: var(--color-negative-light);
 }
 
 .section {
@@ -45,22 +45,22 @@
 .section h3 {
   font-size: 1rem;
   margin: 0 0 0.5rem;
-  border-bottom: 2px solid var(--border, #e0e0e0);
+  border-bottom: 2px solid var(--color-border);
   padding-bottom: 0.25rem;
 }
 
 .resultRow {
-  background: var(--bg-highlight, #f5f5f5);
+  background: var(--color-bg);
   font-weight: 600;
 }
 
 .balanceOk {
-  color: #2e7d32;
+  color: var(--color-positive);
   font-weight: 600;
 }
 
 .balanceError {
-  color: #c62828;
+  color: var(--color-negative);
   font-weight: 600;
 }
 
