@@ -35,12 +35,14 @@ Målet är att göra bokföring **enkel, transparent och självhostbar** — uta
 - Momsrapport
 - SKV Momsdeklaration (SKV 4700 — alla rutor)
 - Periodrapport (månads- eller kvartalsvy med diagram och jämförelsetabell)
+- Kontoanalys — djupanalys per konto med grafer, trender och saldo över tid
 - Grundbok (journal)
 - Huvudbok (general ledger)
 - Verifikationslista
 - Dashboard med översikt, månadstrend och nyckeltal
 - Datumfilter på alla rapporter
 - CSV-export och utskrift på alla rapporter
+- PDF-export (råbalans, resultaträkning, balansräkning, momsrapport, huvudbok, bokslut)
 
 ### Årsbokslut
 - Boksluts-förhandsvisning — visar exakt vilka bokslutsposter som skapas innan du stänger
@@ -56,6 +58,11 @@ Målet är att göra bokföring **enkel, transparent och självhostbar** — uta
 - Skapa, redigera och radera mallar
 - Fyll i verifikat direkt från mall
 
+### Budget
+- Budgetera per konto och period
+- Skapa, redigera och radera budgetar med kontofördelade poster
+- Budget mot utfall — jämför budgeterade belopp mot verkligt utfall med avvikelseanalys
+
 ### Import/export
 - SIE4 (med IB/UB/RES)
 - CSV (alla rapporter)
@@ -70,18 +77,14 @@ Målet är att göra bokföring **enkel, transparent och självhostbar** — uta
 
 ### Drift
 - Självhostbar via Docker Compose
-- Health check-endpoint
+- Health check-endpoint (i docker-compose och Dockerfile)
+- Automatisk rensning av utgångna refresh-tokens vid uppstart och schemalagt
+- Strukturerad loggning med json-file-drivrutin och log-rotation
 - Swagger/OpenAPI-dokumentation
 
 ---
 
 ## Framtida funktioner
-
-Följande funktioner är planerade men ännu inte implementerade:
-
-- **Budget** — budgetera per konto och period, jämför utfall mot budget i rapporter
-- **Kontoanalys** — djupanalys per konto med grafer, trender och saldo över tid
-- **PDF-export** — generera tryckfärdiga rapporter i PDF-format
 
 ### Icke-mål (för närvarande)
 - Bankkoppling
@@ -107,7 +110,7 @@ Se `LICENSE`.
 
 | Lager | Teknik |
 |-------|--------|
-| **Frontend** | React 19 + Vite 5 + TypeScript 5.9 |
+| **Frontend** | React 19 + Vite 7 + TypeScript 5.9 |
 | **Backend** | Node.js 25 + Fastify 5 + TypeScript |
 | **Databas** | PostgreSQL 16+ (Prisma 7.4) |
 | **Auth** | JWT (access + refresh) med jti-baserad tokenåterkallning |
@@ -210,13 +213,13 @@ muninsbok/
 
 ## Teststatus
 
-**584 enhetstester** fördelade på 49 testfiler:
+**636 enhetstester** fördelade på 56 testfiler:
 
 | Paket | Testfiler | Tester | Vad som testas |
 |-------|-----------|--------|----------------|
-| `@muninsbok/core` | 18 | 258 | Result-typer, organisationsnummer (Luhn), kontotyper, kontoplan (BAS), räkenskapsår (max 18 mån), verifikatrader, verifikatvalidering, dokument-MIME, rapporter (råbalans, resultat, balans, moms, SKV 4700, periodrapport, boksluts-förhandsvisning, grundbok, huvudbok, verifikationslista), SIE-import/export (IB/UB/RES) |
+| `@muninsbok/core` | 19 | 286 | Result-typer, organisationsnummer (Luhn), kontotyper, kontoplan (BAS), räkenskapsår (max 18 mån), verifikatrader, verifikatvalidering, dokument-MIME, rapporter (råbalans, resultat, balans, moms, SKV 4700, periodrapport, kontoanalys, boksluts-förhandsvisning, grundbok, huvudbok, verifikationslista), SIE-import/export (IB/UB/RES), resultatdisposition, budget (budget vs utfall-rapport) |
 | `@muninsbok/db` | 1 | 17 | Prisma→domän-mappers (organisation, räkenskapsår, konto, verifikat, verifikatrad, dokument) |
-| `@muninsbok/api` | 24 | 232 | Zod-schemavalidering, CRUD-endpoints (organisationer, konton, verifikat, räkenskapsår), rapporter (9 st + dashboard), boksluts-förhandsvisning, health check, felhantering, auth (register/login/refresh/logout), tokenåterkallning, rollhantering, RBAC, audit-logging, rate limiting, input-sanitering, helmet, swagger |
+| `@muninsbok/api` | 25 | 256 | Zod-schemavalidering, CRUD-endpoints (organisationer, konton, verifikat, räkenskapsår), rapporter (10 st + dashboard), boksluts-förhandsvisning, health check, felhantering, auth (register/login/refresh/logout), tokenåterkallning, rollhantering, RBAC, audit-logging, rate limiting, input-sanitering, helmet, swagger |
 | `@muninsbok/web` | 6 | 77 | ApiError-klass, fetchJson, auth-storage, verifikatformulär (beräkningar, radhantering, öre-konvertering), beloppsformatering, CSV-export, assert-utils |
 
 ---
@@ -230,6 +233,8 @@ muninsbok/
 - **Belopp i ören**: Alla belopp lagras som heltal (öre) för att undvika flyttalsproblem.
 - **Verifikat måste balansera**: Debet = kredit, alltid.
 - **DI via Fastify decorate**: API-routes injiceras med repositories via `fastify.repos`, vilket möjliggör isolerade integrationstester med mockade beroenden.
+- **CSS Custom Properties**: Alla färger definieras som designtokens i `:root`, vilket möjliggör centraliserad temastyrning.
+- **Lazy loading**: PDF-export laddas via dynamic `import()` vid klick — jsPDF+autotable (~300 KB) hämtas aldrig vid sidladdning.
 
 ### Dataflöde
 
