@@ -183,10 +183,12 @@ export function Dashboard() {
             <caption className="sr-only">Senaste 5 verifikat</caption>
             <thead>
               <tr>
-                <th>Nr</th>
-                <th>Datum</th>
-                <th>Beskrivning</th>
-                <th className="text-right">Belopp</th>
+                <th scope="col">Nr</th>
+                <th scope="col">Datum</th>
+                <th scope="col">Beskrivning</th>
+                <th scope="col" className="text-right">
+                  Belopp
+                </th>
               </tr>
             </thead>
             <tbody>
