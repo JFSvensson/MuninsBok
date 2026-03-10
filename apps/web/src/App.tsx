@@ -68,6 +68,9 @@ const BudgetForm = lazy(() =>
 const BudgetVsActual = lazy(() =>
   import("./pages/BudgetVsActual").then((m) => ({ default: m.BudgetVsActual })),
 );
+const AccountAnalysis = lazy(() =>
+  import("./pages/AccountAnalysis").then((m) => ({ default: m.AccountAnalysis })),
+);
 const Members = lazy(() => import("./pages/Members").then((m) => ({ default: m.Members })));
 const NotFound = lazy(() => import("./pages/NotFound").then((m) => ({ default: m.NotFound })));
 const Login = lazy(() => import("./pages/Login").then((m) => ({ default: m.Login })));
@@ -141,6 +144,7 @@ function AppContent() {
               <NavLink to="/reports/vat">Moms</NavLink>
               <NavLink to="/reports/vat-declaration">SKV 4700</NavLink>
               <NavLink to="/reports/period">Periodrapport</NavLink>
+              <NavLink to="/reports/account-analysis">Kontoanalys</NavLink>
             </span>
             <span className={styles.navSeparator} aria-hidden="true" />
             <span className={styles.navGroup}>
@@ -179,6 +183,7 @@ function AppContent() {
                 <Route path="/reports/vat" element={<VatReport />} />
                 <Route path="/reports/vat-declaration" element={<VatDeclaration />} />
                 <Route path="/reports/period" element={<PeriodReport />} />
+                <Route path="/reports/account-analysis" element={<AccountAnalysis />} />
                 <Route path="/reports/journal" element={<Journal />} />
                 <Route path="/reports/general-ledger" element={<GeneralLedger />} />
                 <Route path="/reports/voucher-list" element={<VoucherListReport />} />
