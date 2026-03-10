@@ -1,8 +1,9 @@
 import { api } from "../api";
 import { formatAmount, formatDate, amountClassName } from "../utils/formatting";
 import { toCsv, downloadCsv, csvAmount } from "../utils/csv";
-import { exportTrialBalancePdf } from "../utils/pdf";
+
 import { DateFilter } from "../components/DateFilter";
+import { ReportPageTemplate } from "../components/ReportPageTemplate";
 import { useReportQuery } from "../hooks/useReportQuery";
 
 export function TrialBalance() {
@@ -11,97 +12,95 @@ export function TrialBalance() {
     api.getTrialBalance,
   );
 
-  if (isLoading) {
-    return <div className="loading">Laddar råbalans...</div>;
-  }
-
-  if (error) {
-    return <div className="error">Fel vid hämtning: {(error as Error).message}</div>;
-  }
-
   const report = data?.data;
 
-  if (!report || report.rows.length === 0) {
-    return (
-      <div className="card">
-        <h2>Råbalans</h2>
-        <div className="empty">Inga bokförda transaktioner ännu.</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="card">
-      <div className="flex justify-between items-center mb-2">
-        <h2>Råbalans</h2>
-        <div className="flex" style={{ gap: "0.5rem" }}>
-          <button
-            className="secondary"
-            onClick={() => {
-              const csv = toCsv(
-                ["Konto", "Namn", "Debet", "Kredit", "Saldo"],
-                report.rows.map((r) => [
-                  r.accountNumber,
-                  r.accountName,
-                  csvAmount(r.debit),
-                  csvAmount(r.credit),
-                  csvAmount(r.balance),
-                ]),
-              );
-              downloadCsv(csv, "rabalans.csv");
-            }}
-          >
-            Exportera CSV
-          </button>
-          <button
-            className="secondary"
-            onClick={() =>
-              exportTrialBalancePdf(
-                report,
-                organization?.name ?? "",
-                fiscalYear
-                  ? formatDate(fiscalYear.startDate) + " – " + formatDate(fiscalYear.endDate)
-                  : "",
-              )
-            }
-          >
-            Exportera PDF
-          </button>
-        </div>
-      </div>
-      <div className="mb-2">
-        <DateFilter onFilter={setDateRange} />
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Konto</th>
-            <th>Namn</th>
-            <th className="text-right">Debet</th>
-            <th className="text-right">Kredit</th>
-            <th className="text-right">Saldo</th>
-          </tr>
-        </thead>
-        <tbody>
-          {report.rows.map((row) => (
-            <tr key={row.accountNumber}>
-              <td>{row.accountNumber}</td>
-              <td>{row.accountName}</td>
-              <td className="text-right amount">{formatAmount(row.debit)}</td>
-              <td className="text-right amount">{formatAmount(row.credit)}</td>
-              <td className={amountClassName(row.balance)}>{formatAmount(row.balance)}</td>
+    <ReportPageTemplate
+      title="Råbalans"
+      isLoading={isLoading}
+      error={error}
+      isEmpty={!report || report.rows.length === 0}
+      loadingText="Laddar råbalans..."
+      actions={
+        report &&
+        report.rows.length > 0 && (
+          <>
+            <button
+              className="secondary"
+              onClick={() => {
+                const csv = toCsv(
+                  ["Konto", "Namn", "Debet", "Kredit", "Saldo"],
+                  report.rows.map((r) => [
+                    r.accountNumber,
+                    r.accountName,
+                    csvAmount(r.debit),
+                    csvAmount(r.credit),
+                    csvAmount(r.balance),
+                  ]),
+                );
+                downloadCsv(csv, "rabalans.csv");
+              }}
+            >
+              Exportera CSV
+            </button>
+            <button
+              className="secondary"
+              onClick={async () => {
+                const { exportTrialBalancePdf } = await import("../utils/pdf");
+                exportTrialBalancePdf(
+                  report,
+                  organization?.name ?? "",
+                  fiscalYear
+                    ? formatDate(fiscalYear.startDate) + " – " + formatDate(fiscalYear.endDate)
+                    : "",
+                );
+              }}
+            >
+              Exportera PDF
+            </button>
+          </>
+        )
+      }
+      filters={<DateFilter onFilter={setDateRange} />}
+    >
+      {report && (
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Konto</th>
+              <th scope="col">Namn</th>
+              <th scope="col" className="text-right">
+                Debet
+              </th>
+              <th scope="col" className="text-right">
+                Kredit
+              </th>
+              <th scope="col" className="text-right">
+                Saldo
+              </th>
             </tr>
-          ))}
-        </tbody>
-        <tfoot>
-          <tr style={{ fontWeight: "bold", borderTop: "2px solid #333" }}>
-            <td colSpan={2}>Summa</td>
-            <td className="text-right amount">{formatAmount(report.totalDebit)}</td>
-            <td className="text-right amount">{formatAmount(report.totalCredit)}</td>
-            <td></td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {report.rows.map((row) => (
+              <tr key={row.accountNumber}>
+                <td>{row.accountNumber}</td>
+                <td>{row.accountName}</td>
+                <td className="text-right amount">{formatAmount(row.debit)}</td>
+                <td className="text-right amount">{formatAmount(row.credit)}</td>
+                <td className={amountClassName(row.balance)}>{formatAmount(row.balance)}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr style={{ fontWeight: "bold", borderTop: "2px solid var(--color-border-dark)" }}>
+              <td colSpan={2}>Summa</td>
+              <td className="text-right amount">{formatAmount(report.totalDebit)}</td>
+              <td className="text-right amount">{formatAmount(report.totalCredit)}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      )}
+    </ReportPageTemplate>
   );
 }
