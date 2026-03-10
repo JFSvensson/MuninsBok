@@ -7,15 +7,38 @@
  * POST /api/auth/logout    — revoke all refresh tokens (server-side logout)
  * GET  /api/auth/me        — get current user info (requires access token)
  */
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyReply } from "fastify";
 import { registerSchema, loginSchema } from "../schemas/index.js";
 import { parseBody } from "../utils/parse-body.js";
 import { hashPassword, verifyPassword } from "../utils/password.js";
-import type { JwtPayload } from "../plugins/jwt-auth.js";
+import type { JwtPayload, GeneratedTokens } from "../plugins/jwt-auth.js";
+
+const REFRESH_COOKIE = "refresh_token";
 
 export async function authRoutes(fastify: FastifyInstance) {
   const userRepo = fastify.repos.users;
   const refreshTokenRepo = fastify.repos.refreshTokens;
+
+  /** Set the refresh token as an httpOnly cookie on the reply. */
+  function setRefreshCookie(reply: FastifyReply, tokens: GeneratedTokens): void {
+    reply.setCookie(REFRESH_COOKIE, tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env["NODE_ENV"] === "production",
+      sameSite: "strict",
+      path: "/api/auth",
+      expires: tokens.refreshTokenExpiresAt,
+    });
+  }
+
+  /** Clear the refresh token cookie. */
+  function clearRefreshCookie(reply: FastifyReply): void {
+    reply.clearCookie(REFRESH_COOKIE, {
+      httpOnly: true,
+      secure: process.env["NODE_ENV"] === "production",
+      sameSite: "strict",
+      path: "/api/auth",
+    });
+  }
 
   /** Persist a refresh token in the database for later revocation. */
   async function storeRefreshToken(userId: string, jti: string, expiresAt: Date): Promise<void> {
@@ -44,11 +67,11 @@ export async function authRoutes(fastify: FastifyInstance) {
       const tokens = fastify.generateTokens(user.id, user.email);
       await storeRefreshToken(user.id, tokens.refreshTokenJti, tokens.refreshTokenExpiresAt);
 
+      setRefreshCookie(reply, tokens);
       return reply.status(201).send({
         data: {
           user: { id: user.id, email: user.email, name: user.name },
           accessToken: tokens.accessToken,
-          refreshToken: tokens.refreshToken,
         },
       });
     },
@@ -80,13 +103,13 @@ export async function authRoutes(fastify: FastifyInstance) {
       const tokens = fastify.generateTokens(user.id, user.email);
       await storeRefreshToken(user.id, tokens.refreshTokenJti, tokens.refreshTokenExpiresAt);
 
-      return {
+      setRefreshCookie(reply, tokens);
+      return reply.send({
         data: {
           user: { id: user.id, email: user.email, name: user.name },
           accessToken: tokens.accessToken,
-          refreshToken: tokens.refreshToken,
         },
-      };
+      });
     },
   );
 
@@ -109,18 +132,19 @@ export async function authRoutes(fastify: FastifyInstance) {
     const tokens = fastify.generateTokens(sub, email);
     await storeRefreshToken(sub, tokens.refreshTokenJti, tokens.refreshTokenExpiresAt);
 
-    return {
+    setRefreshCookie(reply, tokens);
+    return reply.send({
       data: {
         accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
       },
-    };
+    });
   });
 
   // ── Logout ──────────────────────────────────────────────────
   fastify.post("/logout", { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { sub } = request.user as JwtPayload;
     await refreshTokenRepo.revokeAllByUserId(sub);
+    clearRefreshCookie(reply);
     return reply.status(204).send();
   });
 
