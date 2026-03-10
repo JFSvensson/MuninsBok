@@ -52,7 +52,7 @@
 }
 
 .nav a:hover {
-  background-color: #e0e0e0;
+  background-color: var(--color-bg-hover);
 }
 
 .nav a:global(.active) {
@@ -89,7 +89,7 @@
 }
 
 .dropdown-toggle:hover {
-  background-color: #e0e0e0;
+  background-color: var(--color-bg-hover);
 }
 
 .dropdown-active {
@@ -110,7 +110,7 @@
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px var(--color-shadow);
   padding: 0.25rem 0;
   margin-top: 0.25rem;
   display: flex;
