@@ -55,6 +55,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 | `CORS_ORIGIN` | Rekommenderat | Frontend-URL (t.ex. `https://bok.example.se`) |
 | `HOST` | Nej (default: `0.0.0.0`) | Lyssningsadress |
 | `PORT` | Nej (default: `3000`) | Lyssningsport |
+| `DATABASE_POOL_SIZE` | Nej (default: `20`) | Max antal databasanslutningar i poolen |
 | `API_KEY` | Nej | Enkel delad-hemlighet-auth. Ignoreras när `JWT_SECRET` är satt. |
 
 Servern validerar vid start att `DATABASE_URL` finns — saknas den avslutas processen direkt med felmeddelande.
