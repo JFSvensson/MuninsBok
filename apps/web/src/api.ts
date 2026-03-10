@@ -74,7 +74,6 @@ export interface AuthUser {
 
 export interface AuthTokens {
   accessToken: string;
-  refreshToken: string;
 }
 
 export interface AuthResponse {
@@ -143,32 +142,26 @@ async function fetchWithAuth(url: string, options?: RequestInit): Promise<Respon
     headers["Authorization"] = `Bearer ${accessToken}`;
   }
 
-  let response = await fetch(url, { ...options, headers });
+  let response = await fetch(url, { ...options, headers, credentials: "include" });
 
-  // If 401 and we have a refresh token, attempt silent refresh then retry once
+  // If 401 and not an auth endpoint, attempt silent refresh via httpOnly cookie
   if (response.status === 401 && !url.includes("/auth/")) {
-    const refreshToken = storage.getRefreshToken();
-    if (refreshToken) {
-      try {
-        const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${refreshToken}`,
-          },
-        });
-        if (refreshRes.ok) {
-          const { data } = (await refreshRes.json()) as RefreshResponse;
-          storage.setTokens(data.accessToken, data.refreshToken);
-          headers["Authorization"] = `Bearer ${data.accessToken}`;
-          response = await fetch(url, { ...options, headers });
-        } else {
-          // Refresh failed — clear tokens (session expired)
-          storage.clearTokens({ notify: true });
-        }
-      } catch {
+    try {
+      const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (refreshRes.ok) {
+        const { data } = (await refreshRes.json()) as RefreshResponse;
+        storage.setTokens(data.accessToken);
+        headers["Authorization"] = `Bearer ${data.accessToken}`;
+        response = await fetch(url, { ...options, headers, credentials: "include" });
+      } else {
+        // Refresh failed — clear tokens (session expired)
         storage.clearTokens({ notify: true });
       }
+    } catch {
+      storage.clearTokens({ notify: true });
     }
   }
 
@@ -468,10 +461,10 @@ export const api = {
       body: JSON.stringify({ email, name, password }),
     }),
 
-  refreshTokens: (refreshToken: string) =>
+  refreshTokens: () =>
     fetchJson<RefreshResponse>(`${API_BASE}/auth/refresh`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${refreshToken}` },
+      credentials: "include",
     }),
 
   getMe: (accessToken: string) =>
