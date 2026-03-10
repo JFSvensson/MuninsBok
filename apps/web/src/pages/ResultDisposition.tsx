@@ -128,7 +128,7 @@ export function ResultDisposition() {
             style={{
               padding: "1rem 1.25rem",
               borderRadius: "8px",
-              border: `1px solid ${preview.netResult >= 0 ? "#2e7d32" : "#c62828"}`,
+              border: `1px solid ${preview.netResult >= 0 ? "var(--color-positive)" : "var(--color-negative)"}`,
               background: preview.netResult >= 0 ? "#f1f8e9" : "#fef2f2",
               marginBottom: "1.5rem",
               textAlign: "center",
@@ -151,10 +151,14 @@ export function ResultDisposition() {
           <table>
             <thead>
               <tr>
-                <th>Konto</th>
-                <th>Kontonamn</th>
-                <th className="text-right">Debet</th>
-                <th className="text-right">Kredit</th>
+                <th scope="col">Konto</th>
+                <th scope="col">Kontonamn</th>
+                <th scope="col" className="text-right">
+                  Debet
+                </th>
+                <th scope="col" className="text-right">
+                  Kredit
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -177,9 +181,11 @@ export function ResultDisposition() {
           <p style={{ marginTop: "0.5rem" }}>
             Balanskontroll:{" "}
             {preview.isBalanced ? (
-              <span style={{ color: "#2e7d32", fontWeight: 600 }}>✓ Verifikatet balanserar</span>
+              <span style={{ color: "var(--color-positive)", fontWeight: 600 }}>
+                ✓ Verifikatet balanserar
+              </span>
             ) : (
-              <span style={{ color: "#c62828", fontWeight: 600 }}>✗ Obalans</span>
+              <span style={{ color: "var(--color-negative)", fontWeight: 600 }}>✗ Obalans</span>
             )}
           </p>
 
@@ -200,7 +206,7 @@ export function ResultDisposition() {
         <summary style={{ cursor: "pointer", fontWeight: 500 }}>
           Vad är resultatdisposition?
         </summary>
-        <div style={{ marginTop: "0.5rem", color: "#555", lineHeight: 1.6 }}>
+        <div style={{ marginTop: "0.5rem", color: "var(--color-text-subtle)", lineHeight: 1.6 }}>
           <p>
             Resultatdisposition innebär att årets resultat (vinst eller förlust) på konto{" "}
             <strong>2099 (Årets resultat)</strong> överförs till konto{" "}
