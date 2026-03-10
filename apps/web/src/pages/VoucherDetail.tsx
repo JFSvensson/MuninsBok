@@ -102,10 +102,14 @@ export function VoucherDetail() {
       <table>
         <thead>
           <tr>
-            <th>Konto</th>
-            <th>Beskrivning</th>
-            <th className="text-right">Debet</th>
-            <th className="text-right">Kredit</th>
+            <th scope="col">Konto</th>
+            <th scope="col">Beskrivning</th>
+            <th scope="col" className="text-right">
+              Debet
+            </th>
+            <th scope="col" className="text-right">
+              Kredit
+            </th>
           </tr>
         </thead>
         <tbody>
