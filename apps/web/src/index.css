@@ -1,4 +1,49 @@
 :root {
+  /* ── Design tokens ── */
+  --color-text: #213547;
+  --color-text-muted: #666;
+  --color-text-light: #888;
+  --color-text-subtle: #555;
+
+  --color-primary: #1976d2;
+  --color-primary-hover: #1565c0;
+  --color-primary-light: #e3f2fd;
+  --color-primary-focus: rgba(25, 118, 210, 0.3);
+  --color-primary-focus-light: rgba(25, 118, 210, 0.2);
+
+  --color-positive: #2e7d32;
+  --color-positive-light: #e8f5e9;
+  --color-positive-border: #a5d6a7;
+  --color-positive-bar: #4caf50;
+
+  --color-negative: #c62828;
+  --color-negative-hover: #b71c1c;
+  --color-negative-light: #ffebee;
+  --color-negative-bar: #ef5350;
+
+  --color-warning: #e65100;
+  --color-warning-light: #fff3e0;
+  --color-warning-border: #ffb74d;
+
+  --color-info: #1565c0;
+  --color-info-light: #e3f2fd;
+  --color-info-border: #90caf9;
+
+  --color-purple: #6a1b9a;
+  --color-purple-light: #f3e5f5;
+  --color-purple-border: #ce93d8;
+
+  --color-bg: #f5f5f5;
+  --color-bg-card: white;
+  --color-bg-subtle: #f9f9f9;
+  --color-bg-muted: #fafafa;
+
+  --color-border: #ddd;
+  --color-border-light: #eee;
+  --color-border-dark: #333;
+
+  --color-disabled: #ccc;
+
   font-family:
     system-ui,
     -apple-system,
@@ -8,8 +53,8 @@
     sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #213547;
-  background-color: #f5f5f5;
+  color: var(--color-text);
+  background-color: var(--color-bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -28,7 +73,7 @@ body {
 
 /* Focus visible outline for keyboard navigation */
 *:focus-visible {
-  outline: 2px solid #1976d2;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
@@ -36,12 +81,12 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
   outline: none;
-  border-color: #1976d2;
-  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.3);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-focus);
 }
 
 .card {
-  background: white;
+  background: var(--color-bg-card);
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -62,12 +107,12 @@ th,
 td {
   text-align: left;
   padding: 0.75rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 th {
   font-weight: 600;
-  background-color: #f9f9f9;
+  background-color: var(--color-bg-subtle);
 }
 
 .text-right {
@@ -79,15 +124,15 @@ th {
 }
 
 .amount.positive {
-  color: #2e7d32;
+  color: var(--color-positive);
 }
 
 .amount.negative {
-  color: #c62828;
+  color: var(--color-negative);
 }
 
 button {
-  background-color: #1976d2;
+  background-color: var(--color-primary);
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -98,18 +143,18 @@ button {
 }
 
 button:hover {
-  background-color: #1565c0;
+  background-color: var(--color-primary-hover);
 }
 
 button:disabled {
-  background-color: #ccc;
+  background-color: var(--color-disabled);
   cursor: not-allowed;
 }
 
 button.secondary {
-  background-color: #f5f5f5;
-  color: #213547;
-  border: 1px solid #ddd;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
 }
 
 button.secondary:hover {
@@ -131,7 +176,7 @@ select,
 textarea {
   width: 100%;
   padding: 0.5rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   font-size: 1rem;
 }
@@ -140,8 +185,8 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border-color: #1976d2;
-  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-focus-light);
 }
 
 .flex {
@@ -180,7 +225,7 @@ textarea:focus {
 .correction-help {
   margin-top: 1rem;
   padding: 0.75rem 1rem;
-  background-color: #f5f5f5;
+  background-color: var(--color-bg);
   border-radius: 4px;
   font-size: 0.9rem;
   line-height: 1.6;
@@ -189,7 +234,7 @@ textarea:focus {
 .correction-help summary {
   cursor: pointer;
   font-weight: 600;
-  color: #1976d2;
+  color: var(--color-primary);
   user-select: none;
 }
 
@@ -199,13 +244,13 @@ textarea:focus {
 
 .correction-help p {
   margin-top: 0.5rem;
-  color: #555;
+  color: var(--color-text-subtle);
 }
 
 .error {
-  color: #c62828;
+  color: var(--color-negative);
   padding: 1rem;
-  background-color: #ffebee;
+  background-color: var(--color-negative-light);
   border-radius: 4px;
   margin-bottom: 1rem;
 }
@@ -213,14 +258,14 @@ textarea:focus {
 .loading {
   text-align: center;
   padding: 2rem;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .empty {
   text-align: center;
   padding: 2rem;
-  color: #666;
-  background-color: #fafafa;
+  color: var(--color-text-muted);
+  background-color: var(--color-bg-muted);
   border-radius: 4px;
 }
 
@@ -234,7 +279,7 @@ textarea:focus {
   padding: 0;
   border-radius: 4px;
   background: #e0e0e0;
-  color: #213547;
+  color: var(--color-text);
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
@@ -243,26 +288,26 @@ textarea:focus {
 }
 
 .btn-icon:hover {
-  background: #ccc;
+  background: var(--color-disabled);
 }
 
 .btn-icon-danger:hover {
   background: #ffcdd2;
-  color: #c62828;
+  color: var(--color-negative);
 }
 
 /* Danger button */
 button.danger {
-  background-color: #c62828;
+  background-color: var(--color-negative);
   color: white;
 }
 
 button.danger:hover {
-  background-color: #b71c1c;
+  background-color: var(--color-negative-hover);
 }
 
 button.danger:disabled {
-  background-color: #ccc;
+  background-color: var(--color-disabled);
 }
 
 /* Clickable table rows */
@@ -272,7 +317,7 @@ button.danger:disabled {
 }
 
 .clickable-row:hover {
-  background-color: #e3f2fd;
+  background-color: var(--color-primary-light);
 }
 
 /* Badges */
@@ -287,43 +332,43 @@ button.danger:disabled {
 }
 
 .badge-warning {
-  background-color: #fff3e0;
-  color: #e65100;
-  border: 1px solid #ffb74d;
+  background-color: var(--color-warning-light);
+  color: var(--color-warning);
+  border: 1px solid var(--color-warning-border);
 }
 
 .badge-info {
-  background-color: #e3f2fd;
-  color: #1565c0;
-  border: 1px solid #90caf9;
+  background-color: var(--color-info-light);
+  color: var(--color-info);
+  border: 1px solid var(--color-info-border);
 }
 
 .badge-success {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-  border: 1px solid #a5d6a7;
+  background-color: var(--color-positive-light);
+  color: var(--color-positive);
+  border: 1px solid var(--color-positive-border);
 }
 
 .badge-closed {
-  background-color: #f3e5f5;
-  color: #6a1b9a;
-  border: 1px solid #ce93d8;
+  background-color: var(--color-purple-light);
+  color: var(--color-purple);
+  border: 1px solid var(--color-purple-border);
 }
 
 .badge-open {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-  border: 1px solid #a5d6a7;
+  background-color: var(--color-positive-light);
+  color: var(--color-positive);
+  border: 1px solid var(--color-positive-border);
 }
 
 /* Success message */
 .success {
-  color: #2e7d32;
+  color: var(--color-positive);
   padding: 1rem;
-  background-color: #e8f5e9;
+  background-color: var(--color-positive-light);
   border-radius: 4px;
   margin-bottom: 1rem;
-  border: 1px solid #a5d6a7;
+  border: 1px solid var(--color-positive-border);
 }
 
 /* Small button */
@@ -334,14 +379,14 @@ button.danger:disabled {
 
 /* Danger button */
 .btn-danger {
-  background-color: #c62828;
+  background-color: var(--color-negative);
   color: #fff;
-  border-color: #c62828;
+  border-color: var(--color-negative);
 }
 
 .btn-danger:hover {
-  background-color: #b71c1c;
-  border-color: #b71c1c;
+  background-color: var(--color-negative-hover);
+  border-color: var(--color-negative-hover);
 }
 
 .ml-1 {
@@ -357,7 +402,7 @@ button.danger:disabled {
 
 /* Warning box */
 .warning {
-  color: #e65100;
+  color: var(--color-warning);
 }
 
 /* Info box */
@@ -369,7 +414,7 @@ button.danger:disabled {
 }
 
 .info-box a {
-  color: #1976d2;
+  color: var(--color-primary);
   font-weight: 500;
 }
 
@@ -384,7 +429,7 @@ button.danger:disabled {
   align-items: center;
   justify-content: space-between;
   padding: 0.5rem 0;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 .document-list li:last-child {
@@ -480,7 +525,7 @@ button.danger:disabled {
   }
 
   th {
-    background-color: #eee !important;
+    background-color: var(--color-border-light) !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
