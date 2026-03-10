@@ -94,30 +94,40 @@ describe("jwt-auth plugin", () => {
     expect(response.json()).toMatchObject({ code: "UNAUTHORIZED" });
   });
 
-  it("verifyRefreshToken allows valid refresh token", async () => {
+  it("verifyRefreshToken allows valid refresh token in cookie", async () => {
     const { refreshToken } = app.generateTokens("user-1", "test@example.com");
 
     const response = await app.inject({
       method: "POST",
       url: "/test/refresh",
-      headers: { authorization: `Bearer ${refreshToken}` },
+      cookies: { refresh_token: refreshToken },
     });
 
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual({ userId: "user-1" });
   });
 
-  it("verifyRefreshToken rejects access token", async () => {
+  it("verifyRefreshToken rejects access token in cookie", async () => {
     const { accessToken } = app.generateTokens("user-1", "test@example.com");
 
     const response = await app.inject({
       method: "POST",
       url: "/test/refresh",
-      headers: { authorization: `Bearer ${accessToken}` },
+      cookies: { refresh_token: accessToken },
     });
 
     expect(response.statusCode).toBe(401);
     expect(response.json()).toMatchObject({ code: "INVALID_TOKEN_TYPE" });
+  });
+
+  it("verifyRefreshToken rejects missing cookie", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/test/refresh",
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toMatchObject({ code: "UNAUTHORIZED" });
   });
 
   it("rejects malformed token", async () => {
