@@ -99,9 +99,9 @@ export function FiscalYears() {
       <table>
         <thead>
           <tr>
-            <th>Period</th>
-            <th>Status</th>
-            <th>Åtgärder</th>
+            <th scope="col">Period</th>
+            <th scope="col">Status</th>
+            <th scope="col">Åtgärder</th>
           </tr>
         </thead>
         <tbody>
@@ -171,7 +171,7 @@ export function FiscalYears() {
         <summary style={{ cursor: "pointer", fontWeight: 500 }}>
           Vad händer när jag stänger ett räkenskapsår?
         </summary>
-        <div style={{ marginTop: "0.5rem", color: "#555", lineHeight: 1.6 }}>
+        <div style={{ marginTop: "0.5rem", color: "var(--color-text-subtle)", lineHeight: 1.6 }}>
           <p>
             Enligt <strong>BFL 6 kap. 2–3 §§</strong> ska bokslutet upprättas senast sex månader
             efter räkenskapsårets slut. När du stänger året:
