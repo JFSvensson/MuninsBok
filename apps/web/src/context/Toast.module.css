@@ -21,23 +21,23 @@
   gap: 0.5rem;
   min-width: 250px;
   max-width: 400px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px var(--color-shadow);
   animation: toast-in 0.3s ease;
 }
 
 .toast-success {
   composes: toast;
-  background-color: #2e7d32;
+  background-color: var(--color-positive);
 }
 
 .toast-error {
   composes: toast;
-  background-color: #c62828;
+  background-color: var(--color-negative);
 }
 
 .toast-info {
   composes: toast;
-  background-color: #1565c0;
+  background-color: var(--color-info);
 }
 
 .toast-close {
