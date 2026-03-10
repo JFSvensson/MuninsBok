@@ -45,7 +45,7 @@ describe("auth E2E flow", () => {
 
   describe("register → access → refresh → access", () => {
     let accessToken: string;
-    let refreshToken: string;
+    let refreshCookie: string;
 
     it("step 1: registers a new user and receives tokens", async () => {
       repos.users.create.mockResolvedValueOnce({
@@ -68,14 +68,24 @@ describe("auth E2E flow", () => {
       expect(body.data.user.id).toBe(testUser.id);
       expect(body.data.user.email).toBe(testUser.email);
       expect(body.data.user.name).toBe(testUser.name);
-      // Tokens must be present
+      // Access token in body, refresh token in httpOnly cookie
       expect(body.data.accessToken).toEqual(expect.any(String));
-      expect(body.data.refreshToken).toEqual(expect.any(String));
-      // Access and refresh must be different tokens
-      expect(body.data.accessToken).not.toBe(body.data.refreshToken);
+      expect(body.data.refreshToken).toBeUndefined();
+
+      // Refresh token must be in Set-Cookie header
+      const cookies = res.cookies as {
+        name: string;
+        value: string;
+        httpOnly?: boolean;
+        path?: string;
+      }[];
+      const rtCookie = cookies.find((c) => c.name === "refresh_token");
+      expect(rtCookie).toBeDefined();
+      expect(rtCookie!.httpOnly).toBe(true);
+      expect(rtCookie!.path).toBe("/api/auth");
 
       accessToken = body.data.accessToken;
-      refreshToken = body.data.refreshToken;
+      refreshCookie = `refresh_token=${rtCookie!.value}`;
     });
 
     it("step 2: uses access token to call /me", async () => {
@@ -95,21 +105,25 @@ describe("auth E2E flow", () => {
       });
     });
 
-    it("step 3: refreshes tokens", async () => {
+    it("step 3: refreshes tokens via cookie", async () => {
       const res = await app.inject({
         method: "POST",
         url: "/api/auth/refresh",
-        headers: { authorization: `Bearer ${refreshToken}` },
+        cookies: { refresh_token: refreshCookie.split("=")[1]! },
       });
 
       expect(res.statusCode).toBe(200);
       const body = res.json();
       expect(body.data.accessToken).toEqual(expect.any(String));
-      expect(body.data.refreshToken).toEqual(expect.any(String));
+      expect(body.data.refreshToken).toBeUndefined();
 
-      // Update for subsequent tests
+      // New refresh token in cookie
+      const cookies = res.cookies as { name: string; value: string }[];
+      const rtCookie = cookies.find((c) => c.name === "refresh_token");
+      expect(rtCookie).toBeDefined();
+
       accessToken = body.data.accessToken;
-      refreshToken = body.data.refreshToken;
+      refreshCookie = `refresh_token=${rtCookie!.value}`;
     });
 
     it("step 4: uses refreshed access token to call /me", async () => {
@@ -150,7 +164,12 @@ describe("auth E2E flow", () => {
       const body = res.json();
       expect(body.data.user.id).toBe(testUser.id);
       expect(body.data.accessToken).toEqual(expect.any(String));
-      expect(body.data.refreshToken).toEqual(expect.any(String));
+      expect(body.data.refreshToken).toBeUndefined();
+
+      // Refresh token in cookie
+      const cookies = res.cookies as { name: string; value: string }[];
+      const rtCookie = cookies.find((c) => c.name === "refresh_token");
+      expect(rtCookie).toBeDefined();
 
       accessToken = body.data.accessToken;
     });
@@ -183,13 +202,13 @@ describe("auth E2E flow", () => {
       expect(res.json().code).toBe("INVALID_TOKEN_TYPE");
     });
 
-    it("rejects access token used for refresh", async () => {
+    it("rejects access token used as refresh cookie", async () => {
       const { accessToken } = app.generateTokens(testUser.id, testUser.email);
 
       const res = await app.inject({
         method: "POST",
         url: "/api/auth/refresh",
-        headers: { authorization: `Bearer ${accessToken}` },
+        cookies: { refresh_token: accessToken },
       });
 
       expect(res.statusCode).toBe(401);
@@ -250,7 +269,7 @@ describe("auth E2E flow", () => {
       expect(res.json().code).toBe("UNAUTHORIZED");
     });
 
-    it("rejects an expired refresh token", async () => {
+    it("rejects an expired refresh token in cookie", async () => {
       const now = Math.floor(Date.now() / 1000);
       const expiredRefresh = app.jwt.sign({
         sub: testUser.id,
@@ -263,7 +282,7 @@ describe("auth E2E flow", () => {
       const res = await app.inject({
         method: "POST",
         url: "/api/auth/refresh",
-        headers: { authorization: `Bearer ${expiredRefresh}` },
+        cookies: { refresh_token: expiredRefresh },
       });
 
       expect(res.statusCode).toBe(401);
@@ -422,7 +441,6 @@ describe("auth E2E flow", () => {
 
   describe("token revocation + logout", () => {
     it("rejects refresh when token has been revoked", async () => {
-      // Generate a valid refresh token
       const { refreshToken } = app.generateTokens(testUser.id, testUser.email);
 
       // Mark the jti as revoked (existsByJti returns false)
@@ -431,7 +449,7 @@ describe("auth E2E flow", () => {
       const res = await app.inject({
         method: "POST",
         url: "/api/auth/refresh",
-        headers: { authorization: `Bearer ${refreshToken}` },
+        cookies: { refresh_token: refreshToken },
       });
 
       expect(res.statusCode).toBe(401);
@@ -463,19 +481,22 @@ describe("auth E2E flow", () => {
     it("refresh rotates tokens (revokes old, creates new)", async () => {
       const { refreshToken } = app.generateTokens(testUser.id, testUser.email);
 
-      // Token is still valid (not revoked)
       repos.refreshTokens.existsByJti.mockResolvedValueOnce(true);
 
       const res = await app.inject({
         method: "POST",
         url: "/api/auth/refresh",
-        headers: { authorization: `Bearer ${refreshToken}` },
+        cookies: { refresh_token: refreshToken },
       });
 
       expect(res.statusCode).toBe(200);
       const body = res.json();
       expect(body.data.accessToken).toEqual(expect.any(String));
-      expect(body.data.refreshToken).toEqual(expect.any(String));
+      expect(body.data.refreshToken).toBeUndefined();
+
+      // New refresh token in cookie
+      const cookies = res.cookies as { name: string; value: string }[];
+      expect(cookies.find((c) => c.name === "refresh_token")).toBeDefined();
 
       // Old jti should have been revoked
       expect(repos.refreshTokens.revokeByJti).toHaveBeenCalled();
