@@ -80,11 +80,43 @@ Målet är att göra bokföring **enkel, transparent och självhostbar** — uta
 - Health check-endpoint (i docker-compose och Dockerfile)
 - Automatisk rensning av utgångna refresh-tokens vid uppstart och schemalagt
 - Strukturerad loggning med json-file-drivrutin och log-rotation
+- Request-timeouts och konfigurerbar databaspool
 - Swagger/OpenAPI-dokumentation
 
 ---
 
-## Framtida funktioner
+## Produktionsstatus
+
+Applikationen är **produktionsklar** för självhostning av småföretag och föreningar. Följande säkerhetsmekanismer finns på plats:
+
+- **Autentisering**: JWT med access/refresh-token, server-side återkallning (jti), automatisk token-cleanup
+- **Auktorisering**: Rollbaserad behörighet (OWNER / ADMIN / MEMBER) med org-scoped membership
+- **Input**: Zod-validering på alla API-endpoints, body-storleksgräns (1 MB), input-sanitering
+- **Transport**: Helmet-headers, CORS-konfiguration, rate limiting med skärpt gräns på auth-endpoints
+- **Infrastruktur**: Multi-stage Docker, non-root containers, healthchecks, log-rotation, graceful shutdown
+- **Drift**: Request-timeouts, konfigurerbar anslutningspool, strukturerad loggning, audit trail
+- **Tester**: 636 enhetstester + E2E med Playwright, CI via GitHub Actions
+
+Se [docs/production.md](docs/production.md) för fullständig driftsättningsguide.
+
+---
+
+## Framtida utveckling
+
+### Planerade förbättringar
+- PDF-export för fler rapporter (journal, kontoanalys, budget vs utfall, SKV 4700)
+- Dark mode (designtokens redan på plats via CSS custom properties)
+- Prometheus `/metrics`-endpoint för operationell övervakning
+- CD-pipeline — automatiserad deploy vid merge till main
+- Frontend-komponenttester (React Testing Library)
+- CHANGELOG / formell versionshantering
+
+### Framtida funktioner
+- Verifikatimport från CSV/Excel (bankutdrag → verifikat)
+- Återkommande verifikatmallar (automatisk månatlig bokföring)
+- Dashboard-grafer med trendlinjer, årsjämförelse och prognos
+- Global sökfunktion (verifikat, konton, rapporter)
+- Multi-language support (engelska utöver svenska)
 
 ### Icke-mål (för närvarande)
 - Bankkoppling
