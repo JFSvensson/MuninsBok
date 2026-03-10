@@ -77,6 +77,7 @@ Målet är att göra bokföring **enkel, transparent och självhostbar** — uta
 
 ### Drift
 - Självhostbar via Docker Compose
+- Dark mode med systempreferensdetektering (light / dark / system)
 - Health check-endpoint (i docker-compose och Dockerfile)
 - Automatisk rensning av utgångna refresh-tokens vid uppstart och schemalagt
 - Strukturerad loggning med json-file-drivrutin och log-rotation
@@ -95,7 +96,7 @@ Applikationen är **produktionsklar** för självhostning av småföretag och f�
 - **Transport**: Helmet-headers, CORS-konfiguration, rate limiting med skärpt gräns på auth-endpoints
 - **Infrastruktur**: Multi-stage Docker, non-root containers, healthchecks, log-rotation, graceful shutdown
 - **Drift**: Request-timeouts, konfigurerbar anslutningspool, strukturerad loggning, audit trail
-- **Tester**: 652 enhetstester + E2E med Playwright, CI via GitHub Actions
+- **Tester**: 661 enhetstester + E2E med Playwright, CI via GitHub Actions
 
 Se [docs/production.md](docs/production.md) för fullständig driftsättningsguide.
 
@@ -105,7 +106,6 @@ Se [docs/production.md](docs/production.md) för fullständig driftsättningsgui
 
 ### Planerade förbättringar
 - PDF-export för fler rapporter (journal, kontoanalys, budget vs utfall, SKV 4700)
-- Dark mode (designtokens redan på plats via CSS custom properties)
 - Prometheus `/metrics`-endpoint för operationell övervakning
 - CD-pipeline — automatiserad deploy vid merge till main
 - Frontend-komponenttester (React Testing Library)
@@ -244,14 +244,14 @@ muninsbok/
 
 ## Teststatus
 
-**652 enhetstester** fördelade på 54 testfiler:
+**661 enhetstester** fördelade på 55 testfiler:
 
 | Paket | Testfiler | Tester | Vad som testas |
 |-------|-----------|--------|----------------|
 | `@muninsbok/core` | 19 | 286 | Result-typer, organisationsnummer (Luhn), kontotyper, kontoplan (BAS), räkenskapsår (max 18 mån), verifikatrader, verifikatvalidering, dokument-MIME, rapporter (råbalans, resultat, balans, moms, SKV 4700, periodrapport, kontoanalys, boksluts-förhandsvisning, grundbok, huvudbok, verifikationslista), SIE-import/export (IB/UB/RES), resultatdisposition, budget (budget vs utfall-rapport) |
 | `@muninsbok/db` | 1 | 17 | Prisma→domän-mappers (organisation, räkenskapsår, konto, verifikat, verifikatrad, dokument) |
 | `@muninsbok/api` | 26 | 278 | Zod-schemavalidering, CRUD-endpoints (organisationer, konton, verifikat, räkenskapsår, budgetar), rapporter (10 st + dashboard), boksluts-förhandsvisning, health check, felhantering, auth (register/login/refresh/logout), httpOnly-cookie, tokenåterkallning, rollhantering, RBAC, audit-logging, rate limiting, input-sanitering, helmet, swagger |
-| `@muninsbok/web` | 6 | 71 | ApiError-klass, fetchJson, auth-storage, verifikatformulär (beräkningar, radhantering, öre-konvertering), beloppsformatering, CSV-export, assert-utils |
+| `@muninsbok/web` | 7 | 80 | ApiError-klass, fetchJson, auth-storage, dark mode (ThemeContext), verifikatformulär (beräkningar, radhantering, öre-konvertering), beloppsformatering, CSV-export, assert-utils |
 
 ---
 
@@ -264,7 +264,7 @@ muninsbok/
 - **Belopp i ören**: Alla belopp lagras som heltal (öre) för att undvika flyttalsproblem.
 - **Verifikat måste balansera**: Debet = kredit, alltid.
 - **DI via Fastify decorate**: API-routes injiceras med repositories via `fastify.repos`, vilket möjliggör isolerade integrationstester med mockade beroenden.
-- **CSS Custom Properties**: Alla färger definieras som designtokens i `:root`, vilket möjliggör centraliserad temastyrning.
+- **CSS Custom Properties**: Alla färger definieras som designtokens i `:root` med dark mode-varianter via `[data-theme="dark"]`, vilket möjliggör centraliserad temastyrning.
 - **Lazy loading**: PDF-export laddas via dynamic `import()` vid klick — jsPDF+autotable (~300 KB) hämtas aldrig vid sidladdning.
 
 ### Dataflöde
