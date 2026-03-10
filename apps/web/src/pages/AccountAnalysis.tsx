@@ -137,61 +137,127 @@ export function AccountAnalysis() {
               marginBottom: "1.5rem",
             }}
           >
-            <div style={{ background: "#f0f9f0", padding: "1rem", borderRadius: "6px" }}>
-              <div style={{ fontSize: "0.85rem", color: "#555" }}>Total debet</div>
-              <div style={{ fontSize: "1.3rem", fontWeight: "bold", color: "#2e7d32" }}>
+            <div
+              style={{
+                background: "var(--color-positive-light)",
+                padding: "1rem",
+                borderRadius: "6px",
+              }}
+            >
+              <div style={{ fontSize: "0.85rem", color: "var(--color-text-subtle)" }}>
+                Total debet
+              </div>
+              <div
+                style={{ fontSize: "1.3rem", fontWeight: "bold", color: "var(--color-positive)" }}
+              >
                 {formatAmount(report.totalDebit)}
               </div>
             </div>
-            <div style={{ background: "#fef0f0", padding: "1rem", borderRadius: "6px" }}>
-              <div style={{ fontSize: "0.85rem", color: "#555" }}>Total kredit</div>
-              <div style={{ fontSize: "1.3rem", fontWeight: "bold", color: "#c62828" }}>
+            <div
+              style={{
+                background: "var(--color-negative-light)",
+                padding: "1rem",
+                borderRadius: "6px",
+              }}
+            >
+              <div style={{ fontSize: "0.85rem", color: "var(--color-text-subtle)" }}>
+                Total kredit
+              </div>
+              <div
+                style={{ fontSize: "1.3rem", fontWeight: "bold", color: "var(--color-negative)" }}
+              >
                 {formatAmount(report.totalCredit)}
               </div>
             </div>
-            <div style={{ background: "#f0f4ff", padding: "1rem", borderRadius: "6px" }}>
-              <div style={{ fontSize: "0.85rem", color: "#555" }}>Slutsaldo</div>
+            <div
+              style={{
+                background: "var(--color-info-light)",
+                padding: "1rem",
+                borderRadius: "6px",
+              }}
+            >
+              <div style={{ fontSize: "0.85rem", color: "var(--color-text-subtle)" }}>
+                Slutsaldo
+              </div>
               <div
                 style={{
                   fontSize: "1.3rem",
                   fontWeight: "bold",
-                  color: report.closingBalance >= 0 ? "#2e7d32" : "#c62828",
+                  color:
+                    report.closingBalance >= 0 ? "var(--color-positive)" : "var(--color-negative)",
                 }}
               >
                 {formatAmount(report.closingBalance)}
               </div>
             </div>
-            <div style={{ background: "#f5f5f5", padding: "1rem", borderRadius: "6px" }}>
-              <div style={{ fontSize: "0.85rem", color: "#555" }}>Transaktioner</div>
+            <div style={{ background: "var(--color-bg)", padding: "1rem", borderRadius: "6px" }}>
+              <div style={{ fontSize: "0.85rem", color: "var(--color-text-subtle)" }}>
+                Transaktioner
+              </div>
               <div style={{ fontSize: "1.3rem", fontWeight: "bold" }}>
                 {report.totalTransactions}
               </div>
             </div>
-            <div style={{ background: "#f5f0ff", padding: "1rem", borderRadius: "6px" }}>
-              <div style={{ fontSize: "0.85rem", color: "#555" }}>Snitt netto/mån</div>
+            <div
+              style={{
+                background: "var(--color-purple-light)",
+                padding: "1rem",
+                borderRadius: "6px",
+              }}
+            >
+              <div style={{ fontSize: "0.85rem", color: "var(--color-text-subtle)" }}>
+                Snitt netto/mån
+              </div>
               <div
                 style={{
                   fontSize: "1.3rem",
                   fontWeight: "bold",
-                  color: report.averageMonthlyNet >= 0 ? "#2e7d32" : "#c62828",
+                  color:
+                    report.averageMonthlyNet >= 0
+                      ? "var(--color-positive)"
+                      : "var(--color-negative)",
                 }}
               >
                 {formatAmount(report.averageMonthlyNet)}
               </div>
             </div>
-            <div style={{ background: "#fffde7", padding: "1rem", borderRadius: "6px" }}>
-              <div style={{ fontSize: "0.85rem", color: "#555" }}>Högsta netto</div>
-              <div style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#2e7d32" }}>
+            <div
+              style={{
+                background: "var(--color-warning-light)",
+                padding: "1rem",
+                borderRadius: "6px",
+              }}
+            >
+              <div style={{ fontSize: "0.85rem", color: "var(--color-text-subtle)" }}>
+                Högsta netto
+              </div>
+              <div
+                style={{ fontSize: "1.1rem", fontWeight: "bold", color: "var(--color-positive)" }}
+              >
                 {formatAmount(report.highestMonthlyNet)}
               </div>
-              <div style={{ fontSize: "0.8rem", color: "#888" }}>{report.highestMonthLabel}</div>
+              <div style={{ fontSize: "0.8rem", color: "var(--color-text-light)" }}>
+                {report.highestMonthLabel}
+              </div>
             </div>
-            <div style={{ background: "#fff3e0", padding: "1rem", borderRadius: "6px" }}>
-              <div style={{ fontSize: "0.85rem", color: "#555" }}>Lägsta netto</div>
-              <div style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#c62828" }}>
+            <div
+              style={{
+                background: "var(--color-warning-light)",
+                padding: "1rem",
+                borderRadius: "6px",
+              }}
+            >
+              <div style={{ fontSize: "0.85rem", color: "var(--color-text-subtle)" }}>
+                Lägsta netto
+              </div>
+              <div
+                style={{ fontSize: "1.1rem", fontWeight: "bold", color: "var(--color-negative)" }}
+              >
                 {formatAmount(report.lowestMonthlyNet)}
               </div>
-              <div style={{ fontSize: "0.8rem", color: "#888" }}>{report.lowestMonthLabel}</div>
+              <div style={{ fontSize: "0.8rem", color: "var(--color-text-light)" }}>
+                {report.lowestMonthLabel}
+              </div>
             </div>
           </div>
 
@@ -204,7 +270,7 @@ export function AccountAnalysis() {
               gap: "4px",
               height: "160px",
               padding: "0.5rem 0",
-              borderBottom: "2px solid #ccc",
+              borderBottom: "2px solid var(--color-disabled)",
               marginBottom: "0.25rem",
             }}
           >
@@ -230,7 +296,9 @@ export function AccountAnalysis() {
                         width: "100%",
                         maxWidth: "48px",
                         height: `${Math.max(pct, 2)}%`,
-                        background: isNeg ? "#ef5350" : "#4caf50",
+                        background: isNeg
+                          ? "var(--color-negative-bar)"
+                          : "var(--color-positive-bar)",
                         borderRadius: "3px 3px 0 0",
                         minHeight: "2px",
                       }}
@@ -255,7 +323,7 @@ export function AccountAnalysis() {
                   flex: 1,
                   textAlign: "center",
                   fontSize: "0.7rem",
-                  color: "#888",
+                  color: "var(--color-text-light)",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
@@ -272,13 +340,25 @@ export function AccountAnalysis() {
             <table>
               <thead>
                 <tr>
-                  <th>Månad</th>
-                  <th className="text-right">Debet</th>
-                  <th className="text-right">Kredit</th>
-                  <th className="text-right">Netto</th>
-                  <th className="text-right">Saldo</th>
-                  <th className="text-right">Ant.</th>
-                  <th style={{ width: "18%" }}>Fördelning</th>
+                  <th scope="col">Månad</th>
+                  <th scope="col" className="text-right">
+                    Debet
+                  </th>
+                  <th scope="col" className="text-right">
+                    Kredit
+                  </th>
+                  <th scope="col" className="text-right">
+                    Netto
+                  </th>
+                  <th scope="col" className="text-right">
+                    Saldo
+                  </th>
+                  <th scope="col" className="text-right">
+                    Ant.
+                  </th>
+                  <th scope="col" style={{ width: "18%" }}>
+                    Fördelning
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -311,7 +391,7 @@ export function AccountAnalysis() {
                             style={{
                               height: "14px",
                               width: `${barWidth(m.debit, maxAbs)}%`,
-                              background: "#4caf50",
+                              background: "var(--color-positive-bar)",
                               borderRadius: "2px",
                               minWidth: m.debit !== 0 ? "2px" : "0",
                             }}
@@ -321,7 +401,7 @@ export function AccountAnalysis() {
                             style={{
                               height: "14px",
                               width: `${barWidth(m.credit, maxAbs)}%`,
-                              background: "#ef5350",
+                              background: "var(--color-negative-bar)",
                               borderRadius: "2px",
                               minWidth: m.credit !== 0 ? "2px" : "0",
                             }}
@@ -334,7 +414,7 @@ export function AccountAnalysis() {
                 })()}
               </tbody>
               <tfoot>
-                <tr style={{ fontWeight: "bold", borderTop: "2px solid #333" }}>
+                <tr style={{ fontWeight: "bold", borderTop: "2px solid var(--color-border-dark)" }}>
                   <td>Totalt</td>
                   <td className={`text-right ${amountClassName(report.totalDebit)}`}>
                     {formatAmount(report.totalDebit)}
