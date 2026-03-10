@@ -4,6 +4,7 @@
  */
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from "fastify";
 import cors from "@fastify/cors";
+import cookie from "@fastify/cookie";
 import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
 import swagger from "@fastify/swagger";
@@ -57,8 +58,11 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     contentSecurityPolicy: false, // CSP handled by frontend / nginx
   });
 
+  await fastify.register(cookie);
+
   await fastify.register(cors, {
     origin: options.corsOrigin ?? "http://localhost:5173",
+    credentials: true,
   });
 
   // OpenAPI / Swagger documentation
