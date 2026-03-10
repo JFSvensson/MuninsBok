@@ -207,6 +207,24 @@ async function fetchVoid(url: string, options?: RequestInit): Promise<void> {
   });
 }
 
+/** Factory for standard report fetchers (org + fiscal year + optional date range). */
+function createReportFetcher<T>(endpoint: string) {
+  return (
+    orgId: string,
+    fiscalYearId: string,
+    dateRange?: { startDate: string; endDate: string },
+  ) => {
+    const params = new URLSearchParams({ fiscalYearId });
+    if (dateRange) {
+      params.set("startDate", dateRange.startDate);
+      params.set("endDate", dateRange.endDate);
+    }
+    return fetchJson<ApiResponse<T>>(
+      `${API_BASE}/organizations/${orgId}/reports/${endpoint}?${params}`,
+    );
+  };
+}
+
 export const api = {
   // Organizations
   getDashboard: (orgId: string, fiscalYearId: string) =>
@@ -334,80 +352,14 @@ export const api = {
     ),
 
   // Reports
-  getTrialBalance: (
-    orgId: string,
-    fiscalYearId: string,
-    dateRange?: { startDate: string; endDate: string },
-  ) => {
-    const params = new URLSearchParams({ fiscalYearId });
-    if (dateRange) {
-      params.set("startDate", dateRange.startDate);
-      params.set("endDate", dateRange.endDate);
-    }
-    return fetchJson<ApiResponse<TrialBalance>>(
-      `${API_BASE}/organizations/${orgId}/reports/trial-balance?${params}`,
-    );
-  },
-
-  getIncomeStatement: (
-    orgId: string,
-    fiscalYearId: string,
-    dateRange?: { startDate: string; endDate: string },
-  ) => {
-    const params = new URLSearchParams({ fiscalYearId });
-    if (dateRange) {
-      params.set("startDate", dateRange.startDate);
-      params.set("endDate", dateRange.endDate);
-    }
-    return fetchJson<ApiResponse<IncomeStatement>>(
-      `${API_BASE}/organizations/${orgId}/reports/income-statement?${params}`,
-    );
-  },
-
-  getBalanceSheet: (
-    orgId: string,
-    fiscalYearId: string,
-    dateRange?: { startDate: string; endDate: string },
-  ) => {
-    const params = new URLSearchParams({ fiscalYearId });
-    if (dateRange) {
-      params.set("startDate", dateRange.startDate);
-      params.set("endDate", dateRange.endDate);
-    }
-    return fetchJson<ApiResponse<BalanceSheet>>(
-      `${API_BASE}/organizations/${orgId}/reports/balance-sheet?${params}`,
-    );
-  },
-
-  getVatReport: (
-    orgId: string,
-    fiscalYearId: string,
-    dateRange?: { startDate: string; endDate: string },
-  ) => {
-    const params = new URLSearchParams({ fiscalYearId });
-    if (dateRange) {
-      params.set("startDate", dateRange.startDate);
-      params.set("endDate", dateRange.endDate);
-    }
-    return fetchJson<ApiResponse<VatReport>>(
-      `${API_BASE}/organizations/${orgId}/reports/vat?${params}`,
-    );
-  },
-
-  getVatDeclaration: (
-    orgId: string,
-    fiscalYearId: string,
-    dateRange?: { startDate: string; endDate: string },
-  ) => {
-    const params = new URLSearchParams({ fiscalYearId });
-    if (dateRange) {
-      params.set("startDate", dateRange.startDate);
-      params.set("endDate", dateRange.endDate);
-    }
-    return fetchJson<ApiResponse<SkVatDeclarationResponse>>(
-      `${API_BASE}/organizations/${orgId}/reports/vat-declaration?${params}`,
-    );
-  },
+  getTrialBalance: createReportFetcher<TrialBalance>("trial-balance"),
+  getIncomeStatement: createReportFetcher<IncomeStatement>("income-statement"),
+  getBalanceSheet: createReportFetcher<BalanceSheet>("balance-sheet"),
+  getVatReport: createReportFetcher<VatReport>("vat"),
+  getVatDeclaration: createReportFetcher<SkVatDeclarationResponse>("vat-declaration"),
+  getJournal: createReportFetcher<JournalReport>("journal"),
+  getGeneralLedger: createReportFetcher<GeneralLedgerReport>("general-ledger"),
+  getVoucherListReport: createReportFetcher<VoucherListReportData>("voucher-list"),
 
   getPeriodReport: (
     orgId: string,
@@ -422,51 +374,6 @@ export const api = {
     }
     return fetchJson<ApiResponse<PeriodReportResponse>>(
       `${API_BASE}/organizations/${orgId}/reports/period?${params}`,
-    );
-  },
-
-  getJournal: (
-    orgId: string,
-    fiscalYearId: string,
-    dateRange?: { startDate: string; endDate: string },
-  ) => {
-    const params = new URLSearchParams({ fiscalYearId });
-    if (dateRange) {
-      params.set("startDate", dateRange.startDate);
-      params.set("endDate", dateRange.endDate);
-    }
-    return fetchJson<ApiResponse<JournalReport>>(
-      `${API_BASE}/organizations/${orgId}/reports/journal?${params}`,
-    );
-  },
-
-  getGeneralLedger: (
-    orgId: string,
-    fiscalYearId: string,
-    dateRange?: { startDate: string; endDate: string },
-  ) => {
-    const params = new URLSearchParams({ fiscalYearId });
-    if (dateRange) {
-      params.set("startDate", dateRange.startDate);
-      params.set("endDate", dateRange.endDate);
-    }
-    return fetchJson<ApiResponse<GeneralLedgerReport>>(
-      `${API_BASE}/organizations/${orgId}/reports/general-ledger?${params}`,
-    );
-  },
-
-  getVoucherListReport: (
-    orgId: string,
-    fiscalYearId: string,
-    dateRange?: { startDate: string; endDate: string },
-  ) => {
-    const params = new URLSearchParams({ fiscalYearId });
-    if (dateRange) {
-      params.set("startDate", dateRange.startDate);
-      params.set("endDate", dateRange.endDate);
-    }
-    return fetchJson<ApiResponse<VoucherListReportData>>(
-      `${API_BASE}/organizations/${orgId}/reports/voucher-list?${params}`,
     );
   },
 
