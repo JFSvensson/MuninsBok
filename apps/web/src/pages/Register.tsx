@@ -51,7 +51,12 @@ export function Register() {
       <div className="card" style={{ maxWidth: "400px", width: "100%", padding: "2rem" }}>
         <h1 style={{ marginBottom: "0.5rem", textAlign: "center" }}>Munins bok</h1>
         <p
-          style={{ marginBottom: "1.5rem", textAlign: "center", color: "#666", fontSize: "0.9rem" }}
+          style={{
+            marginBottom: "1.5rem",
+            textAlign: "center",
+            color: "var(--color-text-muted)",
+            fontSize: "0.9rem",
+          }}
         >
           Skapa ett nytt konto
         </p>
