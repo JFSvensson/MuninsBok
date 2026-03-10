@@ -122,7 +122,10 @@ export function AccountList() {
       </div>
 
       {showCreateForm && (
-        <div className="card" style={{ background: "#f9f9f9", marginBottom: "1rem" }}>
+        <div
+          className="card"
+          style={{ background: "var(--color-bg-subtle)", marginBottom: "1rem" }}
+        >
           <h3 style={{ fontSize: "1rem", marginBottom: "0.75rem" }}>Skapa nytt konto</h3>
           {formError && <div className="error">{formError}</div>}
           <form
@@ -238,12 +241,12 @@ export function AccountList() {
         <table>
           <thead>
             <tr>
-              <th>Nummer</th>
-              <th>Namn</th>
-              <th>Typ</th>
-              <th>Moms</th>
-              <th>Status</th>
-              <th></th>
+              <th scope="col">Nummer</th>
+              <th scope="col">Namn</th>
+              <th scope="col">Typ</th>
+              <th scope="col">Moms</th>
+              <th scope="col">Status</th>
+              <th scope="col"></th>
             </tr>
           </thead>
           <tbody>
@@ -358,7 +361,7 @@ export function AccountList() {
         </table>
       )}
 
-      <p style={{ marginTop: "1rem", color: "#666", fontSize: "0.85rem" }}>
+      <p style={{ marginTop: "1rem", color: "var(--color-text-muted)", fontSize: "0.85rem" }}>
         Visar {filtered.length} av {accounts.length} konton
       </p>
     </div>
