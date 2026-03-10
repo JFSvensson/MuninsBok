@@ -1,10 +1,10 @@
-import { Routes, Route, NavLink, Navigate } from "react-router-dom";
+import { Routes, Route, NavLink, Navigate, useLocation } from "react-router-dom";
 import { OrganizationProvider, useOrganization } from "./context/OrganizationContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import styles from "./App.module.css";
 import { OrganizationSelect } from "./components/OrganizationSelect";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useState, useRef, useEffect } from "react";
 import { CreateOrganizationDialog } from "./components/CreateOrganizationDialog";
 
 // Lazy-loaded page components (code-split per route)
@@ -83,7 +83,7 @@ function WelcomePage() {
   return (
     <div className="card" style={{ textAlign: "center", padding: "3rem" }}>
       <h2 style={{ marginBottom: "1rem" }}>Välkommen till Munins bok</h2>
-      <p style={{ marginBottom: "2rem", color: "#666" }}>
+      <p style={{ marginBottom: "2rem", color: "var(--color-text-muted)" }}>
         Skapa din första organisation för att börja bokföra.
       </p>
       <button onClick={() => setShowCreate(true)}>Skapa organisation</button>
@@ -99,6 +99,22 @@ function WelcomePage() {
 function AppContent() {
   const { organization, fiscalYear, organizations } = useOrganization();
   const { logout, user } = useAuth();
+  const [reportsOpen, setReportsOpen] = useState(false);
+  const reportsRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+
+  const isReportPage = location.pathname.startsWith("/reports/");
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (reportsRef.current && !reportsRef.current.contains(e.target as Node)) {
+        setReportsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   return (
     <div className={styles.app}>
@@ -137,21 +153,88 @@ function AppContent() {
               <NavLink to="/accounts">Kontoplan</NavLink>
             </span>
             <span className={styles.navSeparator} aria-hidden="true" />
-            <span className={styles.navGroup}>
-              <NavLink to="/reports/trial-balance">Råbalans</NavLink>
-              <NavLink to="/reports/income-statement">Resultaträkning</NavLink>
-              <NavLink to="/reports/balance-sheet">Balansräkning</NavLink>
-              <NavLink to="/reports/vat">Moms</NavLink>
-              <NavLink to="/reports/vat-declaration">SKV 4700</NavLink>
-              <NavLink to="/reports/period">Periodrapport</NavLink>
-              <NavLink to="/reports/account-analysis">Kontoanalys</NavLink>
-            </span>
-            <span className={styles.navSeparator} aria-hidden="true" />
-            <span className={styles.navGroup}>
-              <NavLink to="/reports/journal">Grundbok</NavLink>
-              <NavLink to="/reports/general-ledger">Huvudbok</NavLink>
-              <NavLink to="/reports/voucher-list">Verifikationslista</NavLink>
-            </span>
+            <div className={styles.dropdown} ref={reportsRef}>
+              <button
+                type="button"
+                className={`${styles.dropdownToggle} ${isReportPage ? styles.dropdownActive : ""}`}
+                onClick={() => setReportsOpen((o) => !o)}
+                aria-expanded={reportsOpen}
+                aria-haspopup="true"
+              >
+                Rapporter ▾
+              </button>
+              {reportsOpen && (
+                <div className={styles.dropdownMenu} role="menu">
+                  <NavLink
+                    to="/reports/trial-balance"
+                    role="menuitem"
+                    onClick={() => setReportsOpen(false)}
+                  >
+                    Råbalans
+                  </NavLink>
+                  <NavLink
+                    to="/reports/income-statement"
+                    role="menuitem"
+                    onClick={() => setReportsOpen(false)}
+                  >
+                    Resultaträkning
+                  </NavLink>
+                  <NavLink
+                    to="/reports/balance-sheet"
+                    role="menuitem"
+                    onClick={() => setReportsOpen(false)}
+                  >
+                    Balansräkning
+                  </NavLink>
+                  <NavLink to="/reports/vat" role="menuitem" onClick={() => setReportsOpen(false)}>
+                    Moms
+                  </NavLink>
+                  <NavLink
+                    to="/reports/vat-declaration"
+                    role="menuitem"
+                    onClick={() => setReportsOpen(false)}
+                  >
+                    SKV 4700
+                  </NavLink>
+                  <NavLink
+                    to="/reports/period"
+                    role="menuitem"
+                    onClick={() => setReportsOpen(false)}
+                  >
+                    Periodrapport
+                  </NavLink>
+                  <NavLink
+                    to="/reports/account-analysis"
+                    role="menuitem"
+                    onClick={() => setReportsOpen(false)}
+                  >
+                    Kontoanalys
+                  </NavLink>
+                  <hr className={styles.dropdownDivider} />
+                  <NavLink
+                    to="/reports/journal"
+                    role="menuitem"
+                    onClick={() => setReportsOpen(false)}
+                  >
+                    Grundbok
+                  </NavLink>
+                  <NavLink
+                    to="/reports/general-ledger"
+                    role="menuitem"
+                    onClick={() => setReportsOpen(false)}
+                  >
+                    Huvudbok
+                  </NavLink>
+                  <NavLink
+                    to="/reports/voucher-list"
+                    role="menuitem"
+                    onClick={() => setReportsOpen(false)}
+                  >
+                    Verifikationslista
+                  </NavLink>
+                </div>
+              )}
+            </div>
             <span className={styles.navSeparator} aria-hidden="true" />
             <NavLink to="/sie">SIE</NavLink>
             <NavLink to="/fiscal-years">Räkenskapsår</NavLink>
