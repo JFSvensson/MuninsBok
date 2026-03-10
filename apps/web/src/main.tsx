@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { ThemeProvider } from "./context/ThemeContext";
 import { ToastProvider } from "./context/ToastContext";
 import "./index.css";
 import "./print-reports.css";
@@ -25,14 +26,16 @@ const root = document.getElementById("root");
 if (!root) throw new Error("Missing #root element");
 ReactDOM.createRoot(root).render(
   <React.StrictMode>
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <ToastProvider>
-          <BrowserRouter>
-            <App />
-          </BrowserRouter>
-        </ToastProvider>
-      </QueryClientProvider>
-    </ErrorBoundary>
+    <ThemeProvider>
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <ToastProvider>
+            <BrowserRouter>
+              <App />
+            </BrowserRouter>
+          </ToastProvider>
+        </QueryClientProvider>
+      </ErrorBoundary>
+    </ThemeProvider>
   </React.StrictMode>,
 );
