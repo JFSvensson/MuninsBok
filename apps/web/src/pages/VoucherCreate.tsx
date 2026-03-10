@@ -124,11 +124,15 @@ export function VoucherCreate() {
         <table>
           <thead>
             <tr>
-              <th>Konto</th>
-              <th className="text-right">Debet</th>
-              <th className="text-right">Kredit</th>
-              <th>Beskrivning</th>
-              <th></th>
+              <th scope="col">Konto</th>
+              <th scope="col" className="text-right">
+                Debet
+              </th>
+              <th scope="col" className="text-right">
+                Kredit
+              </th>
+              <th scope="col">Beskrivning</th>
+              <th scope="col"></th>
             </tr>
           </thead>
           <tbody>
@@ -205,12 +209,12 @@ export function VoucherCreate() {
               </td>
               <td colSpan={2}>
                 {!isBalanced && (
-                  <span style={{ color: "#c62828" }}>
+                  <span style={{ color: "var(--color-negative)" }}>
                     Differens: {formatAmount(totalDebit - totalCredit)}
                   </span>
                 )}
                 {isBalanced && totalDebit > 0 && (
-                  <span style={{ color: "#2e7d32" }}>✓ Balanserar</span>
+                  <span style={{ color: "var(--color-positive)" }}>✓ Balanserar</span>
                 )}
               </td>
             </tr>
