@@ -82,6 +82,21 @@ export function AccountAnalysis() {
               >
                 Exportera CSV
               </button>
+              <button
+                className="secondary"
+                onClick={async () => {
+                  const { exportAccountAnalysisPdf } = await import("../utils/pdf");
+                  exportAccountAnalysisPdf(
+                    report,
+                    organization?.name ?? "",
+                    fiscalYear
+                      ? `${new Date(fiscalYear.startDate).toLocaleDateString("sv-SE")} – ${new Date(fiscalYear.endDate).toLocaleDateString("sv-SE")}`
+                      : "",
+                  );
+                }}
+              >
+                Exportera PDF
+              </button>
               <button className="secondary" onClick={() => window.print()}>
                 Skriv ut
               </button>
