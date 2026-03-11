@@ -42,7 +42,7 @@ Målet är att göra bokföring **enkel, transparent och självhostbar** — uta
 - Dashboard med översikt, månadstrend och nyckeltal
 - Datumfilter på alla rapporter
 - CSV-export och utskrift på alla rapporter
-- PDF-export (råbalans, resultaträkning, balansräkning, momsrapport, huvudbok, bokslut)
+- PDF-export (råbalans, resultaträkning, balansräkning, momsrapport, huvudbok, bokslut, grundbok, kontoanalys, budget vs utfall, SKV 4700)
 
 ### Årsbokslut
 - Boksluts-förhandsvisning — visar exakt vilka bokslutsposter som skapas innan du stänger
@@ -106,7 +106,6 @@ Se [docs/production.md](docs/production.md) för fullständig driftsättningsgui
 ## Framtida utveckling
 
 ### Planerade förbättringar
-- PDF-export för fler rapporter (journal, kontoanalys, budget vs utfall, SKV 4700)
 - CD-pipeline — automatiserad deploy vid merge till main
 - Frontend-komponenttester (React Testing Library)
 
