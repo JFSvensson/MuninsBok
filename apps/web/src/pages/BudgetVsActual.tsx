@@ -62,6 +62,15 @@ export function BudgetVsActual() {
           >
             Exportera CSV
           </button>
+          <button
+            className="secondary"
+            onClick={async () => {
+              const { exportBudgetVsActualPdf } = await import("../utils/pdf");
+              exportBudgetVsActualPdf(report, organization?.name ?? "");
+            }}
+          >
+            Exportera PDF
+          </button>
           <button className="secondary" onClick={() => navigate("/budgets")}>
             Tillbaka
           </button>
