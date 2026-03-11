@@ -27,6 +27,8 @@ import { documentRoutes } from "./routes/documents.js";
 import { dashboardRoutes } from "./routes/dashboard.js";
 import { authRoutes } from "./routes/auth.js";
 import { memberRoutes } from "./routes/members.js";
+import { metricsRoute } from "./routes/metrics.js";
+import metricsPlugin from "./plugins/metrics.js";
 import type { Repositories } from "./repositories.js";
 // Side-effect import: augments FastifyRequest with `org` property
 import "./plugins/org-scope.js";
@@ -99,6 +101,9 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     },
     timeWindow: "1 minute",
   });
+
+  // Prometheus metrics (register early so the onResponse hook captures all requests)
+  await fastify.register(metricsPlugin);
 
   // Structured request logging with trace IDs
   await fastify.register(requestLogging);
@@ -218,6 +223,9 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     },
     { prefix: "/api/organizations" },
   );
+
+  // Prometheus metrics endpoint (no auth, like /health)
+  await fastify.register(metricsRoute);
 
   // Health check with database connectivity test
   fastify.get("/health", async () => {
