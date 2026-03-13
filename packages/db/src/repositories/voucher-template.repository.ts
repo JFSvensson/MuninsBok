@@ -31,6 +31,20 @@ export class VoucherTemplateRepository implements IVoucherTemplateRepository {
     return template ? toVoucherTemplate(template) : null;
   }
 
+  async findDueRecurring(organizationId: string, asOf: Date): Promise<VoucherTemplate[]> {
+    const templates = await this.prisma.voucherTemplate.findMany({
+      where: {
+        organizationId,
+        isRecurring: true,
+        nextRunDate: { lte: asOf },
+        OR: [{ recurringEndDate: null }, { recurringEndDate: { gte: asOf } }],
+      },
+      include: includeLines,
+      orderBy: { nextRunDate: "asc" },
+    });
+    return templates.map(toVoucherTemplate);
+  }
+
   async create(
     organizationId: string,
     input: CreateVoucherTemplateInput,
@@ -137,6 +151,49 @@ export class VoucherTemplateRepository implements IVoucherTemplateRepository {
     });
 
     return ok(toVoucherTemplate(template));
+  }
+
+  async updateRecurringSchedule(
+    id: string,
+    organizationId: string,
+    schedule: {
+      isRecurring: boolean;
+      frequency?: "MONTHLY" | "QUARTERLY";
+      dayOfMonth?: number;
+      nextRunDate?: Date;
+      recurringEndDate?: Date | null;
+    },
+  ): Promise<VoucherTemplate | null> {
+    const existing = await this.prisma.voucherTemplate.findFirst({
+      where: { id, organizationId },
+    });
+    if (!existing) return null;
+
+    const data: Record<string, unknown> = {
+      isRecurring: schedule.isRecurring,
+      frequency: schedule.isRecurring ? (schedule.frequency ?? null) : null,
+      dayOfMonth: schedule.isRecurring ? (schedule.dayOfMonth ?? null) : null,
+      nextRunDate: schedule.isRecurring ? (schedule.nextRunDate ?? null) : null,
+      recurringEndDate: schedule.recurringEndDate ?? null,
+    };
+
+    const template = await this.prisma.voucherTemplate.update({
+      where: { id },
+      data,
+      include: includeLines,
+    });
+
+    return toVoucherTemplate(template);
+  }
+
+  async markRecurringRun(id: string, nextRunDate: Date): Promise<void> {
+    await this.prisma.voucherTemplate.update({
+      where: { id },
+      data: {
+        lastRunDate: new Date(),
+        nextRunDate,
+      },
+    });
   }
 
   async delete(id: string, organizationId: string): Promise<boolean> {
