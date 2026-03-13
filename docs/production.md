@@ -12,7 +12,8 @@ Denna guide beskriver hur du kör Munins bok i en produktionsmiljö med TLS, bac
 4. [Backup & återställning](#backup--återställning)
 5. [Övervakning](#övervakning)
 6. [Säkerhetsrekommendationer](#säkerhetsrekommendationer)
-7. [Databasmigreringar](#databasmigreringar)
+7. [CD-pipeline](#cd-pipeline)
+8. [Databasmigreringar](#databasmigreringar)
 
 ---
 
@@ -296,6 +297,87 @@ services:
       API_KEY: en-lång-hemlig-api-nyckel
       CORS_ORIGIN: https://bok.example.se
     restart: always
+```
+
+---
+
+## CD-pipeline
+
+Repot har en GitHub Actions-workflow (`.github/workflows/cd.yml`) som automatiskt bygger och deployar vid lyckad CI på `main`.
+
+### Flöde
+
+1. **CI passerar** — alla tester, lint och typecheck gröna på `main`
+2. **Docker-images byggs** — `muninsbok-api` och `muninsbok-web` byggs med multi-stage Dockerfiles
+3. **Push till GHCR** — images pushas till GitHub Container Registry med commit-hash som tag + `latest`
+4. **SSH-deploy** — images pullas på produktionsservern, taggas som `current`, containers startas om med health check-verifiering
+
+### Förutsättningar på servern
+
+1. Docker & Docker Compose installerat
+2. SSH-åtkomst med nyckelbaserad autentisering
+3. `docker-compose.yml` + `docker-compose.prod.yml` + `.env.docker` i deploy-mappen
+4. Användaren måste kunna köra `docker` utan sudo (lägg till i `docker`-gruppen)
+5. Servern måste kunna nå `ghcr.io` — logga in en gång:
+
+```bash
+echo $GITHUB_PAT | docker login ghcr.io -u USERNAME --password-stdin
+```
+
+### GitHub Secrets
+
+Konfigurera dessa under **Settings → Environments → production → Secrets**:
+
+| Secret | Beskrivning |
+|--------|-------------|
+| `DEPLOY_HOST` | Serverns IP eller hostname |
+| `DEPLOY_USER` | SSH-användare (t.ex. `deploy`) |
+| `DEPLOY_SSH_KEY` | Privat SSH-nyckel (ed25519 rekommenderas) |
+| `DEPLOY_PATH` | Sökväg till deploy-mappen (default: `~/muninsbok`) |
+
+### Första installationen
+
+```bash
+# På servern
+mkdir -p ~/muninsbok
+cd ~/muninsbok
+
+# Kopiera filer från repot
+scp docker-compose.yml docker-compose.prod.yml .env.docker.example server:~/muninsbok/
+
+# Konfigurera secrets
+cp .env.docker.example .env.docker
+nano .env.docker  # fyll i lösenord och JWT_SECRET
+
+# Logga in mot GHCR
+echo $GITHUB_PAT | docker login ghcr.io -u USERNAME --password-stdin
+
+# Starta med prod-override
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
+### Manuell deploy
+
+Om du behöver deploya utan att gå via CI:
+
+```bash
+cd ~/muninsbok
+docker compose -f docker-compose.yml -f docker-compose.prod.yml pull api web
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d api web
+```
+
+### Rollback
+
+```bash
+# Lista tillgängliga tags
+docker image ls ghcr.io/jfsvensson/muninsbok-api
+
+# Tagga en äldre version som current
+docker tag ghcr.io/jfsvensson/muninsbok-api:sha-abc1234 ghcr.io/jfsvensson/muninsbok-api:current
+docker tag ghcr.io/jfsvensson/muninsbok-web:sha-abc1234 ghcr.io/jfsvensson/muninsbok-web:current
+
+# Starta om
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d api web
 ```
 
 ---
