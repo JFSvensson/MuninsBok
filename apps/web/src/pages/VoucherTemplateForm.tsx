@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOrganization } from "../context/OrganizationContext";
 import { useToast } from "../context/ToastContext";
+import { useLocale } from "../context/LocaleContext";
 import { defined } from "../utils/assert";
 import { api } from "../api";
 import { formatAmount, parseAmountToOre, oreToKronor } from "../utils/formatting";
@@ -21,6 +22,17 @@ const createEmptyLine = (): TemplateLineInput => ({
   description: "",
 });
 
+function calculateFirstRunDate(frequency: "MONTHLY" | "QUARTERLY", dayOfMonth: number): Date {
+  const now = new Date();
+  const next = new Date(now.getFullYear(), now.getMonth(), dayOfMonth);
+  if (next <= now) {
+    next.setMonth(next.getMonth() + (frequency === "QUARTERLY" ? 3 : 1));
+  }
+  const maxDay = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
+  next.setDate(Math.min(dayOfMonth, maxDay));
+  return next;
+}
+
 export function VoucherTemplateForm() {
   const { templateId } = useParams<{ templateId: string }>();
   const isEdit = Boolean(templateId);
@@ -30,12 +42,19 @@ export function VoucherTemplateForm() {
   const { addToast } = useToast();
 
   const orgId = defined(organization).id;
+  const { t } = useLocale();
 
   // Form state
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [lines, setLines] = useState<TemplateLineInput[]>([createEmptyLine(), createEmptyLine()]);
   const [error, setError] = useState<string | null>(null);
+
+  // Recurring state
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [frequency, setFrequency] = useState<"MONTHLY" | "QUARTERLY">("MONTHLY");
+  const [dayOfMonth, setDayOfMonth] = useState(1);
+  const [recurringEndDate, setRecurringEndDate] = useState("");
 
   // Load accounts
   const { data: accountsData } = useQuery({
@@ -65,6 +84,10 @@ export function VoucherTemplateForm() {
           description: l.description ?? "",
         })),
       );
+      setIsRecurring(tpl.isRecurring ?? false);
+      setFrequency(tpl.frequency ?? "MONTHLY");
+      setDayOfMonth(tpl.dayOfMonth ?? 1);
+      setRecurringEndDate(tpl.recurringEndDate ? tpl.recurringEndDate.slice(0, 10) : "");
     }
   }, [templateData]);
 
@@ -74,7 +97,7 @@ export function VoucherTemplateForm() {
       api.createVoucherTemplate(orgId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["voucher-templates"] });
-      addToast("Mallen har skapats", "success");
+      addToast(t("templates.created"), "success");
       navigate("/templates");
     },
     onError: (err: Error) => setError(err.message),
@@ -88,8 +111,29 @@ export function VoucherTemplateForm() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["voucher-templates"] });
       queryClient.invalidateQueries({ queryKey: ["voucher-template", orgId, templateId] });
-      addToast("Mallen har uppdaterats", "success");
+      addToast(t("templates.updated"), "success");
       navigate("/templates");
+    },
+    onError: (err: Error) => setError(err.message),
+  });
+
+  const recurringMutation = useMutation({
+    mutationFn: () => {
+      if (!templateId) throw new Error("Mall-ID krävs");
+      return api.updateRecurringSchedule(orgId, templateId, {
+        isRecurring,
+        frequency: isRecurring ? frequency : undefined,
+        dayOfMonth: isRecurring ? dayOfMonth : undefined,
+        nextRunDate: isRecurring
+          ? calculateFirstRunDate(frequency, dayOfMonth).toISOString()
+          : undefined,
+        recurringEndDate: recurringEndDate || null,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["voucher-templates"] });
+      queryClient.invalidateQueries({ queryKey: ["voucher-template", orgId, templateId] });
+      addToast(t("templates.recurring.updated"), "success");
     },
     onError: (err: Error) => setError(err.message),
   });
@@ -119,7 +163,7 @@ export function VoucherTemplateForm() {
     setError(null);
 
     if (!name.trim()) {
-      setError("Mallnamn krävs");
+      setError(t("templates.form.errorName"));
       return;
     }
 
@@ -133,14 +177,14 @@ export function VoucherTemplateForm() {
       }));
 
     if (templateLines.length === 0) {
-      setError("Mallen måste ha minst en rad med konto och belopp");
+      setError(t("templates.form.errorLine"));
       return;
     }
 
     // Check for dual entry lines
     const hasDualEntry = templateLines.some((l) => l.debit > 0 && l.credit > 0);
     if (hasDualEntry) {
-      setError("En rad kan inte ha både debet och kredit");
+      setError(t("templates.form.errorDualEntry"));
       return;
     }
 
@@ -160,37 +204,37 @@ export function VoucherTemplateForm() {
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   if (isEdit && isLoadingTemplate) {
-    return <div className="loading">Laddar mall…</div>;
+    return <div className="loading">{t("common.loading")}</div>;
   }
 
   return (
     <div className="card">
-      <h2>{isEdit ? "Redigera mall" : "Ny verifikatmall"}</h2>
+      <h2>{isEdit ? t("templates.form.title.edit") : t("templates.form.title.new")}</h2>
 
       {error && <div className="error">{error}</div>}
 
       <form onSubmit={handleSubmit}>
         <div className="flex gap-2 mb-2">
           <div className="form-group" style={{ flex: 1 }}>
-            <label htmlFor="tpl-name">Mallnamn</label>
+            <label htmlFor="tpl-name">{t("templates.form.name")}</label>
             <input
               id="tpl-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="T.ex. Månadshyra"
+              placeholder={t("templates.form.namePlaceholder")}
               required
               maxLength={255}
             />
           </div>
           <div className="form-group" style={{ flex: 2 }}>
-            <label htmlFor="tpl-desc">Beskrivning (valfri)</label>
+            <label htmlFor="tpl-desc">{t("templates.form.description")}</label>
             <input
               id="tpl-desc"
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="T.ex. Hyra kontor Storgatan 1"
+              placeholder={t("templates.form.descPlaceholder")}
               maxLength={1000}
             />
           </div>
@@ -298,13 +342,81 @@ export function VoucherTemplateForm() {
 
         <div className="flex justify-between items-center" style={{ marginTop: "1rem" }}>
           <button type="button" className="secondary" onClick={() => navigate("/templates")}>
-            Avbryt
+            {t("common.cancel")}
           </button>
           <button type="submit" disabled={isPending}>
-            {isPending ? "Sparar..." : isEdit ? "Spara ändringar" : "Skapa mall"}
+            {isPending
+              ? t("templates.form.saving")
+              : isEdit
+                ? t("templates.form.submit.edit")
+                : t("templates.form.submit.create")}
           </button>
         </div>
       </form>
+
+      {isEdit && (
+        <div className="card" style={{ marginTop: "1.5rem" }}>
+          <h3>{t("templates.recurring.title")}</h3>
+          <div className="form-group">
+            <label>
+              <input
+                type="checkbox"
+                checked={isRecurring}
+                onChange={(e) => setIsRecurring(e.target.checked)}
+                style={{ marginRight: "0.5rem" }}
+              />
+              {t("templates.recurring.enabled")}
+            </label>
+          </div>
+
+          {isRecurring && (
+            <div className="flex gap-2 mb-2" style={{ flexWrap: "wrap" }}>
+              <div className="form-group">
+                <label htmlFor="tpl-freq">{t("templates.recurring.frequency")}</label>
+                <select
+                  id="tpl-freq"
+                  value={frequency}
+                  onChange={(e) => setFrequency(e.target.value as "MONTHLY" | "QUARTERLY")}
+                >
+                  <option value="MONTHLY">{t("templates.recurring.monthly")}</option>
+                  <option value="QUARTERLY">{t("templates.recurring.quarterly")}</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="tpl-day">{t("templates.recurring.dayOfMonth")}</label>
+                <input
+                  id="tpl-day"
+                  type="number"
+                  min={1}
+                  max={28}
+                  value={dayOfMonth}
+                  onChange={(e) => setDayOfMonth(parseInt(e.target.value, 10) || 1)}
+                  style={{ width: "5rem" }}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="tpl-end">{t("templates.recurring.endDate")}</label>
+                <input
+                  id="tpl-end"
+                  type="date"
+                  value={recurringEndDate}
+                  onChange={(e) => setRecurringEndDate(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => recurringMutation.mutate()}
+            disabled={recurringMutation.isPending}
+          >
+            {recurringMutation.isPending
+              ? t("templates.form.saving")
+              : t("templates.recurring.save")}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
