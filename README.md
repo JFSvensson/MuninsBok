@@ -39,7 +39,8 @@ Målet är att göra bokföring **enkel, transparent och självhostbar** — uta
 - Grundbok (journal)
 - Huvudbok (general ledger)
 - Verifikationslista
-- Dashboard med översikt, månadstrend och nyckeltal
+- Dashboard med översikt, månadstrend, nyckeltal, årsjämförelse och prognos
+- Global sökfunktion (Ctrl+K) — sök verifikat och konton direkt från huvudmenyn
 - Datumfilter på alla rapporter
 - CSV-export och utskrift på alla rapporter
 - PDF-export (råbalans, resultaträkning, balansräkning, momsrapport, huvudbok, bokslut, grundbok, kontoanalys, budget vs utfall, SKV 4700)
@@ -98,7 +99,7 @@ Applikationen är **produktionsklar** för självhostning av småföretag och f�
 - **Transport**: Helmet-headers, CORS-konfiguration, rate limiting med skärpt gräns på auth-endpoints
 - **Infrastruktur**: Multi-stage Docker, non-root containers, healthchecks, log-rotation, graceful shutdown
 - **Drift**: Request-timeouts, konfigurerbar anslutningspool, strukturerad loggning, audit trail
-- **Tester**: 716 enhetstester (inkl. React Testing Library-komponenttester) + E2E med Playwright, CI via GitHub Actions
+- **Tester**: 756 enhetstester (inkl. React Testing Library-komponenttester) + E2E med Playwright, CI via GitHub Actions
 
 Se [docs/production.md](docs/production.md) för fullständig driftsättningsguide.
 
@@ -109,8 +110,6 @@ Se [docs/production.md](docs/production.md) för fullständig driftsättningsgui
 ### Framtida funktioner
 - Verifikatimport från CSV/Excel (bankutdrag → verifikat)
 - Återkommande verifikatmallar (automatisk månatlig bokföring)
-- Dashboard-grafer med trendlinjer, årsjämförelse och prognos
-- Global sökfunktion (verifikat, konton, rapporter)
 - Multi-language support (engelska utöver svenska)
 
 ### Icke-mål (för närvarande)
@@ -240,14 +239,14 @@ muninsbok/
 
 ## Teststatus
 
-**716 enhetstester** fördelade på 64 testfiler:
+**756 enhetstester** fördelade på 67 testfiler:
 
 | Paket | Testfiler | Tester | Vad som testas |
 |-------|-----------|--------|----------------|
 | `@muninsbok/core` | 19 | 286 | Result-typer, organisationsnummer (Luhn), kontotyper, kontoplan (BAS), räkenskapsår (max 18 mån), verifikatrader, verifikatvalidering, dokument-MIME, rapporter (råbalans, resultat, balans, moms, SKV 4700, periodrapport, kontoanalys, boksluts-förhandsvisning, grundbok, huvudbok, verifikationslista), SIE-import/export (IB/UB/RES), resultatdisposition, budget (budget vs utfall-rapport) |
 | `@muninsbok/db` | 1 | 17 | Prisma→domän-mappers (organisation, räkenskapsår, konto, verifikat, verifikatrad, dokument) |
-| `@muninsbok/api` | 27 | 285 | Zod-schemavalidering, CRUD-endpoints (organisationer, konton, verifikat, räkenskapsår, budgetar), rapporter (10 st + dashboard), boksluts-förhandsvisning, health check, Prometheus metrics, felhantering, auth (register/login/refresh/logout), httpOnly-cookie, tokenåterkallning, rollhantering, RBAC, audit-logging, rate limiting, input-sanitering, helmet, swagger |
-| `@muninsbok/web` | 17 | 128 | ApiError-klass, fetchJson, auth-storage, dark mode (ThemeContext), verifikatformulär (beräkningar, radhantering, öre-konvertering), beloppsformatering, CSV-export, assert-utils, **komponenttester (React Testing Library)**: ThemeToggle, ConfirmDialog, DateFilter, ErrorBoundary, ReportPageTemplate, ReportSectionRows, ProtectedRoute, ToastContext, Login, NotFound |
+| `@muninsbok/api` | 28 | 298 | Zod-schemavalidering, CRUD-endpoints (organisationer, konton, verifikat, räkenskapsår, budgetar), rapporter (10 st + dashboard), global sökning, boksluts-förhandsvisning, health check, Prometheus metrics, felhantering, auth (register/login/refresh/logout), httpOnly-cookie, tokenåterkallning, rollhantering, RBAC, audit-logging, rate limiting, input-sanitering, helmet, swagger |
+| `@muninsbok/web` | 18 | 155 | ApiError-klass, fetchJson, auth-storage, dark mode (ThemeContext), verifikatformulär (beräkningar, radhantering, öre-konvertering), beloppsformatering, CSV-export, assert-utils, **komponenttester (React Testing Library)**: ThemeToggle, ConfirmDialog, DateFilter, ErrorBoundary, ReportPageTemplate, ReportSectionRows, ProtectedRoute, ToastContext, Login, NotFound, SearchDialog |
 
 ---
 
