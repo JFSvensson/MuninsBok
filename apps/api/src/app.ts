@@ -26,6 +26,7 @@ import { fiscalYearRoutes } from "./routes/fiscal-years.js";
 import { documentRoutes } from "./routes/documents.js";
 import { dashboardRoutes } from "./routes/dashboard.js";
 import { searchRoutes } from "./routes/search.js";
+import { csvImportRoutes } from "./routes/csv-import.js";
 import { authRoutes } from "./routes/auth.js";
 import { memberRoutes } from "./routes/members.js";
 import { metricsRoute } from "./routes/metrics.js";
@@ -222,6 +223,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
       await instance.register(documentRoutes);
       await instance.register(dashboardRoutes);
       await instance.register(searchRoutes);
+      await instance.register(csvImportRoutes);
     },
     { prefix: "/api/organizations" },
   );
