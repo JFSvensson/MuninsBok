@@ -35,6 +35,14 @@
     "./voucher": {
       "types": "./dist/voucher/index.d.ts",
       "import": "./dist/voucher/index.js"
+    },
+    "./csv-import": {
+      "types": "./dist/csv-import.d.ts",
+      "import": "./dist/csv-import.js"
+    },
+    "./i18n": {
+      "types": "./dist/i18n.d.ts",
+      "import": "./dist/i18n.js"
     }
   },
   "scripts": {
