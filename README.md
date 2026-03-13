@@ -84,6 +84,7 @@ Målet är att göra bokföring **enkel, transparent och självhostbar** — uta
 - Strukturerad loggning med json-file-drivrutin och log-rotation
 - Request-timeouts och konfigurerbar databaspool
 - Swagger/OpenAPI-dokumentation
+- CD-pipeline — automatiserad deploy via GitHub Actions → GHCR → SSH
 
 ---
 
@@ -106,7 +107,6 @@ Se [docs/production.md](docs/production.md) för fullständig driftsättningsgui
 ## Framtida utveckling
 
 ### Planerade förbättringar
-- CD-pipeline — automatiserad deploy vid merge till main
 - Frontend-komponenttester (React Testing Library)
 
 ### Framtida funktioner
