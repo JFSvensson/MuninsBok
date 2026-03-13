@@ -58,6 +58,7 @@ describe("Dashboard routes", () => {
   function setupRepos() {
     repos.vouchers.findByFiscalYear.mockResolvedValue(vouchers);
     repos.accounts.findByOrganization.mockResolvedValue(accounts);
+    repos.fiscalYears.findById.mockResolvedValue(null);
   }
 
   it("returns 400 without fiscalYearId", async () => {
@@ -155,6 +156,7 @@ describe("Dashboard routes", () => {
   it("handles empty data gracefully", async () => {
     repos.vouchers.findByFiscalYear.mockResolvedValue([]);
     repos.accounts.findByOrganization.mockResolvedValue([]);
+    repos.fiscalYears.findById.mockResolvedValue(null);
 
     const res = await app.inject({
       method: "GET",
@@ -168,5 +170,125 @@ describe("Dashboard routes", () => {
     expect(d.isBalanced).toBe(true);
     expect(d.latestVouchers).toHaveLength(0);
     expect(d.monthlyTrend).toHaveLength(0);
+    expect(d.yearComparison).toHaveLength(0);
+    expect(d.previousYearResult).toBeNull();
+    expect(d.forecast).toBeNull();
+  });
+
+  it("returns enhanced fields (yearComparison, forecast)", async () => {
+    const fy = {
+      id: fyId,
+      organizationId: orgId,
+      startDate: new Date("2024-01-01"),
+      endDate: new Date("2024-12-31"),
+      isClosed: false,
+    };
+    const prevFyId = "fy-prev";
+    const prevFy = {
+      id: prevFyId,
+      organizationId: orgId,
+      startDate: new Date("2023-01-01"),
+      endDate: new Date("2023-12-31"),
+      isClosed: true,
+    };
+
+    // 3 months of data for forecast
+    const extendedVouchers: Voucher[] = [
+      ...vouchers,
+      {
+        id: "v3",
+        organizationId: orgId,
+        fiscalYearId: fyId,
+        number: 3,
+        date: new Date("2024-05-01"),
+        description: "Maj intäkt",
+        lines: [
+          { id: "l5", voucherId: "v3", accountNumber: "1930", debit: 30000, credit: 0 },
+          { id: "l6", voucherId: "v3", accountNumber: "3000", debit: 0, credit: 30000 },
+        ],
+        documentIds: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
+
+    const prevVouchers: Voucher[] = [
+      {
+        id: "pv1",
+        organizationId: orgId,
+        fiscalYearId: prevFyId,
+        number: 1,
+        date: new Date("2023-03-15"),
+        description: "Förra årets intäkt",
+        lines: [
+          { id: "pl1", voucherId: "pv1", accountNumber: "1930", debit: 40000, credit: 0 },
+          { id: "pl2", voucherId: "pv1", accountNumber: "3000", debit: 0, credit: 40000 },
+        ],
+        documentIds: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
+
+    repos.accounts.findByOrganization.mockResolvedValue(accounts);
+    repos.fiscalYears.findById.mockResolvedValue(fy);
+    repos.fiscalYears.findPreviousByDate.mockResolvedValue(prevFy);
+
+    // First call: current year vouchers, second call: previous year vouchers
+    repos.vouchers.findByFiscalYear
+      .mockResolvedValueOnce(extendedVouchers)
+      .mockResolvedValueOnce(prevVouchers);
+
+    const res = await app.inject({
+      method: "GET",
+      url: `/api/organizations/${orgId}/dashboard?fiscalYearId=${fyId}`,
+    });
+
+    expect(res.statusCode).toBe(200);
+    const d = res.json().data;
+
+    // Year comparison should include months from both years
+    expect(d.yearComparison.length).toBeGreaterThan(0);
+    // Previous year had revenue in March
+    const marchComp = d.yearComparison.find((m: { month: string }) => m.month === "03");
+    expect(marchComp).toBeDefined();
+    expect(marchComp.previousIncome).toBe(400); // 40000 öre = 400 kr
+
+    // Previous year result
+    expect(d.previousYearResult).toBe(400); // 400 kr net (only revenue)
+
+    // Forecast should exist (3+ months of data)
+    expect(d.forecast).not.toBeNull();
+    expect(d.forecast.dataPoints).toBe(3);
+    expect(typeof d.forecast.projectedIncome).toBe("number");
+    expect(typeof d.forecast.projectedExpense).toBe("number");
+    expect(typeof d.forecast.projectedYearEndResult).toBe("number");
+  });
+
+  it("returns null forecast with less than 2 months of data", async () => {
+    const fy = {
+      id: fyId,
+      organizationId: orgId,
+      startDate: new Date("2024-01-01"),
+      endDate: new Date("2024-12-31"),
+      isClosed: false,
+    };
+
+    // Only 1 voucher (1 month of data)
+    const singleVoucher = [vouchers[0]];
+    repos.vouchers.findByFiscalYear.mockResolvedValue(singleVoucher);
+    repos.accounts.findByOrganization.mockResolvedValue(accounts);
+    repos.fiscalYears.findById.mockResolvedValue(fy);
+    repos.fiscalYears.findPreviousByDate.mockResolvedValue(null);
+
+    const res = await app.inject({
+      method: "GET",
+      url: `/api/organizations/${orgId}/dashboard?fiscalYearId=${fyId}`,
+    });
+
+    const d = res.json().data;
+    expect(d.forecast).toBeNull();
+    expect(d.yearComparison).toHaveLength(0);
+    expect(d.previousYearResult).toBeNull();
   });
 });
