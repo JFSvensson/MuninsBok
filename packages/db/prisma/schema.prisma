@@ -242,13 +242,27 @@ model VoucherTemplate {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
+  // Recurring schedule (null = not recurring)
+  isRecurring       Boolean           @default(false) @map("is_recurring")
+  frequency         RecurringFrequency?
+  dayOfMonth        Int?              @map("day_of_month")
+  nextRunDate       DateTime?         @map("next_run_date")
+  lastRunDate       DateTime?         @map("last_run_date")
+  recurringEndDate  DateTime?         @map("recurring_end_date")
+
   // Relations
   organization Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   lines        VoucherTemplateLine[]
 
   @@unique([organizationId, name])
   @@index([organizationId])
+  @@index([isRecurring, nextRunDate])
   @@map("voucher_templates")
+}
+
+enum RecurringFrequency {
+  MONTHLY
+  QUARTERLY
 }
 
 // ============================================
