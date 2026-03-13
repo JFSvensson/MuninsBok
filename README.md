@@ -98,16 +98,13 @@ Applikationen är **produktionsklar** för självhostning av småföretag och f�
 - **Transport**: Helmet-headers, CORS-konfiguration, rate limiting med skärpt gräns på auth-endpoints
 - **Infrastruktur**: Multi-stage Docker, non-root containers, healthchecks, log-rotation, graceful shutdown
 - **Drift**: Request-timeouts, konfigurerbar anslutningspool, strukturerad loggning, audit trail
-- **Tester**: 668 enhetstester + E2E med Playwright, CI via GitHub Actions
+- **Tester**: 716 enhetstester (inkl. React Testing Library-komponenttester) + E2E med Playwright, CI via GitHub Actions
 
 Se [docs/production.md](docs/production.md) för fullständig driftsättningsguide.
 
 ---
 
 ## Framtida utveckling
-
-### Planerade förbättringar
-- Frontend-komponenttester (React Testing Library)
 
 ### Framtida funktioner
 - Verifikatimport från CSV/Excel (bankutdrag → verifikat)
@@ -145,7 +142,7 @@ Se `LICENSE`.
 | **Databas** | PostgreSQL 16+ (Prisma 7.4) |
 | **Auth** | JWT (access + refresh) med jti-baserad tokenåterkallning |
 | **Monorepo** | pnpm workspaces |
-| **Test** | Vitest |
+| **Test** | Vitest + React Testing Library |
 | **Deploy** | Docker Compose |
 
 ---
@@ -243,14 +240,14 @@ muninsbok/
 
 ## Teststatus
 
-**668 enhetstester** fördelade på 56 testfiler:
+**716 enhetstester** fördelade på 64 testfiler:
 
 | Paket | Testfiler | Tester | Vad som testas |
 |-------|-----------|--------|----------------|
 | `@muninsbok/core` | 19 | 286 | Result-typer, organisationsnummer (Luhn), kontotyper, kontoplan (BAS), räkenskapsår (max 18 mån), verifikatrader, verifikatvalidering, dokument-MIME, rapporter (råbalans, resultat, balans, moms, SKV 4700, periodrapport, kontoanalys, boksluts-förhandsvisning, grundbok, huvudbok, verifikationslista), SIE-import/export (IB/UB/RES), resultatdisposition, budget (budget vs utfall-rapport) |
 | `@muninsbok/db` | 1 | 17 | Prisma→domän-mappers (organisation, räkenskapsår, konto, verifikat, verifikatrad, dokument) |
 | `@muninsbok/api` | 27 | 285 | Zod-schemavalidering, CRUD-endpoints (organisationer, konton, verifikat, räkenskapsår, budgetar), rapporter (10 st + dashboard), boksluts-förhandsvisning, health check, Prometheus metrics, felhantering, auth (register/login/refresh/logout), httpOnly-cookie, tokenåterkallning, rollhantering, RBAC, audit-logging, rate limiting, input-sanitering, helmet, swagger |
-| `@muninsbok/web` | 7 | 80 | ApiError-klass, fetchJson, auth-storage, dark mode (ThemeContext), verifikatformulär (beräkningar, radhantering, öre-konvertering), beloppsformatering, CSV-export, assert-utils |
+| `@muninsbok/web` | 17 | 128 | ApiError-klass, fetchJson, auth-storage, dark mode (ThemeContext), verifikatformulär (beräkningar, radhantering, öre-konvertering), beloppsformatering, CSV-export, assert-utils, **komponenttester (React Testing Library)**: ThemeToggle, ConfirmDialog, DateFilter, ErrorBoundary, ReportPageTemplate, ReportSectionRows, ProtectedRoute, ToastContext, Login, NotFound |
 
 ---
 
