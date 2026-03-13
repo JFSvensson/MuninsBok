@@ -16,6 +16,8 @@ export interface VoucherTemplateLine {
   readonly description?: string;
 }
 
+export type RecurringFrequency = "MONTHLY" | "QUARTERLY";
+
 export interface VoucherTemplate {
   readonly id: string;
   readonly organizationId: string;
@@ -25,6 +27,18 @@ export interface VoucherTemplate {
   readonly description?: string;
   /** Mallrader */
   readonly lines: readonly VoucherTemplateLine[];
+  /** Whether this template runs on a schedule */
+  readonly isRecurring: boolean;
+  /** Recurring frequency (null if not recurring) */
+  readonly frequency?: RecurringFrequency;
+  /** Day of month to run (1–28) */
+  readonly dayOfMonth?: number;
+  /** Next scheduled run date */
+  readonly nextRunDate?: Date;
+  /** Last time this template was auto-executed */
+  readonly lastRunDate?: Date;
+  /** End date for recurrence */
+  readonly recurringEndDate?: Date;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
