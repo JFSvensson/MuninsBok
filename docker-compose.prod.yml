@@ -1,0 +1,16 @@
+# docker-compose.prod.yml — production override using pre-built GHCR images.
+#
+# Usage (on the production server):
+#   cp .env.docker.example .env.docker   # fill in secrets
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# The CD pipeline uses the "current" tag which it updates on each deploy.
+
+services:
+  api:
+    image: ghcr.io/jfsvensson/muninsbok-api:current
+    build: !reset null
+
+  web:
+    image: ghcr.io/jfsvensson/muninsbok-web:current
+    build: !reset null
