@@ -212,6 +212,12 @@ export function toVoucherTemplate(
     name: template.name,
     ...(template.description != null && { description: template.description }),
     lines: template.lines.map(toVoucherTemplateLine),
+    isRecurring: template.isRecurring,
+    ...(template.frequency != null && { frequency: template.frequency }),
+    ...(template.dayOfMonth != null && { dayOfMonth: template.dayOfMonth }),
+    ...(template.nextRunDate != null && { nextRunDate: template.nextRunDate }),
+    ...(template.lastRunDate != null && { lastRunDate: template.lastRunDate }),
+    ...(template.recurringEndDate != null && { recurringEndDate: template.recurringEndDate }),
     createdAt: template.createdAt,
     updatedAt: template.updatedAt,
   };
