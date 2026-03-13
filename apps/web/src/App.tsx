@@ -7,6 +7,7 @@ import { OrganizationSelect } from "./components/OrganizationSelect";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { lazy, Suspense, useState, useRef, useEffect } from "react";
 import { CreateOrganizationDialog } from "./components/CreateOrganizationDialog";
+import { SearchDialog } from "./components/SearchDialog";
 
 // Lazy-loaded page components (code-split per route)
 const Dashboard = lazy(() => import("./pages/Dashboard").then((m) => ({ default: m.Dashboard })));
@@ -101,6 +102,7 @@ function AppContent() {
   const { organization, fiscalYear, organizations } = useOrganization();
   const { logout, user } = useAuth();
   const [reportsOpen, setReportsOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const reportsRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
 
@@ -117,6 +119,18 @@ function AppContent() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  // Global search shortcut: Ctrl+K / Cmd+K
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen((prev) => !prev);
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   return (
     <div className={styles.app}>
       <a href="#main-content" className={styles.skipLink} data-testid="skip-link">
@@ -125,6 +139,16 @@ function AppContent() {
       <header className={styles.header} role="banner">
         <h1>Munins bok</h1>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          {organization && fiscalYear && (
+            <button
+              className="secondary"
+              onClick={() => setSearchOpen(true)}
+              title="Sök (Ctrl+K)"
+              style={{ whiteSpace: "nowrap", fontSize: "0.85rem" }}
+            >
+              🔍 Sök
+            </button>
+          )}
           <OrganizationSelect />
           <ThemeToggle />
           {user && (
@@ -299,6 +323,7 @@ function AppContent() {
           </div>
         </main>
       )}
+      <SearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
 }
