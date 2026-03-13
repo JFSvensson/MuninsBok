@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
