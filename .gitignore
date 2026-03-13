@@ -152,3 +152,6 @@ docker-compose.override.yml
 
 # pnpm store
 .pnpm-store/
+
+# vscode settings
+.vscode/
