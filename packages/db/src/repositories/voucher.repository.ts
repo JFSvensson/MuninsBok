@@ -15,6 +15,7 @@ const voucherInclude = {
   lines: true,
   documents: true,
   correctedByVoucher: true,
+  approvalSteps: true,
 } as const;
 
 export class VoucherRepository implements IVoucherRepository {
@@ -176,7 +177,7 @@ export class VoucherRepository implements IVoucherRepository {
     // Find the original voucher
     const original = await this.prisma.voucher.findFirst({
       where: { id: voucherId, organizationId },
-      include: { lines: true, documents: true, correctedByVoucher: true },
+      include: { lines: true, documents: true, correctedByVoucher: true, approvalSteps: true },
     });
 
     if (!original) {
