@@ -4,6 +4,8 @@ import type {
   ApiResponse,
   ApprovalRuleEntity,
   ApprovalStepEntity,
+  CustomerEntity,
+  InvoiceEntity,
   BalanceSheet,
   Budget,
   BudgetVsActualReport,
@@ -39,6 +41,10 @@ export type {
   AccountAnalysis,
   ApprovalRuleEntity,
   ApprovalStepEntity,
+  CustomerEntity,
+  InvoiceEntity,
+  InvoiceLineEntity,
+  InvoiceStatus,
   BalanceSheet,
   Budget,
   BudgetVsActualReport,
@@ -759,4 +765,92 @@ export const api = {
     fetchJson<ApiResponse<ApprovalStepEntity[]>>(
       `${API_BASE}/organizations/${orgId}/vouchers/${voucherId}/approval-steps`,
     ),
+
+  // ── Customers ─────────────────────────────────────────────
+
+  getCustomers: (orgId: string) =>
+    fetchJson<ApiResponse<CustomerEntity[]>>(`${API_BASE}/organizations/${orgId}/customers`),
+
+  getCustomer: (orgId: string, customerId: string) =>
+    fetchJson<ApiResponse<CustomerEntity>>(
+      `${API_BASE}/organizations/${orgId}/customers/${customerId}`,
+    ),
+
+  createCustomer: (orgId: string, data: Record<string, unknown>) =>
+    fetchJson<ApiResponse<CustomerEntity>>(`${API_BASE}/organizations/${orgId}/customers`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateCustomer: (orgId: string, customerId: string, data: Record<string, unknown>) =>
+    fetchJson<ApiResponse<CustomerEntity>>(
+      `${API_BASE}/organizations/${orgId}/customers/${customerId}`,
+      { method: "PUT", body: JSON.stringify(data) },
+    ),
+
+  deleteCustomer: (orgId: string, customerId: string) =>
+    fetchVoid(`${API_BASE}/organizations/${orgId}/customers/${customerId}`, {
+      method: "DELETE",
+    }),
+
+  // ── Invoices ──────────────────────────────────────────────
+
+  getInvoices: (orgId: string, status?: string) =>
+    fetchJson<ApiResponse<InvoiceEntity[]>>(
+      `${API_BASE}/organizations/${orgId}/invoices${status ? `?status=${status}` : ""}`,
+    ),
+
+  getInvoice: (orgId: string, invoiceId: string) =>
+    fetchJson<ApiResponse<InvoiceEntity>>(
+      `${API_BASE}/organizations/${orgId}/invoices/${invoiceId}`,
+    ),
+
+  getCustomerInvoices: (orgId: string, customerId: string) =>
+    fetchJson<ApiResponse<InvoiceEntity[]>>(
+      `${API_BASE}/organizations/${orgId}/customers/${customerId}/invoices`,
+    ),
+
+  createInvoice: (
+    orgId: string,
+    data: {
+      customerId: string;
+      issueDate: string;
+      dueDate: string;
+      ourReference?: string;
+      yourReference?: string;
+      notes?: string;
+      lines: {
+        description: string;
+        quantity: number;
+        unitPrice: number;
+        vatRate: number;
+        accountNumber?: string;
+      }[];
+    },
+  ) =>
+    fetchJson<ApiResponse<InvoiceEntity>>(`${API_BASE}/organizations/${orgId}/invoices`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateInvoice: (orgId: string, invoiceId: string, data: Record<string, unknown>) =>
+    fetchJson<ApiResponse<InvoiceEntity>>(
+      `${API_BASE}/organizations/${orgId}/invoices/${invoiceId}`,
+      { method: "PUT", body: JSON.stringify(data) },
+    ),
+
+  updateInvoiceStatus: (
+    orgId: string,
+    invoiceId: string,
+    data: { status: string; paidDate?: string },
+  ) =>
+    fetchJson<ApiResponse<InvoiceEntity>>(
+      `${API_BASE}/organizations/${orgId}/invoices/${invoiceId}/status`,
+      { method: "POST", body: JSON.stringify(data) },
+    ),
+
+  deleteInvoice: (orgId: string, invoiceId: string) =>
+    fetchVoid(`${API_BASE}/organizations/${orgId}/invoices/${invoiceId}`, {
+      method: "DELETE",
+    }),
 };
