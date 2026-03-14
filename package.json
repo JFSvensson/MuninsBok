@@ -20,6 +20,7 @@
     "format:check": "prettier --check .",
     "typecheck": "pnpm -r typecheck",
     "clean": "pnpm -r clean",
+    "clean:all": "npx pnpm -r --if-present clean && npx pnpm -r build",
     "db:generate": "pnpm --filter @muninsbok/db generate",
     "db:migrate": "pnpm --filter @muninsbok/db migrate",
     "db:push": "pnpm --filter @muninsbok/db push",
