@@ -10,4 +10,5 @@ export * from "./result-disposition.js";
 export * from "./budget.js";
 export * from "./document.js";
 export * from "./user.js";
+export * from "./approval.js";
 export * from "./repositories.js";
