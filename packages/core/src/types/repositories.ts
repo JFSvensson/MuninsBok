@@ -10,6 +10,15 @@ import type { Organization, CreateOrganizationInput, OrganizationError } from ".
 import type { FiscalYear, CreateFiscalYearInput, FiscalYearError } from "./fiscal-year.js";
 import type { Account, CreateAccountInput, UpdateAccountInput, AccountError } from "./account.js";
 import type { Voucher, CreateVoucherInput, VoucherError } from "./voucher.js";
+import type {
+  ApprovalRule,
+  CreateApprovalRuleInput,
+  UpdateApprovalRuleInput,
+  ApprovalRuleError,
+  ApprovalStep,
+  ApprovalDecisionInput,
+  ApprovalError,
+} from "./approval.js";
 import type { Document, CreateDocumentInput, DocumentError } from "./document.js";
 import type {
   VoucherTemplate,
@@ -206,6 +215,40 @@ export interface IRefreshTokenRepository {
   revokeAllByUserId(userId: string): Promise<void>;
   /** Delete expired tokens (housekeeping). */
   cleanupExpired(): Promise<number>;
+}
+
+// ── Approval Rule ───────────────────────────────────────────
+
+export interface IApprovalRuleRepository {
+  findByOrganization(organizationId: string): Promise<ApprovalRule[]>;
+  findById(id: string, organizationId: string): Promise<ApprovalRule | null>;
+  /** Find rules whose amount range matches the given voucher total. */
+  findMatchingRules(organizationId: string, totalAmount: number): Promise<ApprovalRule[]>;
+  create(
+    organizationId: string,
+    input: CreateApprovalRuleInput,
+  ): Promise<Result<ApprovalRule, ApprovalRuleError>>;
+  update(
+    id: string,
+    organizationId: string,
+    input: UpdateApprovalRuleInput,
+  ): Promise<Result<ApprovalRule, ApprovalRuleError>>;
+  delete(id: string, organizationId: string): Promise<boolean>;
+}
+
+// ── Approval Step ───────────────────────────────────────────
+
+export interface IApprovalStepRepository {
+  findByVoucher(voucherId: string): Promise<ApprovalStep[]>;
+  findById(id: string): Promise<ApprovalStep | null>;
+  /** Find pending steps assigned to (or available for) a user's role. */
+  findPendingByOrganization(organizationId: string): Promise<ApprovalStep[]>;
+  createMany(
+    voucherId: string,
+    steps: readonly { stepOrder: number; requiredRole: string }[],
+  ): Promise<ApprovalStep[]>;
+  /** Record an approval / rejection decision. */
+  decide(input: ApprovalDecisionInput): Promise<Result<ApprovalStep, ApprovalError>>;
 }
 
 // ── Budget ──────────────────────────────────────────────────
