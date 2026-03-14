@@ -2,12 +2,34 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useOrganization } from "../context/OrganizationContext";
+import { useLocale } from "../context/LocaleContext";
 import { defined } from "../utils/assert";
-import { api } from "../api";
+import { api, type VoucherStatus } from "../api";
 import { formatAmount, formatDate, oreToKronor } from "../utils/formatting";
+
+const STATUS_KEY: Record<
+  VoucherStatus,
+  | "approval.statusDraft"
+  | "approval.statusPending"
+  | "approval.statusApproved"
+  | "approval.statusRejected"
+> = {
+  DRAFT: "approval.statusDraft",
+  PENDING: "approval.statusPending",
+  APPROVED: "approval.statusApproved",
+  REJECTED: "approval.statusRejected",
+};
+
+const STATUS_BADGE_CLASS: Record<VoucherStatus, string> = {
+  DRAFT: "badge",
+  PENDING: "badge badge-warning",
+  APPROVED: "badge badge-success",
+  REJECTED: "badge badge-danger",
+};
 
 export function VoucherList() {
   const { organization, fiscalYear } = useOrganization();
+  const { t } = useLocale();
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -116,6 +138,7 @@ export function VoucherList() {
             <th scope="col">Nr</th>
             <th scope="col">Datum</th>
             <th scope="col">Beskrivning</th>
+            <th scope="col">Status</th>
             <th scope="col" className="text-right">
               Belopp
             </th>
@@ -152,6 +175,14 @@ export function VoucherList() {
                       Rättelse
                     </span>
                   )}
+                </td>
+                <td>
+                  <span
+                    className={STATUS_BADGE_CLASS[voucher.status]}
+                    style={{ fontSize: "0.75em" }}
+                  >
+                    {t(STATUS_KEY[voucher.status])}
+                  </span>
                 </td>
                 <td className="text-right amount">{formatAmount(oreToKronor(totalOre))} kr</td>
               </tr>
