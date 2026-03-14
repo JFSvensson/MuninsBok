@@ -55,6 +55,40 @@ export interface Voucher {
   createdBy?: string;
   correctsVoucherId?: string;
   correctedByVoucherId?: string;
+  status: VoucherStatus;
+  submittedAt?: string;
+  submittedByUserId?: string;
+  approvalSteps?: ApprovalStepEntity[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type VoucherStatus = "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
+
+export type ApprovalStepStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+export interface ApprovalStepEntity {
+  id: string;
+  voucherId: string;
+  stepOrder: number;
+  requiredRole: MemberRole;
+  approverUserId?: string;
+  status: ApprovalStepStatus;
+  comment?: string;
+  decidedAt?: string;
+  createdAt: string;
+}
+
+export interface ApprovalRuleEntity {
+  id: string;
+  organizationId: string;
+  name: string;
+  /** Min amount in öre */
+  minAmount: number;
+  /** Max amount in öre, null = no upper limit */
+  maxAmount: number | null;
+  requiredRole: MemberRole;
+  stepOrder: number;
   createdAt: string;
   updatedAt: string;
 }
