@@ -30,6 +30,7 @@ describe("Dashboard routes", () => {
       number: 1,
       date: new Date("2024-03-01"),
       description: "Medlemsavgift",
+      status: "DRAFT",
       lines: [
         { id: "l1", voucherId: "v1", accountNumber: "1930", debit: 50000, credit: 0 },
         { id: "l2", voucherId: "v1", accountNumber: "3000", debit: 0, credit: 50000 },
@@ -45,6 +46,7 @@ describe("Dashboard routes", () => {
       number: 2,
       date: new Date("2024-04-01"),
       description: "Hyra",
+      status: "DRAFT",
       lines: [
         { id: "l3", voucherId: "v2", accountNumber: "5010", debit: 20000, credit: 0 },
         { id: "l4", voucherId: "v2", accountNumber: "1930", debit: 0, credit: 20000 },
@@ -202,6 +204,7 @@ describe("Dashboard routes", () => {
         number: 3,
         date: new Date("2024-05-01"),
         description: "Maj intäkt",
+        status: "DRAFT",
         lines: [
           { id: "l5", voucherId: "v3", accountNumber: "1930", debit: 30000, credit: 0 },
           { id: "l6", voucherId: "v3", accountNumber: "3000", debit: 0, credit: 30000 },
@@ -220,6 +223,7 @@ describe("Dashboard routes", () => {
         number: 1,
         date: new Date("2023-03-15"),
         description: "Förra årets intäkt",
+        status: "DRAFT",
         lines: [
           { id: "pl1", voucherId: "pv1", accountNumber: "1930", debit: 40000, credit: 0 },
           { id: "pl2", voucherId: "pv1", accountNumber: "3000", debit: 0, credit: 40000 },
