@@ -32,6 +32,13 @@ import type {
 } from "./result-disposition.js";
 import type { Budget, CreateBudgetInput, UpdateBudgetInput, BudgetError } from "./budget.js";
 import type {
+  Customer,
+  CreateCustomerInput,
+  UpdateCustomerInput,
+  CustomerError,
+} from "./customer.js";
+import type { Invoice, CreateInvoiceInput, UpdateInvoiceInput, InvoiceError } from "./invoice.js";
+import type {
   User,
   CreateUserInput,
   UserError,
@@ -263,5 +270,46 @@ export interface IBudgetRepository {
     organizationId: string,
     input: UpdateBudgetInput,
   ): Promise<Result<Budget, BudgetError>>;
+  delete(id: string, organizationId: string): Promise<boolean>;
+}
+
+// ── Customer ────────────────────────────────────────────────
+
+export interface ICustomerRepository {
+  findByOrganization(organizationId: string): Promise<Customer[]>;
+  findById(id: string, organizationId: string): Promise<Customer | null>;
+  getNextCustomerNumber(organizationId: string): Promise<number>;
+  create(
+    organizationId: string,
+    input: CreateCustomerInput,
+  ): Promise<Result<Customer, CustomerError>>;
+  update(
+    id: string,
+    organizationId: string,
+    input: UpdateCustomerInput,
+  ): Promise<Result<Customer, CustomerError>>;
+  delete(id: string, organizationId: string): Promise<boolean>;
+}
+
+// ── Invoice ─────────────────────────────────────────────────
+
+export interface IInvoiceRepository {
+  findByOrganization(organizationId: string): Promise<Invoice[]>;
+  findById(id: string, organizationId: string): Promise<Invoice | null>;
+  findByCustomer(customerId: string, organizationId: string): Promise<Invoice[]>;
+  findByStatus(organizationId: string, status: string): Promise<Invoice[]>;
+  getNextInvoiceNumber(organizationId: string): Promise<number>;
+  create(organizationId: string, input: CreateInvoiceInput): Promise<Result<Invoice, InvoiceError>>;
+  update(
+    id: string,
+    organizationId: string,
+    input: UpdateInvoiceInput,
+  ): Promise<Result<Invoice, InvoiceError>>;
+  updateStatus(
+    id: string,
+    organizationId: string,
+    status: string,
+    extra?: { paidDate?: Date; sentAt?: Date; voucherId?: string },
+  ): Promise<Result<Invoice, InvoiceError>>;
   delete(id: string, organizationId: string): Promise<boolean>;
 }
