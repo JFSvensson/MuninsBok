@@ -31,6 +31,7 @@ describe("Search routes", () => {
       number: 1,
       date: new Date("2024-03-01"),
       description: "Medlemsavgift från Johan",
+      status: "DRAFT",
       lines: [
         { id: "l1", voucherId: "v1", accountNumber: "1930", debit: 50000, credit: 0 },
         { id: "l2", voucherId: "v1", accountNumber: "3000", debit: 0, credit: 50000 },
@@ -46,6 +47,7 @@ describe("Search routes", () => {
       number: 2,
       date: new Date("2024-04-01"),
       description: "Hyra kontor",
+      status: "DRAFT",
       lines: [
         { id: "l3", voucherId: "v2", accountNumber: "5010", debit: 20000, credit: 0 },
         { id: "l4", voucherId: "v2", accountNumber: "1930", debit: 0, credit: 20000 },
@@ -61,6 +63,7 @@ describe("Search routes", () => {
       number: 3,
       date: new Date("2024-05-15"),
       description: "Försäljning av varor",
+      status: "DRAFT",
       lines: [
         { id: "l5", voucherId: "v3", accountNumber: "1930", debit: 75000, credit: 0 },
         { id: "l6", voucherId: "v3", accountNumber: "3000", debit: 0, credit: 75000 },
@@ -205,6 +208,7 @@ describe("Search routes", () => {
       number: i + 1,
       date: new Date("2024-01-01"),
       description: `Test verifikat ${i}`,
+      status: "DRAFT" as const,
       lines: [
         { id: `l${i}a`, voucherId: `v${i}`, accountNumber: "1930", debit: 10000, credit: 0 },
         { id: `l${i}b`, voucherId: `v${i}`, accountNumber: "3000", debit: 0, credit: 10000 },
