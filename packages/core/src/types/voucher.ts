@@ -1,4 +1,5 @@
 import type { VoucherLine, CreateVoucherLineInput } from "./voucher-line.js";
+import type { VoucherStatus, ApprovalStep } from "./approval.js";
 
 /**
  * Voucher - ett verifikat/bokföringspost.
@@ -23,6 +24,11 @@ export interface Voucher {
   readonly correctsVoucherId?: string;
   /** ID på verifikatet som rättar detta verifikat */
   readonly correctedByVoucherId?: string;
+  /** Attestflöde: DRAFT → PENDING → APPROVED / REJECTED */
+  readonly status: VoucherStatus;
+  readonly submittedAt?: Date;
+  readonly submittedByUserId?: string;
+  readonly approvalSteps?: readonly ApprovalStep[];
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
