@@ -30,6 +30,7 @@ model Organization {
   members     OrganizationMember[]
   voucherTemplates VoucherTemplate[]
   budgets     Budget[]
+  approvalRules ApprovalRule[]
 
   @@map("organizations")
 }
@@ -47,8 +48,9 @@ model User {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   // Relations
-  memberships   OrganizationMember[]
-  refreshTokens RefreshToken[]
+  memberships    OrganizationMember[]
+  refreshTokens  RefreshToken[]
+  approvalSteps  ApprovalStep[]
 
   @@map("users")
 }
@@ -172,15 +174,22 @@ model Voucher {
   correctsVoucher     Voucher? @relation("VoucherCorrection", fields: [correctsVoucherId], references: [id])
   correctedByVoucher  Voucher? @relation("VoucherCorrection")
 
+  // Approval workflow
+  status              VoucherStatus @default(DRAFT)
+  submittedAt         DateTime?     @map("submitted_at")
+  submittedByUserId   String?       @map("submitted_by_user_id")
+
   // Relations
   organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   fiscalYear   FiscalYear    @relation(fields: [fiscalYearId], references: [id], onDelete: Cascade)
   lines        VoucherLine[]
   documents    Document[]
+  approvalSteps ApprovalStep[]
 
   @@unique([fiscalYearId, number])
   @@index([organizationId])
   @@index([date])
+  @@index([organizationId, status])
   @@map("vouchers")
 }
 
@@ -324,4 +333,68 @@ model BudgetEntry {
   @@unique([budgetId, accountNumber, month])
   @@index([budgetId])
   @@map("budget_entries")
+}
+
+// ============================================
+// VOUCHER STATUS
+// ============================================
+
+enum VoucherStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ApprovalStepStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ============================================
+// APPROVAL RULE
+// ============================================
+
+model ApprovalRule {
+  id             String     @id @default(cuid())
+  organizationId String     @map("organization_id")
+  name           String
+  minAmount      Int        @map("min_amount")
+  maxAmount      Int?       @map("max_amount")
+  requiredRole   MemberRole @map("required_role")
+  stepOrder      Int        @map("step_order")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("approval_rules")
+}
+
+// ============================================
+// APPROVAL STEP
+// ============================================
+
+model ApprovalStep {
+  id              String             @id @default(cuid())
+  voucherId       String             @map("voucher_id")
+  stepOrder       Int                @map("step_order")
+  requiredRole    MemberRole         @map("required_role")
+  approverUserId  String?            @map("approver_user_id")
+  status          ApprovalStepStatus @default(PENDING)
+  comment         String?
+  decidedAt       DateTime?          @map("decided_at")
+  createdAt       DateTime           @default(now()) @map("created_at")
+
+  // Relations
+  voucher  Voucher @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  approver User?   @relation(fields: [approverUserId], references: [id])
+
+  @@index([voucherId])
+  @@index([approverUserId])
+  @@index([status])
+  @@map("approval_steps")
 }
