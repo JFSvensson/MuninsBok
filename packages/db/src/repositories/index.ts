@@ -7,3 +7,5 @@ export { FiscalYearRepository } from "./fiscal-year.repository.js";
 export { DocumentRepository } from "./document.repository.js";
 export { UserRepository } from "./user.repository.js";
 export { RefreshTokenRepository } from "./refresh-token.repository.js";
+export { ApprovalRuleRepository } from "./approval-rule.repository.js";
+export { ApprovalStepRepository } from "./approval-step.repository.js";
