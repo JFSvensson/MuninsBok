@@ -166,6 +166,14 @@ export function createMockApprovalStepRepo(): MockedRepo<IApprovalStepRepository
 }
 
 interface MockPrismaModel {
+  findUnique: ReturnType<typeof vi.fn>;
+  findFirst: ReturnType<typeof vi.fn>;
+  findMany: ReturnType<typeof vi.fn>;
+  create: ReturnType<typeof vi.fn>;
+  update: ReturnType<typeof vi.fn>;
+  upsert: ReturnType<typeof vi.fn>;
+  delete: ReturnType<typeof vi.fn>;
+  count: ReturnType<typeof vi.fn>;
   [method: string]: ReturnType<typeof vi.fn>;
 }
 
@@ -204,9 +212,36 @@ export function createMockDocumentStorage(): MockedRepo<IDocumentStorage> {
 
 export function createMockRepos(): MockRepos {
   const prisma: MockPrisma = {
-    organization: { findUnique: vi.fn() },
-    fiscalYear: { findFirst: vi.fn() },
-    voucher: { findFirst: vi.fn(), update: vi.fn() },
+    organization: {
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
+    fiscalYear: {
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
+    voucher: {
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
     $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]),
     $transaction: vi.fn(),
   };
