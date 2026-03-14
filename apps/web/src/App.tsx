@@ -76,6 +76,12 @@ const AccountAnalysis = lazy(() =>
   import("./pages/AccountAnalysis").then((m) => ({ default: m.AccountAnalysis })),
 );
 const Members = lazy(() => import("./pages/Members").then((m) => ({ default: m.Members })));
+const ApprovalRules = lazy(() =>
+  import("./pages/ApprovalRules").then((m) => ({ default: m.ApprovalRules })),
+);
+const PendingApprovals = lazy(() =>
+  import("./pages/PendingApprovals").then((m) => ({ default: m.PendingApprovals })),
+);
 const NotFound = lazy(() => import("./pages/NotFound").then((m) => ({ default: m.NotFound })));
 const Login = lazy(() => import("./pages/Login").then((m) => ({ default: m.Login })));
 const Register = lazy(() => import("./pages/Register").then((m) => ({ default: m.Register })));
@@ -281,6 +287,8 @@ function AppContent() {
             <NavLink to="/result-disposition">Disposition</NavLink>
             <NavLink to="/year-end-summary">Sammanställning</NavLink>
             <NavLink to="/members">{t("nav.members")}</NavLink>
+            <NavLink to="/approval-rules">{t("nav.approval")}</NavLink>
+            <NavLink to="/pending-approvals">{t("approval.pending")}</NavLink>
           </nav>
 
           <main id="main-content">
@@ -316,6 +324,8 @@ function AppContent() {
                 <Route path="/result-disposition" element={<ResultDisposition />} />
                 <Route path="/year-end-summary" element={<YearEndSummary />} />
                 <Route path="/members" element={<Members />} />
+                <Route path="/approval-rules" element={<ApprovalRules />} />
+                <Route path="/pending-approvals" element={<PendingApprovals />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
