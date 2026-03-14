@@ -169,6 +169,12 @@ describe("toVoucher", () => {
     number: 1,
     date: new Date("2025-03-15"),
     description: "Test verifikat",
+    createdBy: null,
+    correctsVoucherId: null,
+    correctedByVoucher: null,
+    status: "DRAFT",
+    submittedAt: null,
+    submittedByUserId: null,
     lines: [
       {
         id: "line-1",
@@ -192,6 +198,7 @@ describe("toVoucher", () => {
       },
     ],
     documents: [{ id: "doc-1" }, { id: "doc-2" }],
+    approvalSteps: [],
     createdAt: now,
     updatedAt: now,
   };
