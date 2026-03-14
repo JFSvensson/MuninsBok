@@ -17,6 +17,8 @@ import type {
   IDocumentStorage,
   IUserRepository,
   IRefreshTokenRepository,
+  IApprovalRuleRepository,
+  IApprovalStepRepository,
 } from "@muninsbok/core/types";
 
 type MockedRepo<T> = {
@@ -142,6 +144,27 @@ export function createMockBudgetRepo(): MockedRepo<IBudgetRepository> {
   } as MockedRepo<IBudgetRepository>;
 }
 
+export function createMockApprovalRuleRepo(): MockedRepo<IApprovalRuleRepository> {
+  return {
+    findByOrganization: vi.fn().mockResolvedValue([]),
+    findById: vi.fn(),
+    findMatchingRules: vi.fn().mockResolvedValue([]),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+  } as MockedRepo<IApprovalRuleRepository>;
+}
+
+export function createMockApprovalStepRepo(): MockedRepo<IApprovalStepRepository> {
+  return {
+    findByVoucher: vi.fn().mockResolvedValue([]),
+    findById: vi.fn(),
+    findPendingByOrganization: vi.fn().mockResolvedValue([]),
+    createMany: vi.fn().mockResolvedValue([]),
+    decide: vi.fn(),
+  } as MockedRepo<IApprovalStepRepository>;
+}
+
 interface MockPrismaModel {
   [method: string]: ReturnType<typeof vi.fn>;
 }
@@ -165,6 +188,8 @@ export interface MockRepos {
   documents: MockedRepo<IDocumentRepository>;
   users: MockedRepo<IUserRepository>;
   refreshTokens: MockedRepo<IRefreshTokenRepository>;
+  approvalRules: MockedRepo<IApprovalRuleRepository>;
+  approvalSteps: MockedRepo<IApprovalStepRepository>;
   prisma: MockPrisma;
 }
 
@@ -181,7 +206,7 @@ export function createMockRepos(): MockRepos {
   const prisma: MockPrisma = {
     organization: { findUnique: vi.fn() },
     fiscalYear: { findFirst: vi.fn() },
-    voucher: { findFirst: vi.fn() },
+    voucher: { findFirst: vi.fn(), update: vi.fn() },
     $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]),
     $transaction: vi.fn(),
   };
@@ -201,6 +226,8 @@ export function createMockRepos(): MockRepos {
     documents: createMockDocumentRepo(),
     users: createMockUserRepo(),
     refreshTokens: createMockRefreshTokenRepo(),
+    approvalRules: createMockApprovalRuleRepo(),
+    approvalSteps: createMockApprovalStepRepo(),
     prisma,
   };
 }
