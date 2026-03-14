@@ -174,3 +174,69 @@ export interface Budget {
   createdAt: string;
   updatedAt: string;
 }
+
+// ── Customer ────────────────────────────────────────────────
+
+export interface CustomerEntity {
+  id: string;
+  organizationId: string;
+  customerNumber: number;
+  name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  postalCode?: string;
+  city?: string;
+  country?: string;
+  orgNumber?: string;
+  vatNumber?: string;
+  reference?: string;
+  paymentTermDays: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ── Invoice ─────────────────────────────────────────────────
+
+export type InvoiceStatus = "DRAFT" | "SENT" | "PAID" | "OVERDUE" | "CANCELLED" | "CREDITED";
+
+export interface InvoiceLineEntity {
+  id: string;
+  invoiceId: string;
+  description: string;
+  /** Quantity × 100 (e.g. 100 = 1.00) */
+  quantity: number;
+  /** Unit price in öre */
+  unitPrice: number;
+  /** VAT rate × 100 (e.g. 2500 = 25%) */
+  vatRate: number;
+  /** Line amount excl. VAT in öre */
+  amount: number;
+  accountNumber?: string;
+}
+
+export interface InvoiceEntity {
+  id: string;
+  organizationId: string;
+  customerId: string;
+  invoiceNumber: number;
+  status: InvoiceStatus;
+  issueDate: string;
+  dueDate: string;
+  paidDate?: string;
+  ourReference?: string;
+  yourReference?: string;
+  notes?: string;
+  /** Subtotal excl. VAT in öre */
+  subtotal: number;
+  /** VAT in öre */
+  vatAmount: number;
+  /** Total incl. VAT in öre */
+  totalAmount: number;
+  voucherId?: string;
+  creditedInvoiceId?: string;
+  sentAt?: string;
+  lines: InvoiceLineEntity[];
+  createdAt: string;
+  updatedAt: string;
+}
