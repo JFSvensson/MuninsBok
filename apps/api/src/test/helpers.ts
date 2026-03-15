@@ -22,6 +22,7 @@ import type {
   ICustomerRepository,
   IInvoiceRepository,
 } from "@muninsbok/core/types";
+import type { IReceiptOcrService, ReceiptOcrInput } from "../services/receipt-ocr.js";
 
 type MockedRepo<T> = {
   [K in keyof T]: T[K] extends (...args: infer _Args) => infer _Return
@@ -240,6 +241,27 @@ export function createMockDocumentStorage(): MockedRepo<IDocumentStorage> {
   };
 }
 
+export function createMockReceiptOcr(): MockedRepo<IReceiptOcrService> {
+  return {
+    analyze: vi.fn().mockImplementation(async (input: ReceiptOcrInput) => ({
+      sourceFilename: input.filename,
+      mimeType: input.mimeType,
+      extractedText: "ICA Nara\nDatum 2025-02-01\nSumma 123,45",
+      confidence: 82,
+      merchantName: "ICA Nara",
+      transactionDate: "2025-02-01",
+      totalAmountOre: 12345,
+      currency: "SEK",
+      suggestedDescription: "Kvitto ICA Nara",
+      prefillLines: [
+        { debit: 12345, credit: 0, description: "Kvitto ICA Nara" },
+        { debit: 0, credit: 12345, description: "Betalning" },
+      ],
+      warnings: [],
+    })),
+  } as MockedRepo<IReceiptOcrService>;
+}
+
 export function createMockRepos(): MockRepos {
   const prisma: MockPrisma = {
     organization: {
@@ -307,13 +329,16 @@ export async function buildTestApp(
   app: FastifyInstance;
   repos: MockRepos;
   documentStorage: MockedRepo<IDocumentStorage>;
+  receiptOcr: MockedRepo<IReceiptOcrService>;
 }> {
   const repos = mocks ?? createMockRepos();
   const documentStorage = createMockDocumentStorage();
+  const receiptOcr = createMockReceiptOcr();
   const app = await buildApp({
     repos: repos as unknown as Repositories,
     documentStorage: documentStorage as unknown as IDocumentStorage,
+    receiptOcr: receiptOcr as unknown as IReceiptOcrService,
     ...(options?.jwtSecret != null && { jwtSecret: options.jwtSecret }),
   });
-  return { app, repos, documentStorage };
+  return { app, repos, documentStorage, receiptOcr };
 }
