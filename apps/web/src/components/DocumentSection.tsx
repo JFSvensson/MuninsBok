@@ -47,6 +47,11 @@ export function DocumentSection({ organizationId, voucherId }: DocumentSectionPr
     queryFn: () => api.getVoucherDocuments(organizationId, voucherId),
   });
 
+  const { data: ocrStatusData } = useQuery({
+    queryKey: ["receipt-ocr-status", organizationId],
+    queryFn: () => api.getReceiptOcrStatus(organizationId),
+  });
+
   const uploadMutation = useMutation({
     mutationFn: (file: File) => api.uploadDocument(organizationId, voucherId, file),
     onSuccess: () => {
@@ -105,10 +110,15 @@ export function DocumentSection({ organizationId, voucherId }: DocumentSectionPr
   }
 
   const documents = data?.data ?? [];
+  const ocrStatus = ocrStatusData?.data;
+  const pdfStatusLabel = ocrStatus == null ? "okand" : ocrStatus.pdfEnabled ? "aktiv" : "inaktiv";
 
   return (
     <div className="mt-2">
       <h3>Bifogade dokument</h3>
+      <p className="text-muted" style={{ marginTop: "0.25rem", marginBottom: "0.5rem" }}>
+        PDF-OCR: {pdfStatusLabel}
+      </p>
 
       {isLoading && <div className="loading">Laddar dokument...</div>}
 
