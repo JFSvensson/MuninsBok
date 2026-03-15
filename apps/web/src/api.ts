@@ -24,6 +24,7 @@ import type {
   OrgMemberWithUser,
   PaginatedApiResponse,
   PeriodReportResponse,
+  ReceiptOcrAnalysis,
   ResultDispositionPreviewResponse,
   SearchResponse,
   SkVatDeclarationResponse,
@@ -66,6 +67,7 @@ export type {
   PeriodReportResponse,
   PeriodRowResponse,
   PeriodType,
+  ReceiptOcrAnalysis,
   ReportSection,
   ResultDispositionPreviewResponse,
   SearchResponse,
@@ -460,6 +462,16 @@ export const api = {
       { method: "POST", body: formData },
     );
     return response.json() as Promise<ApiResponse<DocumentMeta>>;
+  },
+
+  analyzeReceipt: async (orgId: string, file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await fetchWithAuth(`${API_BASE}/organizations/${orgId}/receipt-ocr/analyze`, {
+      method: "POST",
+      body: formData,
+    });
+    return response.json() as Promise<ApiResponse<ReceiptOcrAnalysis>>;
   },
 
   downloadDocumentUrl: (orgId: string, documentId: string) =>
