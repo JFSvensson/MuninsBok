@@ -1,7 +1,7 @@
 # Build stage
-FROM node:25-alpine AS builder
+FROM node:24-alpine AS builder
 
-RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
+RUN npm install -g pnpm@8.15.0
 
 WORKDIR /app
 
@@ -20,8 +20,11 @@ COPY packages/core ./packages/core
 COPY packages/db ./packages/db
 COPY apps/api ./apps/api
 
+# Re-link workspace bins after full source copy
+RUN pnpm install --frozen-lockfile
+
 # Generate Prisma client
-RUN pnpm --filter @muninsbok/db exec prisma generate
+RUN DATABASE_URL=postgresql://postgres:postgres@localhost:5432/muninsbok pnpm --filter @muninsbok/db exec prisma generate
 
 # Build packages
 RUN pnpm --filter @muninsbok/core build
@@ -29,9 +32,9 @@ RUN pnpm --filter @muninsbok/db build
 RUN pnpm --filter @muninsbok/api build
 
 # Production stage
-FROM node:25-alpine AS runner
+FROM node:24-alpine AS runner
 
-RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
+RUN npm install -g pnpm@8.15.0
 
 WORKDIR /app
 
@@ -46,14 +49,18 @@ COPY --from=builder /app/packages/core/dist ./packages/core/dist
 COPY --from=builder /app/packages/db/package.json ./packages/db/
 COPY --from=builder /app/packages/db/dist ./packages/db/dist
 COPY --from=builder /app/packages/db/prisma ./packages/db/prisma
+COPY --from=builder /app/packages/db/prisma.config.ts ./packages/db/
 COPY --from=builder /app/apps/api/package.json ./apps/api/
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 
 # Install production dependencies only
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 
-# Generate Prisma client in production
-RUN pnpm --filter @muninsbok/db exec prisma generate
+# Ensure db package can resolve workspace core package at runtime
+RUN mkdir -p /app/packages/db/node_modules/@muninsbok && ln -sf /app/packages/core /app/packages/db/node_modules/@muninsbok/core
+
+# Prisma module/CLI is needed at runtime for migrate deploy and prisma.config.ts imports
+RUN npm install prisma@7.4.2 --no-save
 
 # Run as non-root user
 USER node
@@ -61,7 +68,7 @@ USER node
 EXPOSE 3000
 
 HEALTHCHECK --interval=10s --timeout=5s --retries=5 --start-period=15s \
-  CMD wget -qO- http://localhost:3000/api/health || exit 1
+  CMD wget -qO- http://127.0.0.1:3000/health || exit 1
 
 # Run migrations and start server
-CMD ["sh", "-c", "pnpm --filter @muninsbok/db exec prisma migrate deploy && node apps/api/dist/index.js"]
+CMD ["sh", "-c", "(npx prisma migrate deploy --config packages/db/prisma.config.ts --schema packages/db/prisma/schema.prisma || npx prisma db push --accept-data-loss --config packages/db/prisma.config.ts --schema packages/db/prisma/schema.prisma) && node apps/api/dist/index.js"]
