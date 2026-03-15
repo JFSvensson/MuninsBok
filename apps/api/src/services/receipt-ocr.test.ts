@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { parseReceiptText, supportsReceiptOcrMimeType } from "./receipt-ocr.js";
+import {
+  TesseractReceiptOcrService,
+  parseReceiptText,
+  supportsReceiptOcrMimeType,
+} from "./receipt-ocr.js";
 
 describe("receipt OCR parsing", () => {
   it("extracts merchant, date and total from common Swedish receipt text", () => {
@@ -35,7 +39,29 @@ describe("receipt OCR parsing", () => {
   });
 
   it("supports OCR only for image formats in the first version", () => {
-    expect(supportsReceiptOcrMimeType("image/jpeg")).toBe(true);
-    expect(supportsReceiptOcrMimeType("application/pdf")).toBe(false);
+    expect(supportsReceiptOcrMimeType("image/jpeg", { pdfEnabled: false })).toBe(true);
+    expect(supportsReceiptOcrMimeType("application/pdf", { pdfEnabled: false })).toBe(false);
+    expect(supportsReceiptOcrMimeType("application/pdf", { pdfEnabled: true })).toBe(true);
+  });
+
+  it("rejects PDF OCR when feature flag is disabled", async () => {
+    const previous = process.env["OCR_ENABLE_PDF"];
+    process.env["OCR_ENABLE_PDF"] = "false";
+    const service = new TesseractReceiptOcrService();
+
+    try {
+      await expect(
+        service.analyze({
+          buffer: new Uint8Array([37, 80, 68, 70]),
+          filename: "test.pdf",
+          mimeType: "application/pdf",
+        }),
+      ).rejects.toMatchObject({
+        code: "OCR_PDF_DISABLED",
+      });
+    } finally {
+      if (previous === undefined) delete process.env["OCR_ENABLE_PDF"];
+      else process.env["OCR_ENABLE_PDF"] = previous;
+    }
   });
 });
