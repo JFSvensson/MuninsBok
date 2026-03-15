@@ -7,7 +7,7 @@ import { useVoucherForm } from "../hooks/useVoucherForm";
 import { api } from "../api";
 import { formatAmount } from "../utils/formatting";
 
-const OCR_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const OCR_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 
 function formatOreAmount(ore: number | undefined): string {
   if (ore == null) return "-";
@@ -86,7 +86,7 @@ export function VoucherCreate() {
 
   const handleReceiptAnalyze = () => {
     if (!receiptFile) {
-      setReceiptError("Valj en kvittobild i JPG-, PNG- eller WebP-format for OCR.");
+      setReceiptError("Valj en kvittofil i JPG-, PNG-, WebP- eller PDF-format for OCR.");
       return;
     }
 
@@ -128,20 +128,20 @@ export function VoucherCreate() {
           <div>
             <h3 style={{ margin: 0 }}>Kvitto-tolkning (OCR)</h3>
             <p className="text-muted" style={{ margin: "0.35rem 0 0" }}>
-              Ladda upp en kvittobild for att fa forslag pa datum, beskrivning och belopp.
+              Ladda upp en kvittofil for att fa forslag pa datum, beskrivning och belopp.
             </p>
           </div>
           <div className="flex gap-1" style={{ flexWrap: "wrap" }}>
             <input
               ref={receiptFileInputRef}
               type="file"
-              accept=".jpg,.jpeg,.png,.webp"
+              accept=".jpg,.jpeg,.png,.webp,.pdf"
               onChange={(e) => {
                 const file = e.target.files?.[0] ?? null;
                 if (file && !OCR_ALLOWED_TYPES.includes(file.type)) {
                   setReceiptFile(null);
                   setReceiptNotice(null);
-                  setReceiptError("OCR stodjer just nu bara JPG, PNG och WebP.");
+                  setReceiptError("OCR stodjer just nu JPG, PNG, WebP och PDF.");
                   return;
                 }
 
