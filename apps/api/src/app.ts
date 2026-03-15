@@ -11,6 +11,7 @@ import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import type { IDocumentStorage } from "@muninsbok/core/types";
 import { AppError } from "./utils/app-error.js";
+import type { IReceiptOcrService } from "./services/receipt-ocr.js";
 import requestLogging from "./plugins/request-logging.js";
 import auditLogging from "./plugins/audit-logging.js";
 import jwtAuth from "./plugins/jwt-auth.js";
@@ -40,6 +41,7 @@ import "./plugins/org-scope.js";
 export interface BuildAppOptions {
   repos: Repositories;
   documentStorage: IDocumentStorage;
+  receiptOcr: IReceiptOcrService;
   fastifyOptions?: FastifyServerOptions;
   corsOrigin?: string;
   apiKey?: string;
@@ -178,6 +180,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   // Decorate with repositories so routes can access them
   fastify.decorate("repos", options.repos);
   fastify.decorate("documentStorage", options.documentStorage);
+  fastify.decorate("receiptOcr", options.receiptOcr);
 
   // Auth routes (register, login, refresh, me)
   if (options.jwtSecret) {
@@ -273,5 +276,6 @@ declare module "fastify" {
   interface FastifyInstance {
     repos: Repositories;
     documentStorage: IDocumentStorage;
+    receiptOcr: IReceiptOcrService;
   }
 }
