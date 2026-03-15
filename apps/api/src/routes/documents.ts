@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import multipart from "@fastify/multipart";
 import { isAllowedMimeType } from "@muninsbok/core/types";
 import { AppError } from "../utils/app-error.js";
+import { isPdfOcrEnabled } from "../services/receipt-ocr.js";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
@@ -77,6 +78,21 @@ export async function documentRoutes(fastify: FastifyInstance) {
     });
 
     return { data: analysis };
+  });
+
+  fastify.get<{ Params: { orgId: string } }>("/:orgId/receipt-ocr/status", async () => {
+    const pdfEnabled = isPdfOcrEnabled();
+    return {
+      data: {
+        pdfEnabled,
+        supportedMimeTypes: [
+          "image/jpeg",
+          "image/png",
+          "image/webp",
+          ...(pdfEnabled ? ["application/pdf"] : []),
+        ],
+      },
+    };
   });
 
   // Download document
