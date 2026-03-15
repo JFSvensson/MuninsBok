@@ -107,6 +107,28 @@ describe("Document routes", () => {
     });
   });
 
+  describe("GET /:orgId/receipt-ocr/status", () => {
+    it("reports PDF OCR as enabled when feature flag is set", async () => {
+      const previous = process.env["OCR_ENABLE_PDF"];
+      process.env["OCR_ENABLE_PDF"] = "true";
+
+      try {
+        const res = await app.inject({
+          method: "GET",
+          url: `/api/organizations/${orgId}/receipt-ocr/status`,
+        });
+
+        expect(res.statusCode).toBe(200);
+        const body = res.json();
+        expect(body.data.pdfEnabled).toBe(true);
+        expect(body.data.supportedMimeTypes).toContain("application/pdf");
+      } finally {
+        if (previous === undefined) delete process.env["OCR_ENABLE_PDF"];
+        else process.env["OCR_ENABLE_PDF"] = previous;
+      }
+    });
+  });
+
   describe("POST /:orgId/documents/:documentId/receipt-ocr", () => {
     it("returns 404 when the stored document does not exist", async () => {
       repos.documents.findById.mockResolvedValue(null);
