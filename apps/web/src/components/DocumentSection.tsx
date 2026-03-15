@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, type DocumentMeta, type ReceiptOcrAnalysis } from "../api";
 
 const ALLOWED_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp", "image/heic"];
-const OCR_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const OCR_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
 
 function formatFileSize(bytes: number): string {
