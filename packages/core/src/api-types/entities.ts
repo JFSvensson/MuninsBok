@@ -104,6 +104,28 @@ export interface DocumentMeta {
   createdAt: string;
 }
 
+export interface ReceiptOcrPrefillLine {
+  accountNumber?: string;
+  debit: number;
+  credit: number;
+  description?: string;
+}
+
+export interface ReceiptOcrAnalysis {
+  sourceFilename: string;
+  mimeType: string;
+  extractedText: string;
+  confidence: number;
+  merchantName?: string;
+  transactionDate?: string;
+  totalAmountOre?: number;
+  vatAmountOre?: number;
+  currency?: string;
+  suggestedDescription: string;
+  prefillLines: ReceiptOcrPrefillLine[];
+  warnings: string[];
+}
+
 export type MemberRole = "OWNER" | "ADMIN" | "MEMBER";
 
 export interface OrgMember {
