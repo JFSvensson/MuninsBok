@@ -1,6 +1,7 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyRequest } from "fastify";
 import multipart from "@fastify/multipart";
 import { isAllowedMimeType } from "@muninsbok/core/types";
+import { AppError } from "../utils/app-error.js";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
@@ -10,6 +11,16 @@ export async function documentRoutes(fastify: FastifyInstance) {
   const documentRepo = fastify.repos.documents;
   const voucherRepo = fastify.repos.vouchers;
   const storage = fastify.documentStorage;
+  const receiptOcr = fastify.receiptOcr;
+
+  async function readUploadedFile(request: FastifyRequest) {
+    const file = await request.file();
+    if (!file) {
+      throw AppError.badRequest("Ingen fil bifogad");
+    }
+
+    return file;
+  }
 
   // List documents for a voucher
   fastify.get<{ Params: { orgId: string; voucherId: string } }>(
@@ -24,10 +35,7 @@ export async function documentRoutes(fastify: FastifyInstance) {
   fastify.post<{ Params: { orgId: string; voucherId: string } }>(
     "/:orgId/vouchers/:voucherId/documents",
     async (request, reply) => {
-      const file = await request.file();
-      if (!file) {
-        return reply.status(400).send({ error: "Ingen fil bifogad" });
-      }
+      const file = await readUploadedFile(request);
 
       if (!isAllowedMimeType(file.mimetype)) {
         return reply.status(400).send({
@@ -59,6 +67,18 @@ export async function documentRoutes(fastify: FastifyInstance) {
     },
   );
 
+  fastify.post<{ Params: { orgId: string } }>("/:orgId/receipt-ocr/analyze", async (request) => {
+    const file = await readUploadedFile(request);
+    const data = await file.toBuffer();
+    const analysis = await receiptOcr.analyze({
+      buffer: data,
+      filename: file.filename,
+      mimeType: file.mimetype,
+    });
+
+    return { data: analysis };
+  });
+
   // Download document
   fastify.get<{ Params: { orgId: string; documentId: string } }>(
     "/:orgId/documents/:documentId/download",
@@ -73,6 +93,25 @@ export async function documentRoutes(fastify: FastifyInstance) {
         .header("Content-Type", doc.mimeType)
         .header("Content-Disposition", `attachment; filename="${encodeURIComponent(doc.filename)}"`)
         .send(data);
+    },
+  );
+
+  fastify.post<{ Params: { orgId: string; documentId: string } }>(
+    "/:orgId/documents/:documentId/receipt-ocr",
+    async (request) => {
+      const doc = await documentRepo.findById(request.params.documentId, request.params.orgId);
+      if (!doc) {
+        throw AppError.notFound("Dokumentet");
+      }
+
+      const data = await storage.read(doc.storageKey);
+      const analysis = await receiptOcr.analyze({
+        buffer: data,
+        filename: doc.filename,
+        mimeType: doc.mimeType,
+      });
+
+      return { data: analysis };
     },
   );
 
