@@ -69,8 +69,16 @@ export function VoucherCreate() {
     enabled: !!organization,
   });
 
+  const { data: ocrStatusData } = useQuery({
+    queryKey: ["receipt-ocr-status", orgId],
+    queryFn: () => api.getReceiptOcrStatus(orgId),
+    enabled: !!organization,
+  });
+
   const accounts = accountsData?.data ?? [];
   const templates = templatesData?.data ?? [];
+  const ocrStatus = ocrStatusData?.data;
+  const pdfStatusLabel = ocrStatus == null ? "okand" : ocrStatus.pdfEnabled ? "aktiv" : "inaktiv";
 
   const receiptMutation = useMutation({
     mutationFn: (file: File) => api.analyzeReceipt(orgId, file),
@@ -136,6 +144,9 @@ export function VoucherCreate() {
             <h3 style={{ margin: 0 }}>Kvitto-tolkning (OCR)</h3>
             <p className="text-muted" style={{ margin: "0.35rem 0 0" }}>
               Ladda upp en kvittofil for att fa forslag pa datum, beskrivning och belopp.
+            </p>
+            <p className="text-muted" style={{ margin: "0.35rem 0 0" }}>
+              PDF-OCR: {pdfStatusLabel}
             </p>
           </div>
           <div className="flex gap-1" style={{ flexWrap: "wrap" }}>
