@@ -474,6 +474,14 @@ export const api = {
     return response.json() as Promise<ApiResponse<ReceiptOcrAnalysis>>;
   },
 
+  analyzeUploadedDocumentReceipt: (orgId: string, documentId: string) =>
+    fetchJson<ApiResponse<ReceiptOcrAnalysis>>(
+      `${API_BASE}/organizations/${orgId}/documents/${documentId}/receipt-ocr`,
+      {
+        method: "POST",
+      },
+    ),
+
   downloadDocumentUrl: (orgId: string, documentId: string) =>
     `${API_BASE}/organizations/${orgId}/documents/${documentId}/download`,
 
