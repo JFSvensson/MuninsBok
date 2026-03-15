@@ -25,6 +25,7 @@ import type {
   PaginatedApiResponse,
   PeriodReportResponse,
   ReceiptOcrAnalysis,
+  ReceiptOcrStatus,
   ResultDispositionPreviewResponse,
   SearchResponse,
   SkVatDeclarationResponse,
@@ -68,6 +69,7 @@ export type {
   PeriodRowResponse,
   PeriodType,
   ReceiptOcrAnalysis,
+  ReceiptOcrStatus,
   ReportSection,
   ResultDispositionPreviewResponse,
   SearchResponse,
@@ -473,6 +475,11 @@ export const api = {
     });
     return response.json() as Promise<ApiResponse<ReceiptOcrAnalysis>>;
   },
+
+  getReceiptOcrStatus: (orgId: string) =>
+    fetchJson<ApiResponse<ReceiptOcrStatus>>(
+      `${API_BASE}/organizations/${orgId}/receipt-ocr/status`,
+    ),
 
   analyzeUploadedDocumentReceipt: (orgId: string, documentId: string) =>
     fetchJson<ApiResponse<ReceiptOcrAnalysis>>(
