@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useOrganization } from "../context/OrganizationContext";
 import { defined } from "../utils/assert";
 import { useVoucherForm } from "../hooks/useVoucherForm";
-import { api } from "../api";
+import { ApiError, api } from "../api";
 import { formatAmount } from "../utils/formatting";
 
 const OCR_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
@@ -12,6 +12,13 @@ const OCR_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "application
 function formatOreAmount(ore: number | undefined): string {
   if (ore == null) return "-";
   return `${formatAmount(ore / 100)} kr`;
+}
+
+function getOcrErrorMessage(error: Error): string {
+  if (error instanceof ApiError && error.code === "OCR_PDF_DISABLED") {
+    return "PDF-OCR ar avstangt pa servern. Behorig admin kan aktivera OCR_ENABLE_PDF=true i API-miljon.";
+  }
+  return error.message;
 }
 
 export function VoucherCreate() {
@@ -73,7 +80,7 @@ export function VoucherCreate() {
     },
     onError: (error: Error) => {
       setReceiptNotice(null);
-      setReceiptError(error.message);
+      setReceiptError(getOcrErrorMessage(error));
     },
   });
 
