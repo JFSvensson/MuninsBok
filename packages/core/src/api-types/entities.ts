@@ -131,6 +131,95 @@ export interface ReceiptOcrStatus {
   supportedMimeTypes: string[];
 }
 
+// ── Bank Connection ────────────────────────────────────────
+
+export type BankConnectionStatus = "CONNECTED" | "AUTH_REQUIRED" | "SYNCING" | "FAILED";
+
+export type BankTransactionMatchStatus = "PENDING_MATCH" | "MATCHED" | "CONFIRMED" | "ERROR";
+
+export type BankSyncRunStatus = "PENDING" | "RUNNING" | "SUCCEEDED" | "FAILED";
+
+export type BankSyncTrigger = "MANUAL" | "SCHEDULED" | "WEBHOOK";
+
+export type BankWebhookEventStatus = "RECEIVED" | "PROCESSED" | "IGNORED" | "FAILED";
+
+export interface BankConnectionEntity {
+  id: string;
+  organizationId: string;
+  provider: string;
+  externalConnectionId: string;
+  displayName?: string;
+  accountName?: string;
+  accountIban?: string;
+  accountLast4?: string;
+  currency: string;
+  status: BankConnectionStatus;
+  authExpiresAt?: string;
+  lastSyncedAt?: string;
+  lastErrorCode?: string;
+  lastErrorMessage?: string;
+  metadata?: unknown;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BankTransactionEntity {
+  id: string;
+  organizationId: string;
+  connectionId: string;
+  providerTransactionId: string;
+  bookedAt: string;
+  valueDate?: string;
+  description: string;
+  /** Amount in öre (signed) */
+  amountOre: number;
+  currency: string;
+  reference?: string;
+  counterpartyName?: string;
+  matchStatus: BankTransactionMatchStatus;
+  matchedVoucherId?: string;
+  matchConfidence?: number;
+  matchNote?: string;
+  rawData?: unknown;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BankSyncRunEntity {
+  id: string;
+  organizationId: string;
+  connectionId: string;
+  trigger: BankSyncTrigger;
+  status: BankSyncRunStatus;
+  externalRunId?: string;
+  startedAt: string;
+  completedAt?: string;
+  importedCount: number;
+  updatedCount: number;
+  failedCount: number;
+  errorCode?: string;
+  errorMessage?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BankWebhookEventEntity {
+  id: string;
+  organizationId: string;
+  connectionId?: string;
+  provider: string;
+  providerEventId: string;
+  eventType: string;
+  status: BankWebhookEventStatus;
+  signatureValidated: boolean;
+  payload: unknown;
+  receivedAt: string;
+  processedAt?: string;
+  errorMessage?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type MemberRole = "OWNER" | "ADMIN" | "MEMBER";
 
 export interface OrgMember {
