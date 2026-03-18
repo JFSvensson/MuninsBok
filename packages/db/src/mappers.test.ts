@@ -6,6 +6,10 @@ import {
   toVoucher,
   toVoucherLine,
   toDocument,
+  toBankConnection,
+  toBankTransaction,
+  toBankSyncRun,
+  toBankWebhookEvent,
 } from "./mappers.js";
 
 // Derive mapper input types — avoids importing Prisma generics directly
@@ -15,6 +19,10 @@ type AccountRow = Parameters<typeof toAccount>[0];
 type VoucherRow = Parameters<typeof toVoucher>[0];
 type LineRow = Parameters<typeof toVoucherLine>[0];
 type DocRow = Parameters<typeof toDocument>[0];
+type BankConnectionRow = Parameters<typeof toBankConnection>[0];
+type BankTransactionRow = Parameters<typeof toBankTransaction>[0];
+type BankSyncRunRow = Parameters<typeof toBankSyncRun>[0];
+type BankWebhookEventRow = Parameters<typeof toBankWebhookEvent>[0];
 
 // Prisma-like stub data matching the mapper input types
 // These mirror what Prisma would actually return (plain objects with Date fields)
@@ -273,5 +281,113 @@ describe("toDocument", () => {
   it("should preserve voucherId when present", () => {
     const result = toDocument(prismaDoc as unknown as DocRow);
     expect(result.voucherId).toBe("v-1");
+  });
+});
+
+describe("bank mappers", () => {
+  it("maps BankConnection with optional fields", () => {
+    const row = {
+      id: "bc-1",
+      organizationId: "org-1",
+      provider: "aggregator",
+      externalConnectionId: "ext-1",
+      displayName: "SEB Foretag",
+      accountName: "Foretagskonto",
+      accountIban: "SE4550000000058398257466",
+      accountLast4: "7466",
+      currency: "SEK",
+      status: "CONNECTED",
+      authExpiresAt: now,
+      lastSyncedAt: now,
+      lastErrorCode: null,
+      lastErrorMessage: null,
+      metadata: { source: "sandbox" },
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const result = toBankConnection(row as unknown as BankConnectionRow);
+    expect(result.provider).toBe("aggregator");
+    expect(result.status).toBe("CONNECTED");
+    expect(result.metadata).toEqual({ source: "sandbox" });
+  });
+
+  it("maps BankTransaction and nullables to optional fields", () => {
+    const row = {
+      id: "bt-1",
+      organizationId: "org-1",
+      connectionId: "bc-1",
+      providerTransactionId: "txn-123",
+      bookedAt: now,
+      valueDate: null,
+      description: "Kortkop ica",
+      amountOre: -12345,
+      currency: "SEK",
+      reference: null,
+      counterpartyName: "ICA",
+      matchStatus: "PENDING_MATCH",
+      matchedVoucherId: null,
+      matchConfidence: null,
+      matchNote: null,
+      rawData: { originalAmount: "-123.45" },
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const result = toBankTransaction(row as unknown as BankTransactionRow);
+    expect(result.amountOre).toBe(-12345);
+    expect(result.valueDate).toBeUndefined();
+    expect(result.matchStatus).toBe("PENDING_MATCH");
+    expect(result.rawData).toEqual({ originalAmount: "-123.45" });
+  });
+
+  it("maps BankSyncRun statuses and counters", () => {
+    const row = {
+      id: "run-1",
+      organizationId: "org-1",
+      connectionId: "bc-1",
+      trigger: "MANUAL",
+      status: "SUCCEEDED",
+      externalRunId: "ext-run-1",
+      startedAt: now,
+      completedAt: now,
+      importedCount: 10,
+      updatedCount: 2,
+      failedCount: 1,
+      errorCode: null,
+      errorMessage: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const result = toBankSyncRun(row as unknown as BankSyncRunRow);
+    expect(result.trigger).toBe("MANUAL");
+    expect(result.status).toBe("SUCCEEDED");
+    expect(result.importedCount).toBe(10);
+    expect(result.failedCount).toBe(1);
+  });
+
+  it("maps BankWebhookEvent payload and status", () => {
+    const row = {
+      id: "wh-1",
+      organizationId: "org-1",
+      connectionId: null,
+      provider: "aggregator",
+      providerEventId: "evt-1",
+      eventType: "transactions.updated",
+      status: "RECEIVED",
+      signatureValidated: true,
+      payload: { transactionCount: 4 },
+      receivedAt: now,
+      processedAt: null,
+      errorMessage: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const result = toBankWebhookEvent(row as unknown as BankWebhookEventRow);
+    expect(result.connectionId).toBeUndefined();
+    expect(result.signatureValidated).toBe(true);
+    expect(result.payload).toEqual({ transactionCount: 4 });
   });
 });
