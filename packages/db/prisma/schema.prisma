@@ -33,6 +33,10 @@ model Organization {
   approvalRules ApprovalRule[]
   customers   Customer[]
   invoices    Invoice[]
+  bankConnections  BankConnection[]
+  bankTransactions BankTransaction[]
+  bankSyncRuns     BankSyncRun[]
+  bankWebhookEvents BankWebhookEvent[]
 
   @@map("organizations")
 }
@@ -188,6 +192,7 @@ model Voucher {
   documents    Document[]
   approvalSteps ApprovalStep[]
   invoice      Invoice?
+  matchedBankTransactions BankTransaction[] @relation("BankTransactionMatch")
 
   @@unique([fiscalYearId, number])
   @@index([organizationId])
@@ -509,4 +514,159 @@ model InvoiceLine {
 
   @@index([invoiceId])
   @@map("invoice_lines")
+}
+
+// ============================================
+// BANK CONNECTION
+// ============================================
+
+enum BankConnectionStatus {
+  CONNECTED
+  AUTH_REQUIRED
+  SYNCING
+  FAILED
+}
+
+enum BankTransactionMatchStatus {
+  PENDING_MATCH
+  MATCHED
+  CONFIRMED
+  ERROR
+}
+
+enum BankSyncRunStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+enum BankSyncTrigger {
+  MANUAL
+  SCHEDULED
+  WEBHOOK
+}
+
+enum BankWebhookEventStatus {
+  RECEIVED
+  PROCESSED
+  IGNORED
+  FAILED
+}
+
+model BankConnection {
+  id                   String               @id @default(cuid())
+  organizationId       String               @map("organization_id")
+  provider             String
+  externalConnectionId String               @map("external_connection_id")
+  displayName          String?              @map("display_name")
+  accountName          String?              @map("account_name")
+  accountIban          String?              @map("account_iban")
+  accountLast4         String?              @map("account_last4")
+  currency             String               @default("SEK")
+  status               BankConnectionStatus @default(AUTH_REQUIRED)
+  authExpiresAt        DateTime?            @map("auth_expires_at")
+  lastSyncedAt         DateTime?            @map("last_synced_at")
+  lastErrorCode        String?              @map("last_error_code")
+  lastErrorMessage     String?              @map("last_error_message")
+  metadata             Json?
+  createdAt            DateTime             @default(now()) @map("created_at")
+  updatedAt            DateTime             @updatedAt @map("updated_at")
+
+  // Relations
+  organization  Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  transactions  BankTransaction[]
+  syncRuns      BankSyncRun[]
+  webhookEvents BankWebhookEvent[]
+
+  @@unique([organizationId, provider, externalConnectionId])
+  @@index([organizationId, status])
+  @@index([organizationId, lastSyncedAt])
+  @@map("bank_connections")
+}
+
+model BankTransaction {
+  id                    String                     @id @default(cuid())
+  organizationId        String                     @map("organization_id")
+  connectionId          String                     @map("connection_id")
+  providerTransactionId String                     @map("provider_transaction_id")
+  bookedAt              DateTime                   @map("booked_at")
+  valueDate             DateTime?                  @map("value_date")
+  description           String
+  amountOre             Int                        @map("amount_ore")
+  currency              String                     @default("SEK")
+  reference             String?
+  counterpartyName      String?                    @map("counterparty_name")
+  matchStatus           BankTransactionMatchStatus @default(PENDING_MATCH) @map("match_status")
+  matchedVoucherId      String?                    @map("matched_voucher_id")
+  matchConfidence       Int?                       @map("match_confidence")
+  matchNote             String?                    @map("match_note")
+  rawData               Json?                      @map("raw_data")
+  createdAt             DateTime                   @default(now()) @map("created_at")
+  updatedAt             DateTime                   @updatedAt @map("updated_at")
+
+  // Relations
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  connection    BankConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  matchedVoucher Voucher?      @relation("BankTransactionMatch", fields: [matchedVoucherId], references: [id], onDelete: SetNull)
+
+  @@unique([connectionId, providerTransactionId])
+  @@index([organizationId, bookedAt])
+  @@index([organizationId, matchStatus])
+  @@index([matchedVoucherId])
+  @@map("bank_transactions")
+}
+
+model BankSyncRun {
+  id             String            @id @default(cuid())
+  organizationId String            @map("organization_id")
+  connectionId   String            @map("connection_id")
+  trigger        BankSyncTrigger
+  status         BankSyncRunStatus @default(PENDING)
+  externalRunId  String?           @map("external_run_id")
+  startedAt      DateTime          @default(now()) @map("started_at")
+  completedAt    DateTime?         @map("completed_at")
+  importedCount  Int               @default(0) @map("imported_count")
+  updatedCount   Int               @default(0) @map("updated_count")
+  failedCount    Int               @default(0) @map("failed_count")
+  errorCode      String?           @map("error_code")
+  errorMessage   String?           @map("error_message")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  connection   BankConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status])
+  @@index([organizationId, startedAt])
+  @@index([connectionId, startedAt])
+  @@map("bank_sync_runs")
+}
+
+model BankWebhookEvent {
+  id                 String                 @id @default(cuid())
+  organizationId     String                 @map("organization_id")
+  connectionId       String?                @map("connection_id")
+  provider           String
+  providerEventId    String                 @map("provider_event_id")
+  eventType          String                 @map("event_type")
+  status             BankWebhookEventStatus @default(RECEIVED)
+  signatureValidated Boolean                @default(false) @map("signature_validated")
+  payload            Json
+  receivedAt         DateTime               @default(now()) @map("received_at")
+  processedAt        DateTime?              @map("processed_at")
+  errorMessage       String?                @map("error_message")
+  createdAt          DateTime               @default(now()) @map("created_at")
+  updatedAt          DateTime               @updatedAt @map("updated_at")
+
+  // Relations
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  connection   BankConnection? @relation(fields: [connectionId], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, provider, providerEventId])
+  @@index([organizationId, status])
+  @@index([receivedAt])
+  @@index([connectionId])
+  @@map("bank_webhook_events")
 }
