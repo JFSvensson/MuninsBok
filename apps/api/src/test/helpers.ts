@@ -27,6 +27,7 @@ import type {
   IBankWebhookEventRepository,
 } from "@muninsbok/core/types";
 import type { IReceiptOcrService, ReceiptOcrInput } from "../services/receipt-ocr.js";
+import type { IAggregatorBankAdapter } from "../services/bank-adapter.js";
 
 type MockedRepo<T> = {
   [K in keyof T]: T[K] extends (...args: infer _Args) => infer _Return
@@ -318,6 +319,34 @@ export function createMockReceiptOcr(): MockedRepo<IReceiptOcrService> {
   } as MockedRepo<IReceiptOcrService>;
 }
 
+export function createMockBankAdapter(): MockedRepo<IAggregatorBankAdapter> {
+  return {
+    provider: "sandbox",
+    createAuthorizationUrl: vi.fn().mockResolvedValue({
+      authorizationUrl: "https://sandbox.aggregator.local/oauth/authorize?state=test",
+      state: "test",
+      expiresAt: new Date("2026-01-01T00:00:00.000Z"),
+    }),
+    exchangeAuthorizationCode: vi.fn().mockResolvedValue({
+      accessToken: "sbx_at_test",
+      refreshToken: "sbx_rt_test",
+      expiresAt: new Date("2026-01-01T01:00:00.000Z"),
+      tokenType: "Bearer",
+      scope: ["accounts", "transactions"],
+    }),
+    refreshAccessToken: vi.fn().mockResolvedValue({
+      accessToken: "sbx_at_refresh",
+      refreshToken: "sbx_rt_test",
+      expiresAt: new Date("2026-01-01T02:00:00.000Z"),
+      tokenType: "Bearer",
+      scope: ["accounts", "transactions"],
+    }),
+    fetchTransactions: vi.fn().mockResolvedValue({
+      transactions: [],
+    }),
+  } as MockedRepo<IAggregatorBankAdapter>;
+}
+
 export function createMockRepos(): MockRepos {
   const prisma: MockPrisma = {
     organization: {
@@ -390,15 +419,18 @@ export async function buildTestApp(
   repos: MockRepos;
   documentStorage: MockedRepo<IDocumentStorage>;
   receiptOcr: MockedRepo<IReceiptOcrService>;
+  bankAdapter: MockedRepo<IAggregatorBankAdapter>;
 }> {
   const repos = mocks ?? createMockRepos();
   const documentStorage = createMockDocumentStorage();
   const receiptOcr = createMockReceiptOcr();
+  const bankAdapter = createMockBankAdapter();
   const app = await buildApp({
     repos: repos as unknown as Repositories,
     documentStorage: documentStorage as unknown as IDocumentStorage,
     receiptOcr: receiptOcr as unknown as IReceiptOcrService,
+    bankAdapter: bankAdapter as unknown as IAggregatorBankAdapter,
     ...(options?.jwtSecret != null && { jwtSecret: options.jwtSecret }),
   });
-  return { app, repos, documentStorage, receiptOcr };
+  return { app, repos, documentStorage, receiptOcr, bankAdapter };
 }
