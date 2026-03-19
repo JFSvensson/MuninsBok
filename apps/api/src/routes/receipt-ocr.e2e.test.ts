@@ -2,8 +2,13 @@ import type { IDocumentStorage } from "@muninsbok/core/types";
 import { describe, expect, it } from "vitest";
 import { buildApp } from "../app.js";
 import type { Repositories } from "../repositories.js";
+import type { IAggregatorBankAdapter } from "../services/bank-adapter.js";
 import { TesseractReceiptOcrService } from "../services/receipt-ocr.js";
-import { createMockDocumentStorage, createMockRepos } from "../test/helpers.js";
+import {
+  createMockBankAdapter,
+  createMockDocumentStorage,
+  createMockRepos,
+} from "../test/helpers.js";
 
 describe("Receipt OCR API (integration)", () => {
   it("returns OCR_PDF_CONVERTER_NOT_FOUND when PDF OCR is enabled but converter is missing", async () => {
@@ -15,10 +20,12 @@ describe("Receipt OCR API (integration)", () => {
 
     const repos = createMockRepos();
     const documentStorage = createMockDocumentStorage();
+    const bankAdapter = createMockBankAdapter();
     const app = await buildApp({
       repos: repos as unknown as Repositories,
       documentStorage: documentStorage as unknown as IDocumentStorage,
       receiptOcr: new TesseractReceiptOcrService(),
+      bankAdapter: bankAdapter as unknown as IAggregatorBankAdapter,
     });
 
     try {
