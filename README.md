@@ -140,7 +140,7 @@ Se [docs/production.md](docs/production.md) för fullständig driftsättningsgui
 ---
 
 ## Framtida utveckling
-- Bankkoppling (Sprint 2 pågår: adapter-abstraktion, sandbox-provider, idempotensverifiering och sync-orchestrering)
+- Bankkoppling (Sprint 3 pågår: anslutnings/sync-endpoints, webhook-ingest, idempotens och transaktionslistning)
 
 ---
 
