@@ -14,8 +14,8 @@
   },
   "dependencies": {
     "@muninsbok/core": "workspace:*",
-    "@tanstack/react-query": "^5.17.0",
-    "jspdf": "^4.2.0",
+    "@tanstack/react-query": "^5.95.0",
+    "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
@@ -32,6 +32,6 @@
     "jsdom": "^28.1.0",
     "typescript": "^5.3.3",
     "vite": "^7.3.1",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.0"
   }
 }
