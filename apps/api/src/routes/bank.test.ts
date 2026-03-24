@@ -349,12 +349,19 @@ describe("Bank routes", () => {
 
   describe("POST /:orgId/bank/webhooks", () => {
     const oldWebhookSecret = process.env["BANK_WEBHOOK_HMAC_SECRET"];
+    const oldSandboxWebhookSecret = process.env["BANK_WEBHOOK_SANDBOX_HMAC_SECRET"];
 
     beforeEach(() => {
       if (oldWebhookSecret == null) {
         delete process.env["BANK_WEBHOOK_HMAC_SECRET"];
       } else {
         process.env["BANK_WEBHOOK_HMAC_SECRET"] = oldWebhookSecret;
+      }
+
+      if (oldSandboxWebhookSecret == null) {
+        delete process.env["BANK_WEBHOOK_SANDBOX_HMAC_SECRET"];
+      } else {
+        process.env["BANK_WEBHOOK_SANDBOX_HMAC_SECRET"] = oldSandboxWebhookSecret;
       }
     });
 
@@ -536,6 +543,48 @@ describe("Bank routes", () => {
 
       expect(res.statusCode).toBe(400);
       expect(JSON.parse(res.body).code).toBe("BANK_WEBHOOK_SIGNATURE_INVALID");
+    });
+
+    it("prefers provider-specific webhook secret over global fallback", async () => {
+      process.env["BANK_WEBHOOK_HMAC_SECRET"] = "global-secret";
+      process.env["BANK_WEBHOOK_SANDBOX_HMAC_SECRET"] = "provider-secret";
+
+      const payload = { changed: 1 };
+      const signature = createHmac("sha256", "provider-secret")
+        .update(JSON.stringify(payload))
+        .digest("hex");
+
+      repos.bankWebhookEvents.create.mockResolvedValue({ ok: true, value: webhookEvent });
+      repos.bankWebhookEvents.update.mockResolvedValue({
+        ...webhookEvent,
+        status: "PROCESSED",
+      });
+      repos.bankConnections.findById.mockResolvedValue(mockConnection);
+      repos.bankSyncRuns.create.mockResolvedValue(mockSyncRun);
+      bankAdapter.fetchTransactions.mockResolvedValue({ transactions: [] });
+      repos.bankSyncRuns.complete.mockResolvedValue({
+        ...mockSyncRun,
+        status: "SUCCEEDED" as const,
+      });
+      repos.bankConnections.update.mockResolvedValue({ ok: true, value: mockConnection });
+
+      const res = await app.inject({
+        method: "POST",
+        url: `/api/organizations/${orgId}/bank/webhooks`,
+        headers: { "x-webhook-signature": signature },
+        payload: {
+          provider: "sandbox",
+          providerEventId: "evt-provider-secret",
+          eventType: "transactions.updated",
+          connectionId,
+          payload,
+        },
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(repos.bankWebhookEvents.create).toHaveBeenCalledWith(
+        expect.objectContaining({ signatureValidated: true }),
+      );
     });
   });
 
