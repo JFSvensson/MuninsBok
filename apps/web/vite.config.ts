@@ -13,10 +13,21 @@ export default defineConfig({
     target: "es2022",
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Vendor chunks — cached independently from app code
-          "vendor-react": ["react", "react-dom", "react-router-dom"],
-          "vendor-query": ["@tanstack/react-query"],
+        // Vendor chunks — cached independently from app code
+        manualChunks(id) {
+          if (
+            id.includes("/node_modules/react/") ||
+            id.includes("/node_modules/react-dom/") ||
+            id.includes("/node_modules/react-router-dom/")
+          ) {
+            return "vendor-react";
+          }
+
+          if (id.includes("/node_modules/@tanstack/react-query/")) {
+            return "vendor-query";
+          }
+
+          return undefined;
         },
       },
     },
