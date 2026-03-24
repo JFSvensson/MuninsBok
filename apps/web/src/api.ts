@@ -6,6 +6,8 @@ import type {
   ApprovalStepEntity,
   BankConnectionEntity,
   BankSyncRunEntity,
+  BankTransactionEntity,
+  BankTransactionMatchStatus,
   CustomerEntity,
   InvoiceEntity,
   BalanceSheet,
@@ -47,6 +49,8 @@ export type {
   ApprovalStepEntity,
   BankConnectionEntity,
   BankSyncRunEntity,
+  BankTransactionEntity,
+  BankTransactionMatchStatus,
   CustomerEntity,
   InvoiceEntity,
   InvoiceLineEntity,
@@ -365,6 +369,29 @@ export const api = {
       `${API_BASE}/organizations/${orgId}/bank/${connectionId}/auth/refresh`,
       { method: "POST" },
     ),
+
+  getBankTransactions: (
+    orgId: string,
+    connectionId: string,
+    params?: {
+      page?: number;
+      limit?: number;
+      fromDate?: string;
+      toDate?: string;
+      matchStatus?: BankTransactionMatchStatus | string;
+    },
+  ) => {
+    const q = new URLSearchParams();
+    if (params?.page != null) q.set("page", String(params.page));
+    if (params?.limit != null) q.set("limit", String(params.limit));
+    if (params?.fromDate) q.set("fromDate", params.fromDate);
+    if (params?.toDate) q.set("toDate", params.toDate);
+    if (params?.matchStatus) q.set("matchStatus", params.matchStatus);
+    const qs = q.toString();
+    return fetchJson<{ data: BankTransactionEntity[]; total: number; page: number; limit: number }>(
+      `${API_BASE}/organizations/${orgId}/bank/${connectionId}/transactions${qs ? `?${qs}` : ""}`,
+    );
+  },
 
   updateAccount: (
     orgId: string,
