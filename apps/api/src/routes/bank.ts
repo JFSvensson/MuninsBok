@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import type { BankTransactionMatchStatus } from "@muninsbok/core/types";
 import { AppError } from "../utils/app-error.js";
@@ -12,6 +12,38 @@ import {
   bankWebhookListQuerySchema,
   bankSyncRunListQuerySchema,
 } from "../schemas/index.js";
+
+function hmacSha256Hex(payload: unknown, secret: string): string {
+  return createHmac("sha256", secret).update(JSON.stringify(payload)).digest("hex");
+}
+
+function normalizeSignature(signature: string): string {
+  const trimmed = signature.trim();
+  return trimmed.startsWith("sha256=") ? trimmed.slice(7) : trimmed;
+}
+
+function signaturesMatch(provided: string, expected: string): boolean {
+  if (!/^[a-f0-9]+$/i.test(provided) || provided.length !== expected.length) {
+    return false;
+  }
+
+  const providedBuffer = Buffer.from(provided, "hex");
+  const expectedBuffer = Buffer.from(expected, "hex");
+
+  if (providedBuffer.length !== expectedBuffer.length) {
+    return false;
+  }
+
+  return timingSafeEqual(providedBuffer, expectedBuffer);
+}
+
+function resolveWebhookSecret(provider: string): string | undefined {
+  const normalizedProvider = provider.toUpperCase().replace(/[^A-Z0-9]+/g, "_");
+  return (
+    process.env[`BANK_WEBHOOK_${normalizedProvider}_HMAC_SECRET`] ??
+    process.env["BANK_WEBHOOK_HMAC_SECRET"]
+  );
+}
 
 export async function bankRoutes(fastify: FastifyInstance) {
   const adapter = fastify.bankAdapter;
@@ -137,6 +169,31 @@ export async function bankRoutes(fastify: FastifyInstance) {
   fastify.post<{ Params: { orgId: string } }>("/:orgId/bank/webhooks", async (request) => {
     const body = parseBody(bankWebhookCreateSchema, request.body);
     const orgId = request.params.orgId;
+    const webhookSecret = resolveWebhookSecret(body.provider);
+
+    let signatureValidated = body.signatureValidated;
+    if (webhookSecret != null) {
+      const headerValue = request.headers["x-webhook-signature"];
+      const signatureHeader =
+        typeof headerValue === "string"
+          ? headerValue
+          : Array.isArray(headerValue)
+            ? headerValue[0]
+            : undefined;
+
+      if (!signatureHeader) {
+        throw AppError.badRequest("Webhook-signatur saknas", "BANK_WEBHOOK_SIGNATURE_MISSING");
+      }
+
+      const providedSignature = normalizeSignature(signatureHeader);
+      const expectedSignature = hmacSha256Hex(body.payload, webhookSecret);
+
+      if (!signaturesMatch(providedSignature, expectedSignature)) {
+        throw AppError.badRequest("Ogiltig webhook-signatur", "BANK_WEBHOOK_SIGNATURE_INVALID");
+      }
+
+      signatureValidated = true;
+    }
 
     const created = await fastify.repos.bankWebhookEvents.create({
       organizationId: orgId,
@@ -144,8 +201,8 @@ export async function bankRoutes(fastify: FastifyInstance) {
       provider: body.provider,
       providerEventId: body.providerEventId,
       eventType: body.eventType,
-      ...(body.signatureValidated != null && {
-        signatureValidated: body.signatureValidated,
+      ...(signatureValidated != null && {
+        signatureValidated,
       }),
       payload: body.payload,
       ...(body.receivedAt != null && { receivedAt: new Date(body.receivedAt) }),
