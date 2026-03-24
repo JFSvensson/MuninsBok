@@ -58,8 +58,40 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 | `PORT` | Nej (default: `3000`) | Lyssningsport |
 | `DATABASE_POOL_SIZE` | Nej (default: `20`) | Max antal databasanslutningar i poolen |
 | `API_KEY` | Nej | Enkel delad-hemlighet-auth. Ignoreras när `JWT_SECRET` är satt. |
+| `BANK_WEBHOOK_HMAC_SECRET` | Rekommenderat | Global HMAC-hemlighet for bank-webhooks (`x-webhook-signature`) |
+| `BANK_WEBHOOK_<PROVIDER>_HMAC_SECRET` | Nej | Providerspecifik HMAC-hemlighet som prioriteras over global hemlighet |
 
 Servern validerar vid start att `DATABASE_URL` finns — saknas den avslutas processen direkt med felmeddelande.
+
+### Bank-webhooks: signaturverifiering
+
+For inkommande bank-webhooks kan API:t verifiera HMAC-signatur automatiskt.
+
+- Header: `x-webhook-signature`
+- Stodda format:
+  - `sha256=<hex>`
+  - `<hex>`
+- Hash-algoritm: `HMAC-SHA256`
+
+Konfiguration:
+
+- `BANK_WEBHOOK_HMAC_SECRET` anvands som global fallback
+- `BANK_WEBHOOK_<PROVIDER>_HMAC_SECRET` (t.ex. `BANK_WEBHOOK_SANDBOX_HMAC_SECRET`) anvands i forsta hand
+
+Om en hemlighet ar konfigurerad maste webhooken innehalla giltig signatur, annars returnerar API:t:
+
+- `400 BANK_WEBHOOK_SIGNATURE_MISSING` nar header saknas
+- `400 BANK_WEBHOOK_SIGNATURE_INVALID` nar signaturen ar felaktig
+
+Exempel:
+
+```dotenv
+# Global fallback
+BANK_WEBHOOK_HMAC_SECRET=byt-till-lang-slumpmassig-hemlighet
+
+# Providerspecifik hemlighet (overskriver global for provider "sandbox")
+BANK_WEBHOOK_SANDBOX_HMAC_SECRET=annan-hemlighet-for-sandbox
+```
 
 ---
 
