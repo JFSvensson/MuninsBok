@@ -31,3 +31,7 @@ export const bankWebhookCreateSchema = z.object({
 export const bankWebhookListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).optional(),
 });
+
+export const bankSyncRunListQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(50).optional(),
+});
