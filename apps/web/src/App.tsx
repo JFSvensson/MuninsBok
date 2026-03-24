@@ -27,6 +27,9 @@ const AccountList = lazy(() =>
 const BankConnections = lazy(() =>
   import("./pages/BankConnections").then((m) => ({ default: m.BankConnections })),
 );
+const BankTransactions = lazy(() =>
+  import("./pages/BankTransactions").then((m) => ({ default: m.BankTransactions })),
+);
 const TrialBalance = lazy(() =>
   import("./pages/TrialBalance").then((m) => ({ default: m.TrialBalance })),
 );
@@ -323,6 +326,7 @@ function AppContent() {
                 <Route path="/budgets/:budgetId/vs-actual" element={<BudgetVsActual />} />
                 <Route path="/accounts" element={<AccountList />} />
                 <Route path="/bank" element={<BankConnections />} />
+                <Route path="/bank/:connectionId/transactions" element={<BankTransactions />} />
                 <Route path="/reports/trial-balance" element={<TrialBalance />} />
                 <Route path="/reports/income-statement" element={<IncomeStatement />} />
                 <Route path="/reports/balance-sheet" element={<BalanceSheet />} />
