@@ -60,6 +60,54 @@ interface BankSyncServiceDeps {
   >;
   adapter: IAggregatorBankAdapter;
   now?: () => Date;
+  sleep?: (ms: number) => Promise<void>;
+  random?: () => number;
+  retryConfig?: Partial<BankSyncRetryConfig>;
+}
+
+interface BankSyncRetryConfig {
+  maxRetries: number;
+  initialDelayMs: number;
+  maxDelayMs: number;
+  jitterFactor: number;
+}
+
+const defaultRetryConfig: BankSyncRetryConfig = {
+  maxRetries: 2,
+  initialDelayMs: 250,
+  maxDelayMs: 2_000,
+  jitterFactor: 0.25,
+};
+
+function sleep(ms: number): Promise<void> {
+  if (ms <= 0) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function resolveRetryConfig(overrides?: Partial<BankSyncRetryConfig>): BankSyncRetryConfig {
+  return {
+    ...defaultRetryConfig,
+    ...overrides,
+    maxRetries: Math.max(0, overrides?.maxRetries ?? defaultRetryConfig.maxRetries),
+    initialDelayMs: Math.max(0, overrides?.initialDelayMs ?? defaultRetryConfig.initialDelayMs),
+    maxDelayMs: Math.max(0, overrides?.maxDelayMs ?? defaultRetryConfig.maxDelayMs),
+    jitterFactor: Math.max(0, overrides?.jitterFactor ?? defaultRetryConfig.jitterFactor),
+  };
+}
+
+function calculateRetryDelayMs(
+  attempt: number,
+  config: BankSyncRetryConfig,
+  random: () => number,
+): number {
+  const baseDelay = Math.min(config.initialDelayMs * 2 ** attempt, config.maxDelayMs);
+  const jitter = Math.round(baseDelay * config.jitterFactor * random());
+  return baseDelay + jitter;
 }
 
 function asObject(value: unknown): Record<string, unknown> | null {
@@ -166,6 +214,26 @@ async function ensureConnectionUpdate(
 export class BankSyncService implements IBankSyncService {
   constructor(private readonly deps: BankSyncServiceDeps) {}
 
+  private async runAdapterOperationWithRetry<T>(operation: () => Promise<T>): Promise<T> {
+    const config = resolveRetryConfig(this.deps.retryConfig);
+    const random = this.deps.random ?? Math.random;
+    const sleepFn = this.deps.sleep ?? sleep;
+
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await operation();
+      } catch (error) {
+        const mapped = toBankAdapterResultError(error);
+        if (!mapped.retryable || attempt >= config.maxRetries) {
+          throw error;
+        }
+
+        const delayMs = calculateRetryDelayMs(attempt, config, random);
+        await sleepFn(delayMs);
+      }
+    }
+  }
+
   async syncConnection(input: SyncBankConnectionInput): Promise<SyncBankConnectionResult> {
     const now = this.deps.now ?? (() => new Date());
     const connection = await this.deps.repos.bankConnections.findById(
@@ -219,7 +287,9 @@ export class BankSyncService implements IBankSyncService {
 
       let refreshed: AdapterTokenSet;
       try {
-        refreshed = await this.deps.adapter.refreshAccessToken(auth.refreshToken);
+        refreshed = await this.runAdapterOperationWithRetry(() =>
+          this.deps.adapter.refreshAccessToken(auth?.refreshToken),
+        );
       } catch (error) {
         throw toBankAdapterAppError(error);
       }
@@ -256,14 +326,16 @@ export class BankSyncService implements IBankSyncService {
 
     try {
       for (let page = 0; page < maxPages; page++) {
-        const pageResult = await this.deps.adapter.fetchTransactions({
-          externalConnectionId: connection.externalConnectionId,
-          accessToken: auth.accessToken,
-          fromDate,
-          toDate,
-          ...(cursor != null && { cursor }),
-          pageSize,
-        });
+        const pageResult = await this.runAdapterOperationWithRetry(() =>
+          this.deps.adapter.fetchTransactions({
+            externalConnectionId: connection.externalConnectionId,
+            accessToken: auth.accessToken,
+            fromDate,
+            toDate,
+            ...(cursor != null && { cursor }),
+            pageSize,
+          }),
+        );
 
         if (pageResult.transactions.length === 0) {
           cursor = pageResult.nextCursor;
