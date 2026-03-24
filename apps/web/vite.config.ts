@@ -15,15 +15,16 @@ export default defineConfig({
       output: {
         // Vendor chunks — cached independently from app code
         manualChunks(id) {
+          const norm = id.split("\\").join("/");
           if (
-            id.includes("/node_modules/react/") ||
-            id.includes("/node_modules/react-dom/") ||
-            id.includes("/node_modules/react-router-dom/")
+            norm.includes("/node_modules/react/") ||
+            norm.includes("/node_modules/react-dom/") ||
+            norm.includes("/node_modules/react-router-dom/")
           ) {
             return "vendor-react";
           }
 
-          if (id.includes("/node_modules/@tanstack/react-query/")) {
+          if (norm.includes("/node_modules/@tanstack/react-query/")) {
             return "vendor-query";
           }
 
