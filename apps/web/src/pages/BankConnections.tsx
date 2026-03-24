@@ -1,4 +1,5 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { useOrganization } from "../context/OrganizationContext";
 import { useToast } from "../context/ToastContext";
 import { defined } from "../utils/assert";
@@ -188,6 +189,12 @@ export function BankConnections() {
                     >
                       {isRefreshingThisConnection ? "Förnyar..." : "Förnya auth"}
                     </button>
+                    <Link
+                      to={`/bank/${connection.id}/transactions`}
+                      style={{ fontSize: "0.875rem", alignSelf: "center" }}
+                    >
+                      Visa transaktioner →
+                    </Link>
                   </div>
                 </div>
 
