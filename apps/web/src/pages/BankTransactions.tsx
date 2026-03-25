@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useOrganization } from "../context/OrganizationContext";
 import { useToast } from "../context/ToastContext";
 import { defined } from "../utils/assert";
+import { isBankingEnabledForOrganization } from "../utils/bank-feature-flag";
 import { ApiError, api, type BankTransactionEntity, type BankTransactionMatchStatus } from "../api";
 
 const MATCH_STATUS_LABELS: Record<BankTransactionMatchStatus, string> = {
@@ -42,6 +43,7 @@ export function BankTransactions() {
   const { addToast } = useToast();
   const queryClient = useQueryClient();
   const orgId = defined(organization).id;
+  const bankingEnabled = isBankingEnabledForOrganization(orgId);
 
   const [page, setPage] = useState(1);
   const [matchStatus, setMatchStatus] = useState<string>("");
@@ -67,7 +69,7 @@ export function BankTransactions() {
         ...(fromDate && { fromDate }),
         ...(toDate && { toDate }),
       }),
-    enabled: !!connectionId,
+    enabled: !!connectionId && bankingEnabled,
   });
 
   const result = query.data;
@@ -164,6 +166,17 @@ export function BankTransactions() {
     setToDate("");
     setPage(1);
   };
+
+  if (!bankingEnabled) {
+    return (
+      <div className="card">
+        <h2>Transaktioner</h2>
+        <p className="text-muted">
+          Bankfunktioner är inte aktiverade för den valda organisationen.
+        </p>
+      </div>
+    );
+  }
 
   if (query.isLoading) {
     return <div className="loading">Laddar transaktioner...</div>;
