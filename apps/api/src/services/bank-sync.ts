@@ -284,11 +284,12 @@ export class BankSyncService implements IBankSyncService {
           "Bankanslutningen kräver ny autentisering (refresh token saknas)",
         );
       }
+      const refreshToken = auth.refreshToken;
 
       let refreshed: AdapterTokenSet;
       try {
         refreshed = await this.runAdapterOperationWithRetry(() =>
-          this.deps.adapter.refreshAccessToken(auth?.refreshToken),
+          this.deps.adapter.refreshAccessToken(refreshToken),
         );
       } catch (error) {
         throw toBankAdapterAppError(error);
