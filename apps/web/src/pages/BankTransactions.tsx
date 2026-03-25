@@ -1,11 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useOrganization } from "../context/OrganizationContext";
 import { useToast } from "../context/ToastContext";
 import { defined } from "../utils/assert";
 import { isBankingEnabledForOrganization } from "../utils/bank-feature-flag";
-import { ApiError, api, type BankTransactionEntity, type BankTransactionMatchStatus } from "../api";
+import {
+  ApiError,
+  api,
+  type BankMatchCandidate,
+  type BankTransactionEntity,
+  type BankTransactionMatchStatus,
+} from "../api";
 
 const MATCH_STATUS_LABELS: Record<BankTransactionMatchStatus, string> = {
   PENDING_MATCH: "Väntar på matchning",
@@ -49,6 +55,8 @@ export function BankTransactions() {
   const [matchStatus, setMatchStatus] = useState<string>("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [candidatePickerTx, setCandidatePickerTx] = useState<BankTransactionEntity | null>(null);
+  const [selectedCandidateId, setSelectedCandidateId] = useState("");
 
   const query = useQuery({
     queryKey: [
@@ -81,25 +89,26 @@ export function BankTransactions() {
     queryClient.invalidateQueries({ queryKey: ["bank-transactions", orgId, connectionId] });
   };
 
-  const findAndMatchMutation = useMutation({
-    mutationFn: async (tx: BankTransactionEntity) => {
-      const candidates = await api.getBankMatchCandidates(orgId, tx.id, 5);
-      const best = candidates.data[0];
-      if (!best) {
-        throw new Error("Ingen matchningskandidat hittades");
-      }
+  const matchCandidatesQuery = useQuery({
+    queryKey: ["bank-match-candidates", orgId, candidatePickerTx?.id],
+    queryFn: () => api.getBankMatchCandidates(orgId, defined(candidatePickerTx).id, 10),
+    enabled: candidatePickerTx != null,
+  });
 
-      return api.matchBankTransaction(orgId, tx.id, {
-        voucherId: best.voucherId,
-        matchConfidence: best.score,
+  const applyMatchMutation = useMutation({
+    mutationFn: (vars: { transactionId: string; candidate: BankMatchCandidate }) =>
+      api.matchBankTransaction(orgId, vars.transactionId, {
+        voucherId: vars.candidate.voucherId,
+        matchConfidence: vars.candidate.score,
         matchNote:
-          best.reasons.length > 0
-            ? `Automatch: ${best.reasons.join(", ")}`
-            : "Automatch utan explicita skäl",
-      });
-    },
+          vars.candidate.reasons.length > 0
+            ? `Manuell match: ${vars.candidate.reasons.join(", ")}`
+            : "Manuell match utan explicita skäl",
+      }),
     onSuccess: () => {
       invalidateTransactions();
+      setCandidatePickerTx(null);
+      setSelectedCandidateId("");
       addToast("Transaktionen matchades", "success");
     },
     onError: (error: Error) => {
@@ -166,6 +175,17 @@ export function BankTransactions() {
     setToDate("");
     setPage(1);
   };
+
+  const matchCandidates = matchCandidatesQuery.data?.data ?? [];
+  useEffect(() => {
+    if (matchCandidates.length > 0 && selectedCandidateId === "") {
+      setSelectedCandidateId(matchCandidates[0]?.voucherId ?? "");
+    }
+  }, [matchCandidates, selectedCandidateId]);
+
+  const selectedCandidate = matchCandidates.find(
+    (candidate) => candidate.voucherId === selectedCandidateId,
+  );
 
   if (!bankingEnabled) {
     return (
@@ -279,16 +299,23 @@ export function BankTransactions() {
               <tbody>
                 {transactions.map((tx) => {
                   const isFindingMatch =
-                    findAndMatchMutation.isPending && findAndMatchMutation.variables?.id === tx.id;
+                    matchCandidatesQuery.isFetching && candidatePickerTx?.id === tx.id;
                   const isUnmatching =
                     unmatchMutation.isPending && unmatchMutation.variables === tx.id;
                   const isConfirming =
                     confirmMutation.isPending && confirmMutation.variables === tx.id;
+                  const isApplyingMatch =
+                    applyMatchMutation.isPending &&
+                    applyMatchMutation.variables?.transactionId === tx.id;
                   const isCreatingVoucher =
                     createVoucherMutation.isPending &&
                     createVoucherMutation.variables?.transactionId === tx.id;
                   const isBusy =
-                    isFindingMatch || isUnmatching || isConfirming || isCreatingVoucher;
+                    isFindingMatch ||
+                    isUnmatching ||
+                    isConfirming ||
+                    isApplyingMatch ||
+                    isCreatingVoucher;
 
                   return (
                     <tr key={tx.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
@@ -330,9 +357,12 @@ export function BankTransactions() {
                           <button
                             style={smallButtonStyle}
                             disabled={isBusy || tx.matchStatus === "CONFIRMED"}
-                            onClick={() => findAndMatchMutation.mutate(tx)}
+                            onClick={() => {
+                              setCandidatePickerTx(tx);
+                              setSelectedCandidateId("");
+                            }}
                           >
-                            {isFindingMatch ? "Matchar..." : "Matcha"}
+                            {isFindingMatch ? "Laddar..." : "Välj match"}
                           </button>
                           <button
                             style={smallButtonStyle}
@@ -388,6 +418,114 @@ export function BankTransactions() {
               </tbody>
             </table>
           </div>
+
+          {candidatePickerTx && (
+            <div style={modalBackdropStyle}>
+              <div className="card" style={modalCardStyle}>
+                <div className="flex-between" style={{ marginBottom: "0.75rem" }}>
+                  <h3 style={{ margin: 0 }}>Välj matchning</h3>
+                  <button
+                    className="secondary"
+                    onClick={() => {
+                      setCandidatePickerTx(null);
+                      setSelectedCandidateId("");
+                    }}
+                  >
+                    Stäng
+                  </button>
+                </div>
+
+                <p className="text-muted" style={{ marginTop: 0 }}>
+                  Transaktion: {candidatePickerTx.description} (
+                  {formatAmount(candidatePickerTx.amountOre, candidatePickerTx.currency)})
+                </p>
+
+                {matchCandidatesQuery.isLoading ? (
+                  <p className="text-muted">Hämtar matchningskandidater...</p>
+                ) : matchCandidates.length === 0 ? (
+                  <p className="text-muted">Inga kandidater hittades för transaktionen.</p>
+                ) : (
+                  <div
+                    style={{
+                      display: "grid",
+                      gap: "0.5rem",
+                      maxHeight: "320px",
+                      overflowY: "auto",
+                    }}
+                  >
+                    {matchCandidates.map((candidate) => (
+                      <label
+                        key={candidate.voucherId}
+                        style={{
+                          display: "block",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "8px",
+                          padding: "0.6rem",
+                          cursor: "pointer",
+                          background:
+                            selectedCandidateId === candidate.voucherId ? "#eff6ff" : "#fff",
+                        }}
+                      >
+                        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                          <input
+                            type="radio"
+                            name="match-candidate"
+                            checked={selectedCandidateId === candidate.voucherId}
+                            onChange={() => setSelectedCandidateId(candidate.voucherId)}
+                          />
+                          <strong>
+                            Verifikat #{candidate.voucherNumber} - score {candidate.score}
+                          </strong>
+                        </div>
+                        <div style={{ marginTop: "0.35rem", fontSize: "0.85rem" }}>
+                          {candidate.description}
+                        </div>
+                        <div
+                          className="text-muted"
+                          style={{ fontSize: "0.8rem", marginTop: "0.35rem" }}
+                        >
+                          Datum: {formatDate(candidate.date)}
+                        </div>
+                        {candidate.reasons.length > 0 && (
+                          <div
+                            className="text-muted"
+                            style={{ fontSize: "0.8rem", marginTop: "0.35rem" }}
+                          >
+                            Skäl: {candidate.reasons.join(", ")}
+                          </div>
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                )}
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    marginTop: "0.85rem",
+                    gap: "0.5rem",
+                  }}
+                >
+                  <button
+                    style={buttonStyle}
+                    disabled={!selectedCandidate || applyMatchMutation.isPending}
+                    onClick={() => {
+                      if (!candidatePickerTx || !selectedCandidate) {
+                        return;
+                      }
+                      applyMatchMutation.mutate({
+                        transactionId: candidatePickerTx.id,
+                        candidate: selectedCandidate,
+                      });
+                    }}
+                  >
+                    {applyMatchMutation.isPending ? "Matchar..." : "Matcha vald kandidat"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {totalPages > 1 && (
             <div
@@ -471,4 +609,22 @@ const thStyle: React.CSSProperties = {
 const tdStyle: React.CSSProperties = {
   padding: "0.625rem 0.75rem",
   verticalAlign: "top",
+};
+
+const modalBackdropStyle: React.CSSProperties = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(15, 23, 42, 0.35)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 40,
+  padding: "1rem",
+};
+
+const modalCardStyle: React.CSSProperties = {
+  width: "100%",
+  maxWidth: "640px",
+  maxHeight: "80vh",
+  overflow: "auto",
 };
