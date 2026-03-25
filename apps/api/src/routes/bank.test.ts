@@ -18,6 +18,7 @@ describe("Bank routes", () => {
 
   const orgId = "org-1";
   const connectionId = "conn-1";
+  const oldEnabledOrgIds = process.env["BANK_ENABLED_ORG_IDS"];
 
   const mockConnection = {
     id: connectionId,
@@ -56,6 +57,12 @@ describe("Bank routes", () => {
   };
 
   beforeEach(async () => {
+    if (oldEnabledOrgIds == null) {
+      delete process.env["BANK_ENABLED_ORG_IDS"];
+    } else {
+      process.env["BANK_ENABLED_ORG_IDS"] = oldEnabledOrgIds;
+    }
+
     const ctx = await buildTestApp();
     app = ctx.app;
     repos = ctx.repos;
@@ -205,6 +212,18 @@ describe("Bank routes", () => {
 
       expect(res.statusCode).toBe(200);
       expect(JSON.parse(res.body).data).toHaveLength(0);
+    });
+
+    it("returns 403 when banking is disabled for organization", async () => {
+      process.env["BANK_ENABLED_ORG_IDS"] = "org-2";
+
+      const res = await app.inject({
+        method: "GET",
+        url: `/api/organizations/${orgId}/bank/connections`,
+      });
+
+      expect(res.statusCode).toBe(403);
+      expect(JSON.parse(res.body).code).toBe("BANKING_DISABLED");
     });
   });
 
