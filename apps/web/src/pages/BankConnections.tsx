@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useOrganization } from "../context/OrganizationContext";
 import { useToast } from "../context/ToastContext";
 import { defined } from "../utils/assert";
+import { isBankingEnabledForOrganization } from "../utils/bank-feature-flag";
 import { api, ApiError, type BankConnectionEntity, type BankSyncRunEntity } from "../api";
 
 const STATUS_LABELS: Record<BankConnectionEntity["status"], string> = {
@@ -60,10 +61,12 @@ export function BankConnections() {
   const { addToast } = useToast();
   const queryClient = useQueryClient();
   const orgId = defined(organization).id;
+  const bankingEnabled = isBankingEnabledForOrganization(orgId);
 
   const connectionsQuery = useQuery({
     queryKey: ["bank-connections", orgId],
     queryFn: () => api.getBankConnections(orgId),
+    enabled: bankingEnabled,
   });
 
   const connections = connectionsQuery.data?.data ?? [];
@@ -115,6 +118,17 @@ export function BankConnections() {
       );
     },
   });
+
+  if (!bankingEnabled) {
+    return (
+      <div className="card">
+        <h2>Bankkopplingar</h2>
+        <p className="text-muted">
+          Bankfunktioner är inte aktiverade för den valda organisationen.
+        </p>
+      </div>
+    );
+  }
 
   if (connectionsQuery.isLoading) {
     return <div className="loading">Laddar bankanslutningar...</div>;
