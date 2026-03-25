@@ -780,4 +780,182 @@ describe("Bank routes", () => {
       expect(body.code).toBe("BANK_AUTH_REQUIRED");
     });
   });
+
+  // ── POST/GET /transactions/:transactionId/* (matching flow) ──────────────
+
+  describe("Bank transaction matching routes", () => {
+    const txId = "tx-match-1";
+    const voucherId = "vch-1";
+
+    const bankTxBase = {
+      id: txId,
+      organizationId: orgId,
+      connectionId,
+      providerTransactionId: "sbx_tx_match_1",
+      bookedAt: new Date("2026-03-15T00:00:00.000Z"),
+      description: "Lunch med kund",
+      amountOre: -12500,
+      currency: "SEK",
+      matchStatus: "PENDING_MATCH" as const,
+      createdAt: new Date("2026-03-15T00:00:00.000Z"),
+      updatedAt: new Date("2026-03-15T00:00:00.000Z"),
+    };
+
+    const voucher = {
+      id: voucherId,
+      fiscalYearId: "fy-1",
+      organizationId: orgId,
+      number: 42,
+      date: new Date("2026-03-15T00:00:00.000Z"),
+      description: "Lunch med kund",
+      lines: [
+        {
+          id: "line-1",
+          voucherId,
+          accountNumber: "6071",
+          debit: 12500,
+          credit: 0,
+        },
+        {
+          id: "line-2",
+          voucherId,
+          accountNumber: "1930",
+          debit: 0,
+          credit: 12500,
+        },
+      ],
+      documentIds: [],
+      status: "DRAFT" as const,
+      createdAt: new Date("2026-03-15T00:00:00.000Z"),
+      updatedAt: new Date("2026-03-15T00:00:00.000Z"),
+    };
+
+    it("returns match candidates for transaction", async () => {
+      repos.bankTransactions.findById.mockResolvedValue(bankTxBase);
+      repos.vouchers.findByDateRange.mockResolvedValue([voucher]);
+
+      const res = await app.inject({
+        method: "GET",
+        url: `/api/organizations/${orgId}/bank/transactions/${txId}/match-candidates?limit=5`,
+      });
+
+      expect(res.statusCode).toBe(200);
+      const body = JSON.parse(res.body);
+      expect(body.data).toHaveLength(1);
+      expect(body.data[0].voucherId).toBe(voucherId);
+    });
+
+    it("matches transaction to voucher", async () => {
+      repos.bankTransactions.findById.mockResolvedValue(bankTxBase);
+      repos.vouchers.findById.mockResolvedValue(voucher);
+      repos.vouchers.isVoucherInClosedFiscalYear.mockResolvedValue(false);
+      repos.bankTransactions.updateMatch.mockResolvedValue({
+        ...bankTxBase,
+        matchStatus: "MATCHED",
+        matchedVoucherId: voucherId,
+        matchConfidence: 90,
+      });
+
+      const res = await app.inject({
+        method: "POST",
+        url: `/api/organizations/${orgId}/bank/transactions/${txId}/match`,
+        payload: {
+          voucherId,
+          matchConfidence: 90,
+        },
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(repos.bankTransactions.updateMatch).toHaveBeenCalledWith(
+        txId,
+        orgId,
+        expect.objectContaining({ status: "MATCHED", matchedVoucherId: voucherId }),
+      );
+    });
+
+    it("unmatches transaction", async () => {
+      repos.bankTransactions.findById.mockResolvedValue({
+        ...bankTxBase,
+        matchStatus: "MATCHED",
+        matchedVoucherId: voucherId,
+      });
+      repos.bankTransactions.updateMatch.mockResolvedValue({
+        ...bankTxBase,
+        matchStatus: "PENDING_MATCH",
+        matchedVoucherId: null,
+      });
+
+      const res = await app.inject({
+        method: "POST",
+        url: `/api/organizations/${orgId}/bank/transactions/${txId}/unmatch`,
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(repos.bankTransactions.updateMatch).toHaveBeenCalledWith(
+        txId,
+        orgId,
+        expect.objectContaining({ status: "PENDING_MATCH", matchedVoucherId: null }),
+      );
+    });
+
+    it("returns 400 when confirming transaction without voucher match", async () => {
+      repos.bankTransactions.findById.mockResolvedValue(bankTxBase);
+
+      const res = await app.inject({
+        method: "POST",
+        url: `/api/organizations/${orgId}/bank/transactions/${txId}/confirm`,
+      });
+
+      expect(res.statusCode).toBe(400);
+      expect(JSON.parse(res.body).code).toBe("BANK_TRANSACTION_NOT_MATCHED");
+    });
+
+    it("creates voucher from transaction and confirms match", async () => {
+      repos.bankTransactions.findById.mockResolvedValue(bankTxBase);
+      repos.fiscalYears.findByOrganization.mockResolvedValue([
+        {
+          id: "fy-1",
+          organizationId: orgId,
+          startDate: new Date("2026-01-01T00:00:00.000Z"),
+          endDate: new Date("2026-12-31T00:00:00.000Z"),
+          isClosed: false,
+          createdAt: new Date("2026-01-01T00:00:00.000Z"),
+          updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+        },
+      ]);
+      repos.vouchers.create.mockResolvedValue({ ok: true, value: voucher });
+      repos.bankTransactions.updateMatch.mockResolvedValue({
+        ...bankTxBase,
+        matchStatus: "CONFIRMED",
+        matchedVoucherId: voucherId,
+        matchConfidence: 100,
+      });
+
+      const res = await app.inject({
+        method: "POST",
+        url: `/api/organizations/${orgId}/bank/transactions/${txId}/create-voucher`,
+        payload: {
+          bankAccountNumber: "1930",
+          counterAccountNumber: "6071",
+        },
+      });
+
+      expect(res.statusCode).toBe(201);
+      expect(repos.vouchers.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          organizationId: orgId,
+          description: expect.stringContaining("Banktransaktion:"),
+          lines: [
+            expect.objectContaining({ accountNumber: "6071", debit: 12500, credit: 0 }),
+            expect.objectContaining({ accountNumber: "1930", debit: 0, credit: 12500 }),
+          ],
+        }),
+      );
+      expect(repos.bankTransactions.updateMatch).toHaveBeenCalledWith(
+        txId,
+        orgId,
+        expect.objectContaining({ status: "CONFIRMED", matchedVoucherId: voucherId }),
+      );
+    });
+  });
 });
