@@ -194,20 +194,24 @@ export function BankConnections() {
                       onClick={() => syncMutation.mutate(connection.id)}
                       disabled={isSyncingThisConnection || isRefreshingThisConnection}
                     >
-                      {isSyncingThisConnection ? "Synkar..." : "Synka nu"}
+                      {isSyncingThisConnection
+                        ? t("bank.action.syncing")
+                        : t("bank.action.syncNow")}
                     </button>
                     <button
                       className="secondary"
                       onClick={() => refreshMutation.mutate(connection.id)}
                       disabled={isSyncingThisConnection || isRefreshingThisConnection}
                     >
-                      {isRefreshingThisConnection ? "Förnyar..." : "Förnya auth"}
+                      {isRefreshingThisConnection
+                        ? t("bank.action.refreshingAuth")
+                        : t("bank.action.refreshAuth")}
                     </button>
                     <Link
                       to={`/bank/${connection.id}/transactions`}
                       style={{ fontSize: "0.875rem", alignSelf: "center" }}
                     >
-                      Visa transaktioner →
+                      {t("bank.action.viewTransactions")}
                     </Link>
                   </div>
                 </div>
