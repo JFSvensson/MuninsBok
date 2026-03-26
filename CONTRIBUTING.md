@@ -51,6 +51,18 @@ muninsbok/
     db/       # Prisma schema + repositories + mappers
 ```
 
+### Banking-modulen
+
+- API-routes: `apps/api/src/routes/bank.ts`
+- Matchningslogik: `apps/api/src/services/bank-matching.ts`
+- Synklogik: `apps/api/src/services/bank-sync.ts`
+- Scheman/validering: `apps/api/src/schemas/bank.ts`
+- Web-vyer: `apps/web/src/pages/BankConnections.tsx` och `apps/web/src/pages/BankTransactions.tsx`
+- i18n-nycklar: `packages/core/src/i18n.ts` (prefix `bank.`)
+
+Feature-gating for banking styrs med `BANK_ENABLED_ORG_IDS` (backend) och `VITE_BANK_ENABLED_ORG_IDS` (frontend).
+Använd samma värde i båda för att undvika att UI visar funktioner som API:t nekar.
+
 ### Designprinciper
 
 - **Ren domänlogik** — all bokföringslogik i `packages/core` utan sidoeffekter.
