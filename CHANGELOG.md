@@ -5,6 +5,16 @@ Alla viktiga ändringar i projektet dokumenteras i denna fil.
 Formatet följer [Keep a Changelog](https://keepachangelog.com/sv/1.1.0/)
 och projektet använder [Semantic Versioning](https://semver.org/lang/sv/).
 
+## [Unreleased]
+
+### Fixat
+- **Banking e2e**: routes `POST /bank/connect/init` och `POST /bank/connect/callback` returnerade 404 i e2e-tester. Orsak: Docker API-image var inte ombyggd efter kodändringar. Löst genom rebuild-rutin (`docker compose build --no-cache api`).
+
+### Tillagt
+- **CONTRIBUTING.md**: ny sektion "Felsökning av Docker & e2e" med recovery-checklista och vanliga e2e-problem.
+- **docs/production.md**: ny sektion "Felsökning: API-container och kodmismatch" med diagnostik och åtgärder.
+- **.gitignore**: regler för lokala debug-loggar (`*.log`, `*-exit.txt`, `tmp-*`).
+
 ## [0.1.0] — 2025-06-22
 
 ### Tillagt
