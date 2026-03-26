@@ -155,3 +155,9 @@ docker-compose.override.yml
 
 # vscode settings
 .vscode/
+
+# Local debug/test logs
+*.log
+*-exit.txt
+tmp-*.txt
+tmp-*.log
