@@ -15,12 +15,14 @@ export default defineConfig({
     {
       command: "pnpm --filter @muninsbok/api dev",
       port: 3000,
-      reuseExistingServer: !process.env["CI"],
+      reuseExistingServer: !!process.env["PLAYWRIGHT_REUSE_SERVER"],
+      timeout: 30_000,
     },
     {
       command: "pnpm --filter @muninsbok/web dev",
       port: 5173,
-      reuseExistingServer: !process.env["CI"],
+      reuseExistingServer: !!process.env["PLAYWRIGHT_REUSE_SERVER"],
+      timeout: 30_000,
     },
   ],
 });
