@@ -232,6 +232,8 @@ textarea {
   border: 1px solid var(--color-border);
   border-radius: 4px;
   font-size: 1rem;
+  background-color: var(--color-bg-card);
+  color: var(--color-text);
 }
 
 input:focus,
@@ -539,11 +541,23 @@ button.danger:disabled {
   button {
     padding: 0.6rem 1rem;
     font-size: 0.9rem;
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .btn-icon {
+    width: 44px;
+    height: 44px;
   }
 
   .flex.gap-2 {
     flex-direction: column;
     gap: 0.5rem;
+  }
+
+  /* Hide less-critical table columns on mobile */
+  .hide-mobile {
+    display: none;
   }
 }
 
