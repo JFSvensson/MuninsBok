@@ -143,6 +143,25 @@ export class BankTransactionMatchingService {
     return updated;
   }
 
+  async bulkConfirmTransactions(organizationId: string, transactionIds: string[]): Promise<number> {
+    if (transactionIds.length === 0) return 0;
+
+    return this.deps.repos.bankTransactions.updateMatchMany(transactionIds, organizationId, {
+      status: "CONFIRMED",
+    });
+  }
+
+  async bulkUnmatchTransactions(organizationId: string, transactionIds: string[]): Promise<number> {
+    if (transactionIds.length === 0) return 0;
+
+    return this.deps.repos.bankTransactions.updateMatchMany(transactionIds, organizationId, {
+      status: "PENDING_MATCH",
+      matchedVoucherId: null,
+      matchConfidence: null,
+      matchNote: null,
+    });
+  }
+
   async createVoucherFromTransaction(input: CreateVoucherFromBankTransactionInput) {
     const tx = await this.requireTransaction(input.organizationId, input.transactionId);
 
