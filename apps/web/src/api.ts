@@ -468,6 +468,24 @@ export const api = {
       },
     ),
 
+  bulkConfirmBankTransactions: (orgId: string, transactionIds: string[]) =>
+    fetchJson<ApiResponse<{ updated: number }>>(
+      `${API_BASE}/organizations/${orgId}/bank/transactions/bulk/confirm`,
+      {
+        method: "POST",
+        body: JSON.stringify({ transactionIds }),
+      },
+    ),
+
+  bulkUnmatchBankTransactions: (orgId: string, transactionIds: string[]) =>
+    fetchJson<ApiResponse<{ updated: number }>>(
+      `${API_BASE}/organizations/${orgId}/bank/transactions/bulk/unmatch`,
+      {
+        method: "POST",
+        body: JSON.stringify({ transactionIds }),
+      },
+    ),
+
   updateAccount: (
     orgId: string,
     accountNumber: string,
