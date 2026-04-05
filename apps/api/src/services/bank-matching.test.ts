@@ -548,4 +548,51 @@ describe("BankTransactionMatchingService", () => {
       ).rejects.toThrow(/Obalanserat/);
     });
   });
+
+  describe("bulkConfirmTransactions", () => {
+    it("delegates to updateMatchMany with CONFIRMED status", async () => {
+      const { service, bankTransactions } = buildService();
+      bankTransactions.updateMatchMany.mockResolvedValue(3);
+
+      const count = await service.bulkConfirmTransactions(ORG_ID, ["tx-1", "tx-2", "tx-3"]);
+
+      expect(count).toBe(3);
+      expect(bankTransactions.updateMatchMany).toHaveBeenCalledWith(
+        ["tx-1", "tx-2", "tx-3"],
+        ORG_ID,
+        { status: "CONFIRMED" },
+      );
+    });
+
+    it("returns 0 for empty array without calling repo", async () => {
+      const { service, bankTransactions } = buildService();
+      const count = await service.bulkConfirmTransactions(ORG_ID, []);
+      expect(count).toBe(0);
+      expect(bankTransactions.updateMatchMany).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("bulkUnmatchTransactions", () => {
+    it("delegates to updateMatchMany with PENDING_MATCH status and null fields", async () => {
+      const { service, bankTransactions } = buildService();
+      bankTransactions.updateMatchMany.mockResolvedValue(2);
+
+      const count = await service.bulkUnmatchTransactions(ORG_ID, ["tx-1", "tx-2"]);
+
+      expect(count).toBe(2);
+      expect(bankTransactions.updateMatchMany).toHaveBeenCalledWith(["tx-1", "tx-2"], ORG_ID, {
+        status: "PENDING_MATCH",
+        matchedVoucherId: null,
+        matchConfidence: null,
+        matchNote: null,
+      });
+    });
+
+    it("returns 0 for empty array without calling repo", async () => {
+      const { service, bankTransactions } = buildService();
+      const count = await service.bulkUnmatchTransactions(ORG_ID, []);
+      expect(count).toBe(0);
+      expect(bankTransactions.updateMatchMany).not.toHaveBeenCalled();
+    });
+  });
 });
