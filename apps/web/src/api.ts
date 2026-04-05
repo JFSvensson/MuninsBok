@@ -682,6 +682,7 @@ export const api = {
   refreshTokens: () =>
     fetchJson<RefreshResponse>(`${API_BASE}/auth/refresh`, {
       method: "POST",
+      body: JSON.stringify({}),
       credentials: "include",
     }),
 
@@ -690,7 +691,7 @@ export const api = {
       headers: { Authorization: `Bearer ${accessToken}` },
     }),
 
-  logout: () => fetchVoid(`${API_BASE}/auth/logout`, { method: "POST" }),
+  logout: () => fetchVoid(`${API_BASE}/auth/logout`, { method: "POST", body: JSON.stringify({}) }),
 
   // ── Members ───────────────────────────────────────────────
 
