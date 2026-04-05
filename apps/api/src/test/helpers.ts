@@ -223,6 +223,7 @@ export function createMockBankTransactionRepo(): MockedRepo<IBankTransactionRepo
     findUnmatchedByOrganization: vi.fn().mockResolvedValue([]),
     upsertMany: vi.fn(),
     updateMatch: vi.fn(),
+    updateMatchMany: vi.fn().mockResolvedValue(0),
     deleteByConnection: vi.fn().mockResolvedValue(0),
   } as MockedRepo<IBankTransactionRepository>;
 }
