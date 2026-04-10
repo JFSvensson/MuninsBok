@@ -41,7 +41,7 @@ describe("auth routes", () => {
         payload: {
           email: "test@example.com",
           name: "Test User",
-          password: "password123",
+          password: "Passw0rd!xyz",
         },
       });
 
@@ -72,7 +72,7 @@ describe("auth routes", () => {
         payload: {
           email: "taken@example.com",
           name: "Another User",
-          password: "password123",
+          password: "Passw0rd!xyz",
         },
       });
 
@@ -108,6 +108,8 @@ describe("auth routes", () => {
         passwordHash: storedHash,
         createdAt: new Date(),
         updatedAt: new Date(),
+        failedLoginAttempts: 0,
+        lockedUntil: null,
       });
 
       const response = await app.inject({
@@ -155,6 +157,8 @@ describe("auth routes", () => {
         passwordHash: storedHash,
         createdAt: new Date(),
         updatedAt: new Date(),
+        failedLoginAttempts: 0,
+        lockedUntil: null,
       });
 
       const response = await app.inject({
