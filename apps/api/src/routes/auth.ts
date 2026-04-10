@@ -10,7 +10,7 @@
 import type { FastifyInstance, FastifyReply } from "fastify";
 import { registerSchema, loginSchema } from "../schemas/index.js";
 import { parseBody } from "../utils/parse-body.js";
-import { hashPassword, verifyPassword } from "../utils/password.js";
+import { hashPassword, verifyPassword, needsRehash } from "../utils/password.js";
 import type { JwtPayload, GeneratedTokens } from "../plugins/jwt-auth.js";
 
 const REFRESH_COOKIE = "refresh_token";
@@ -18,6 +18,11 @@ const REFRESH_COOKIE = "refresh_token";
 export async function authRoutes(fastify: FastifyInstance) {
   const userRepo = fastify.repos.users;
   const refreshTokenRepo = fastify.repos.refreshTokens;
+
+  /** Max failed login attempts before lockout. */
+  const MAX_LOGIN_ATTEMPTS = 5;
+  /** Lockout duration in minutes. */
+  const LOCKOUT_MINUTES = 15;
 
   /** Set the refresh token as an httpOnly cookie on the reply. */
   function setRefreshCookie(reply: FastifyReply, tokens: GeneratedTokens): void {
@@ -92,8 +97,18 @@ export async function authRoutes(fastify: FastifyInstance) {
         });
       }
 
+      // Check account lockout
+      if (user.lockedUntil && user.lockedUntil > new Date()) {
+        const minutesLeft = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60_000);
+        return reply.status(429).send({
+          error: `Kontot är låst. Försök igen om ${minutesLeft} minut${minutesLeft === 1 ? "" : "er"}.`,
+          code: "ACCOUNT_LOCKED",
+        });
+      }
+
       const valid = await verifyPassword(password, user.passwordHash);
       if (!valid) {
+        await userRepo.recordFailedLogin(user.id, MAX_LOGIN_ATTEMPTS, LOCKOUT_MINUTES);
         return reply.status(401).send({
           error: "Felaktig e-postadress eller lösenord",
           code: "INVALID_CREDENTIALS",
@@ -101,6 +116,14 @@ export async function authRoutes(fastify: FastifyInstance) {
       }
 
       const tokens = fastify.generateTokens(user.id, user.email);
+      await userRepo.resetFailedLogins(user.id);
+
+      // Rehash with stronger algorithm if using legacy v1 format
+      if (needsRehash(user.passwordHash)) {
+        const newHash = await hashPassword(password);
+        await userRepo.updatePasswordHash(user.id, newHash);
+      }
+
       await storeRefreshToken(user.id, tokens.refreshTokenJti, tokens.refreshTokenExpiresAt);
 
       setRefreshCookie(reply, tokens);
@@ -117,16 +140,13 @@ export async function authRoutes(fastify: FastifyInstance) {
   fastify.post("/refresh", { preHandler: [fastify.verifyRefreshToken] }, async (request, reply) => {
     const { sub, email, jti } = request.user as JwtPayload;
 
-    // Verify the refresh token has not been revoked
-    if (!jti || !(await refreshTokenRepo.existsByJti(jti))) {
+    // Atomically verify and revoke the refresh token to prevent reuse
+    if (!jti || !(await refreshTokenRepo.revokeByJtiIfExists(jti))) {
       return reply.status(401).send({
         error: "Refresh-token har återkallats",
         code: "TOKEN_REVOKED",
       });
     }
-
-    // Revoke the old refresh token (rotate)
-    await refreshTokenRepo.revokeByJti(jti);
 
     // Issue new token pair
     const tokens = fastify.generateTokens(sub, email);
