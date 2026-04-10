@@ -19,18 +19,32 @@ interface AuthResult {
 
 /**
  * Register a unique test user via the API and return tokens + user info.
+ * Automatically retries when hitting the rate limiter (429).
  */
 export async function registerTestUser(request: APIRequestContext): Promise<AuthResult> {
   counter++;
   const email = `e2e-${Date.now()}-${counter}@test.local`;
-  const resp = await request.post(`${API_BASE}/api/auth/register`, {
-    data: { email, name: "E2E Test User", password: TEST_PASSWORD },
-  });
-  if (!resp.ok()) {
-    throw new Error(`Failed to register test user: ${resp.status()} ${await resp.text()}`);
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const resp = await request.post(`${API_BASE}/api/auth/register`, {
+      data: { email, name: "E2E Test User", password: TEST_PASSWORD },
+    });
+
+    if (resp.status() === 429 && attempt < 3) {
+      const text = await resp.text();
+      const match = text.match(/retry in (\d+)/i);
+      const waitSec = match ? Number(match[1]) : 10;
+      await new Promise((r) => setTimeout(r, waitSec * 1_000 + 500));
+      continue;
+    }
+
+    if (!resp.ok()) {
+      throw new Error(`Failed to register test user: ${resp.status()} ${await resp.text()}`);
+    }
+    const body = await resp.json();
+    return body.data as AuthResult;
   }
-  const body = await resp.json();
-  return body.data as AuthResult;
+  throw new Error("Failed to register test user after 3 attempts (rate limited)");
 }
 
 /**
