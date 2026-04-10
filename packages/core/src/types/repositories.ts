@@ -210,6 +210,12 @@ export interface IUserRepository {
   findById(id: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;
   create(input: CreateUserInput): Promise<Result<User, UserError>>;
+  /** Record a failed login attempt and optionally lock the account. */
+  recordFailedLogin(userId: string, maxAttempts: number, lockoutMinutes: number): Promise<void>;
+  /** Reset failed login counter on successful login. */
+  resetFailedLogins(userId: string): Promise<void>;
+  /** Update the stored password hash (e.g. for rehashing on login). */
+  updatePasswordHash(userId: string, passwordHash: string): Promise<void>;
   /** Members of an organization, including user details. */
   findMembersByOrganization(organizationId: string): Promise<OrganizationMemberWithUser[]>;
   /** Get a specific membership. */
@@ -237,6 +243,8 @@ export interface IRefreshTokenRepository {
   existsByJti(jti: string): Promise<boolean>;
   /** Revoke a single refresh token by jti. */
   revokeByJti(jti: string): Promise<void>;
+  /** Atomically revoke a refresh token by jti if it exists. Returns true if it was deleted. */
+  revokeByJtiIfExists(jti: string): Promise<boolean>;
   /** Revoke all refresh tokens for a user (e.g. on logout / password change). */
   revokeAllByUserId(userId: string): Promise<void>;
   /** Delete expired tokens (housekeeping). */
