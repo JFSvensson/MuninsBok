@@ -157,6 +157,8 @@ export function toUser(user: Prisma.UserGetPayload<{}>): CoreUser {
     passwordHash: user.passwordHash,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
+    failedLoginAttempts: user.failedLoginAttempts,
+    lockedUntil: user.lockedUntil,
   };
 }
 
