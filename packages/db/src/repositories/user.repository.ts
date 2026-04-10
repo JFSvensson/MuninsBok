@@ -47,6 +47,36 @@ export class UserRepository implements IUserRepository {
     return ok(toUser(user));
   }
 
+  async recordFailedLogin(
+    userId: string,
+    maxAttempts: number,
+    lockoutMinutes: number,
+  ): Promise<void> {
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    const attempts = user.failedLoginAttempts + 1;
+    const lockedUntil =
+      attempts >= maxAttempts ? new Date(Date.now() + lockoutMinutes * 60_000) : null;
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { failedLoginAttempts: attempts, lockedUntil },
+    });
+  }
+
+  async resetFailedLogins(userId: string): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { failedLoginAttempts: 0, lockedUntil: null },
+    });
+  }
+
+  async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash },
+    });
+  }
+
   async findMembersByOrganization(organizationId: string): Promise<OrganizationMemberWithUser[]> {
     const members = await this.prisma.organizationMember.findMany({
       where: { organizationId },
