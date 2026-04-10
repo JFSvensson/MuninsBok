@@ -1,3 +1,6 @@
+# Playwright and test results
+playwright-report/
+test-results/
 # Logs
 logs
 *.log
