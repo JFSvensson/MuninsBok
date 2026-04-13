@@ -82,8 +82,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/db
       dotenv:
-        specifier: ^17.4.1
-        version: 17.4.1
+        specifier: ^17.4.2
+        version: 17.4.2
       fastify:
         specifier: ^5.8.4
         version: 5.8.4
@@ -125,8 +125,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/core
       '@tanstack/react-query':
-        specifier: ^5.97.0
-        version: 5.97.0(react@19.2.5)
+        specifier: ^5.99.0
+        version: 5.99.0(react@19.2.5)
       jspdf:
         specifier: ^4.2.1
         version: 4.2.1
@@ -201,8 +201,8 @@ importers:
         specifier: ^7.7.0
         version: 7.7.0(prisma@7.7.0)(typescript@6.0.2)
       dotenv:
-        specifier: ^17.4.1
-        version: 17.4.1
+        specifier: ^17.4.2
+        version: 17.4.2
       pg:
         specifier: ^8.20.0
         version: 8.20.0
@@ -1332,16 +1332,16 @@ packages:
   /@standard-schema/spec@1.1.0:
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
-  /@tanstack/query-core@5.97.0:
-    resolution: {integrity: sha512-QdpLP5VzVMgo4VtaPppRA2W04UFjIqX+bxke/ZJhE5cfd5UPkRzqIAJQt9uXkQJjqE8LBOMbKv7f8HCsZltXlg==}
+  /@tanstack/query-core@5.99.0:
+    resolution: {integrity: sha512-3Jv3WQG0BCcH7G+7lf/bP8QyBfJOXeY+T08Rin3GZ1bshvwlbPt7NrDHMEzGdKIOmOzvIQmxjk28YEQX60k7pQ==}
     dev: false
 
-  /@tanstack/react-query@5.97.0(react@19.2.5):
-    resolution: {integrity: sha512-y4So4eGcQoK2WVMAcDNZE9ofB/p5v1OlKvtc1F3uqHwrtifobT7q+ZnXk2mRkc8E84HKYSlAE9z6HXl2V0+ySQ==}
+  /@tanstack/react-query@5.99.0(react@19.2.5):
+    resolution: {integrity: sha512-OY2bCqPemT1LlqJ8Y2CUau4KELnIhhG9Ol3ZndPbdnB095pRbPo1cHuXTndg8iIwtoHTgwZjyaDnQ0xD0mYwAw==}
     peerDependencies:
       react: ^18 || ^19
     dependencies:
-      '@tanstack/query-core': 5.97.0
+      '@tanstack/query-core': 5.99.0
       react: 19.2.5
     dev: false
 
@@ -2117,8 +2117,8 @@ packages:
     resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
     engines: {node: '>=12'}
 
-  /dotenv@17.4.1:
-    resolution: {integrity: sha512-k8DaKGP6r1G30Lx8V4+pCsLzKr8vLmV2paqEj1Y55GdAgJuIqpRp5FfajGF8KtwMxCz9qJc6wUIJnm053d/WCw==}
+  /dotenv@17.4.2:
+    resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
     engines: {node: '>=12'}
     dev: false
 
