@@ -30,6 +30,11 @@ const ADMIN_MEMBERSHIP = {
   createdAt: new Date(),
 };
 
+const OWNER_MEMBERSHIP = {
+  ...ADMIN_MEMBERSHIP,
+  role: "OWNER" as const,
+};
+
 describe("Member routes", () => {
   let app: FastifyInstance;
   let repos: MockRepos;
@@ -188,6 +193,42 @@ describe("Member routes", () => {
 
       expect(res.statusCode).toBe(403);
     });
+
+    it("returns 403 when ADMIN tries to assign OWNER role", async () => {
+      repos.users.findMembership.mockResolvedValueOnce(ADMIN_MEMBERSHIP);
+
+      const res = await app.inject({
+        method: "POST",
+        url: "/api/organizations/org-1/members",
+        headers: authHeaders(),
+        payload: { email: "anna@example.com", role: "OWNER" },
+      });
+
+      expect(res.statusCode).toBe(403);
+      expect(JSON.parse(res.body).code).toBe("INSUFFICIENT_ROLE_ASSIGNMENT");
+    });
+
+    it("allows OWNER to assign OWNER role", async () => {
+      repos.users.findMembership
+        .mockResolvedValueOnce(OWNER_MEMBERSHIP) // requireMembership
+        .mockResolvedValueOnce(null); // route: check user isn't already member
+      repos.users.findByEmail.mockResolvedValueOnce({
+        id: "user-2",
+        email: "anna@example.com",
+        name: "Anna",
+      });
+      repos.users.addMember.mockResolvedValueOnce({ ...MEMBER, role: "OWNER" });
+
+      const res = await app.inject({
+        method: "POST",
+        url: "/api/organizations/org-1/members",
+        headers: authHeaders(),
+        payload: { email: "anna@example.com", role: "OWNER" },
+      });
+
+      expect(res.statusCode).toBe(201);
+      expect(JSON.parse(res.body).data.role).toBe("OWNER");
+    });
   });
 
   // ---------- PATCH /:orgId/members/:userId ----------
@@ -234,6 +275,35 @@ describe("Member routes", () => {
       });
 
       expect(res.statusCode).toBe(400);
+    });
+
+    it("returns 403 when ADMIN tries to promote member to OWNER", async () => {
+      repos.users.findMembership.mockResolvedValueOnce(ADMIN_MEMBERSHIP);
+
+      const res = await app.inject({
+        method: "PATCH",
+        url: "/api/organizations/org-1/members/user-2",
+        headers: authHeaders(),
+        payload: { role: "OWNER" },
+      });
+
+      expect(res.statusCode).toBe(403);
+      expect(JSON.parse(res.body).code).toBe("INSUFFICIENT_ROLE_ASSIGNMENT");
+    });
+
+    it("allows OWNER to promote member to OWNER", async () => {
+      repos.users.findMembership.mockResolvedValueOnce(OWNER_MEMBERSHIP);
+      repos.users.updateMemberRole.mockResolvedValueOnce({ ...MEMBER, role: "OWNER" });
+
+      const res = await app.inject({
+        method: "PATCH",
+        url: "/api/organizations/org-1/members/user-2",
+        headers: authHeaders(),
+        payload: { role: "OWNER" },
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(JSON.parse(res.body).data.role).toBe("OWNER");
     });
   });
 
