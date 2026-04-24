@@ -234,6 +234,13 @@ describe("RBAC + org membership", () => {
         role: "ADMIN",
         createdAt: new Date(),
       });
+      repos.users.findMembership.mockResolvedValueOnce({
+        id: "mem-2",
+        userId: "user-2",
+        organizationId: "org-1",
+        role: "MEMBER",
+        createdAt: new Date(),
+      });
       // updateMemberRole returns the updated membership atomically
       repos.users.updateMemberRole.mockResolvedValueOnce({
         id: "mem-3",
@@ -266,6 +273,13 @@ describe("RBAC + org membership", () => {
         userId: "admin-1",
         organizationId: "org-1",
         role: "ADMIN",
+        createdAt: new Date(),
+      });
+      repos.users.findMembership.mockResolvedValueOnce({
+        id: "mem-2",
+        userId: "user-2",
+        organizationId: "org-1",
+        role: "MEMBER",
         createdAt: new Date(),
       });
       repos.users.removeMember.mockResolvedValueOnce(true);
