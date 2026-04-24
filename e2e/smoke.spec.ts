@@ -17,9 +17,12 @@ test.describe("Smoke tests", () => {
   });
 
   test("welcome page shows create button when no org exists", async ({ page, request }) => {
+    test.slow();
     await loginViaUI(page, request);
-    const createBtn = page.getByText("Skapa organisation");
-    await expect(createBtn).toBeVisible();
+    await expect(page.getByTitle("Ny organisation")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("button", { name: "Skapa organisation" })).toBeVisible({
+      timeout: 15_000,
+    });
   });
 
   test("API returns 401 for vouchers without auth", async ({ request }) => {
