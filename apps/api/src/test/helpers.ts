@@ -327,11 +327,11 @@ export function createMockReceiptOcr(): MockedRepo<IReceiptOcrService> {
 export function createMockBankAdapter(): MockedRepo<IAggregatorBankAdapter> {
   return {
     provider: "sandbox",
-    createAuthorizationUrl: vi.fn().mockResolvedValue({
-      authorizationUrl: "https://sandbox.aggregator.local/oauth/authorize?state=test",
-      state: "test",
+    createAuthorizationUrl: vi.fn().mockImplementation(async (input) => ({
+      authorizationUrl: `https://sandbox.aggregator.local/oauth/authorize?state=${encodeURIComponent(input.state)}`,
+      state: input.state,
       expiresAt: new Date("2026-01-01T00:00:00.000Z"),
-    }),
+    })),
     exchangeAuthorizationCode: vi.fn().mockResolvedValue({
       accessToken: "sbx_at_test",
       refreshToken: "sbx_rt_test",
