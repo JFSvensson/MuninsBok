@@ -11,6 +11,10 @@ importers:
       '@prisma/client':
         specifier: ^7.7.0
         version: 7.7.0(prisma@7.7.0)(typescript@6.0.2)
+    optionalDependencies:
+      '@rolldown/binding-linux-x64-gnu':
+        specifier: 1.0.0-rc.15
+        version: 1.0.0-rc.15
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
@@ -1270,7 +1274,6 @@ packages:
     cpu: [x64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@rolldown/binding-linux-x64-musl@1.0.0-rc.15:
