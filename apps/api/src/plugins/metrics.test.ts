@@ -67,4 +67,42 @@ describe("Prometheus /metrics endpoint", () => {
     const res = await app.inject({ method: "GET", url: "/metrics" });
     expect(res.body).not.toMatch(/http_requests_total\{[^}]*route="\/health"/);
   });
+
+  it("is disabled by default in production", async () => {
+    const ctx = await buildTestApp(undefined, { isProduction: true });
+    const prodApp = ctx.app;
+
+    const res = await prodApp.inject({ method: "GET", url: "/metrics" });
+    expect(res.statusCode).toBe(404);
+
+    await prodApp.close();
+  });
+
+  it("requires bearer metrics token in production when configured", async () => {
+    const ctx = await buildTestApp(undefined, {
+      isProduction: true,
+      metricsToken: "metrics-secret",
+    });
+    const prodApp = ctx.app;
+
+    const unauth = await prodApp.inject({ method: "GET", url: "/metrics" });
+    expect(unauth.statusCode).toBe(401);
+
+    const wrong = await prodApp.inject({
+      method: "GET",
+      url: "/metrics",
+      headers: { authorization: "Bearer wrong" },
+    });
+    expect(wrong.statusCode).toBe(401);
+
+    const ok = await prodApp.inject({
+      method: "GET",
+      url: "/metrics",
+      headers: { authorization: "Bearer metrics-secret" },
+    });
+    expect(ok.statusCode).toBe(200);
+    expect(ok.headers["content-type"]).toContain("text/plain");
+
+    await prodApp.close();
+  });
 });
