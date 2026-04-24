@@ -61,7 +61,7 @@ export function BankTransactions() {
   const [selectedCandidateId, setSelectedCandidateId] = useState("");
   const [createVoucherTx, setCreateVoucherTx] = useState<BankTransactionEntity | null>(null);
   const [bankAccountNumber, setBankAccountNumber] = useState("1930");
-  const [counterAccountNumber, setCounterAccountNumber] = useState("6071");
+  const [counterAccountNumber, setCounterAccountNumber] = useState("6110");
   const [voucherDescription, setVoucherDescription] = useState("");
   const [createVoucherError, setCreateVoucherError] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -254,7 +254,7 @@ export function BankTransactions() {
   const openCreateVoucherModal = (tx: BankTransactionEntity) => {
     setCreateVoucherTx(tx);
     setBankAccountNumber("1930");
-    setCounterAccountNumber("6071");
+    setCounterAccountNumber("6110");
     setVoucherDescription(`Banktransaktion: ${tx.description}`);
     setCreateVoucherError("");
   };

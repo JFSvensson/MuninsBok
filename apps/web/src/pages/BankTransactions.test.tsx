@@ -151,7 +151,7 @@ describe("BankTransactions create voucher modal", () => {
     await waitFor(() => {
       expect(mockCreateVoucherFromBankTransaction).toHaveBeenCalledWith("org-1", "tx-1", {
         bankAccountNumber: "1930",
-        counterAccountNumber: "6071",
+        counterAccountNumber: "6110",
         description: "Banktransaktion test",
       });
     });

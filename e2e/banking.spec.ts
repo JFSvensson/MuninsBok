@@ -126,15 +126,36 @@ test.describe("Banking e2e", () => {
     const modal = page.locator(".card", { hasText: "Skapa verifikat från transaktion" }).first();
     await expect(modal).toBeVisible();
 
-    await modal.getByLabel("Bankkonto").fill("1930");
-    await modal.getByLabel("Motkonto").fill("6010");
+    await modal.getByLabel("Motkonto").fill("6110");
     await modal.getByLabel("Beskrivning").fill("E2E verifikat från banktransaktion");
+
+    const createVoucherResponsePromise = page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        response.url().includes(`/api/organizations/${orgId}/bank/transactions/`) &&
+        response.url().endsWith("/create-voucher"),
+    );
+
     await modal.getByRole("button", { name: "Skapa verifikat" }).click();
 
-    // Wait for modal to close (API call may be slow under parallel load)
-    await expect(modal).not.toBeVisible({ timeout: 30_000 });
-    await expect(page.getByText(/skapades och transaktionen bekräftades/i)).toBeVisible();
+    const createVoucherResponse = await createVoucherResponsePromise;
+    if (!createVoucherResponse.ok()) {
+      console.error(
+        `Create voucher error (${createVoucherResponse.status()}):`,
+        await createVoucherResponse.text(),
+      );
+    }
+
+    expect(createVoucherResponse.ok()).toBeTruthy();
+
+    // In CI the network response and confirmed state are more reliable signals
+    // than DOM disappearance timing for the modal itself.
+    await expect(page.getByText(/skapades och transaktionen bekräftades/i)).toBeVisible({
+      timeout: 30_000,
+    });
     // Verify the transaction status in the table (not the filter dropdown option)
-    await expect(page.locator("table").getByText("Bekräftad").first()).toBeVisible();
+    await expect(page.locator("table").getByText("Bekräftad").first()).toBeVisible({
+      timeout: 15_000,
+    });
   });
 });
