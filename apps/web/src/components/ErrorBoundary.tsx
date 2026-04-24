@@ -1,6 +1,8 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import styles from "./ErrorBoundary.module.css";
 
+const SHOW_TECHNICAL_DETAILS = import.meta.env.MODE !== "production";
+
 interface Props {
   children: ReactNode;
 }
@@ -35,7 +37,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <div className={styles.content}>
             <h2>Något gick fel</h2>
             <p>Ett oväntat fel uppstod. Försök ladda om sidan.</p>
-            {this.state.error && (
+            {SHOW_TECHNICAL_DETAILS && this.state.error && (
               <details>
                 <summary>Teknisk information</summary>
                 <pre>{this.state.error.message}</pre>
