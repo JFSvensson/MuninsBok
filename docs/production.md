@@ -19,7 +19,7 @@ Denna guide beskriver hur du kör Munins bok i en produktionsmiljö med TLS, bac
 
 ## Förberedelser
 
-- **Node.js 20+** och **pnpm 8+** (om du kör utan Docker)
+- **Node.js 22+** och **pnpm 8+** (om du kör utan Docker)
 - **PostgreSQL 16+** med ett dedikerat databasanvändarkonto
 - **Docker & Docker Compose** (rekommenderat)
 - Eget domännamn med DNS pekat mot servern
@@ -43,7 +43,7 @@ JWT_SECRET=en-lång-slumpmässig-hemlighet
 Generera `JWT_SECRET` med:
 
 ```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 ```
 
 ### Viktiga inställningar i produktion
@@ -52,12 +52,14 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 |----------|-------|-------------|
 | `NODE_ENV` | Nej (default: `development`) | Sätts till `production` — styr loggformat och varningar |
 | `DATABASE_URL` | **Ja** | PostgreSQL-anslutningssträng |
-| `JWT_SECRET` | **Rekommenderat** | Aktiverar JWT-autentisering (register/login). **Varning visas om den saknas i produktion.** |
+| `JWT_SECRET` | **Ja (produktion)** | Aktiverar JWT-autentisering (register/login). **API:et startar inte utan denna i produktion.** |
 | `CORS_ORIGIN` | **Ja (produktion)** | Frontend-URL (t.ex. `https://bok.example.se`). **API:et startar inte utan denna i produktion.** |
 | `HOST` | Nej (default: `0.0.0.0`) | Lyssningsadress |
 | `PORT` | Nej (default: `3000`) | Lyssningsport |
 | `DATABASE_POOL_SIZE` | Nej (default: `20`) | Max antal databasanslutningar i poolen |
-| `API_KEY` | Nej | Enkel delad-hemlighet-auth. Ignoreras när `JWT_SECRET` är satt. |
+| `API_KEY` | Nej | Legacy enkel delad-hemlighet-auth. Ignoreras när `JWT_SECRET` är satt och bör normalt inte användas i produktion. |
+| `ENABLE_DOCS` | Nej (default: `false` i produktion) | Exponerar Swagger UI på `/docs`. Rekommenderas endast i dev/staging eller bakom separat skydd. |
+| `METRICS_TOKEN` | Nej | Om satt registreras `/metrics` och kräver `Authorization: Bearer <token>`. Utan denna exponeras inte `/metrics` i produktion. |
 | `OCR_ENABLE_PDF` | Nej (default: `false`) | Aktiverar lokal PDF→bild-konvertering för OCR (kräver `pdftoppm`/Poppler i runtime) |
 | `BANK_WEBHOOK_HMAC_SECRET` | Rekommenderat | Global HMAC-hemlighet for bank-webhooks (`x-webhook-signature`) |
 | `BANK_WEBHOOK_<PROVIDER>_HMAC_SECRET` | Nej | Providerspecifik HMAC-hemlighet som prioriteras over global hemlighet |
@@ -65,6 +67,13 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 | `VITE_BANK_ENABLED_ORG_IDS` | Nej | Frontend feature-gate med samma syntax som backend; bör spegla `BANK_ENABLED_ORG_IDS` |
 
 Servern validerar vid start att `DATABASE_URL` finns — saknas den avslutas processen direkt med felmeddelande.
+I produktion krävs både `JWT_SECRET` och `CORS_ORIGIN`.
+
+### Introspektionsytor i produktion
+
+- `/docs` är avstängd som standard i produktion och exponeras endast om `ENABLE_DOCS=true` är satt.
+- `/metrics` registreras endast i produktion om `METRICS_TOKEN` är satt, och kräver då `Authorization: Bearer <token>`.
+- Rekommendation: håll både `/docs` och `/metrics` bakom reverse proxy, intern nätverksyta eller separat auth även när de är aktiverade.
 
 ### Bank-webhooks: signaturverifiering
 
