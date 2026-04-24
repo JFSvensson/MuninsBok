@@ -123,11 +123,11 @@ Målet är att göra bokföring **enkel, transparent och självhostbar** — uta
 - Självhostbar via Docker Compose
 - Dark mode med systempreferensdetektering (light / dark / system)
 - Health check-endpoint (i docker-compose och Dockerfile)
-- Prometheus `/metrics`-endpoint med HTTP-statistik och Node.js runtime-metrics
+- Prometheus `/metrics`-endpoint med HTTP-statistik och Node.js runtime-metrics (aktiveras i produktion via `METRICS_TOKEN`)
 - Automatisk rensning av utgångna refresh-tokens vid uppstart och schemalagt
 - Strukturerad loggning med json-file-drivrutin och log-rotation
 - Request-timeouts och konfigurerbar databaspool
-- Swagger/OpenAPI-dokumentation
+- Swagger/OpenAPI-dokumentation (UI avstängd som standard i produktion; aktiveras via `ENABLE_DOCS=true`)
 - CD-pipeline — automatiserad deploy via GitHub Actions → GHCR → SSH
 
 ---
@@ -136,24 +136,25 @@ Målet är att göra bokföring **enkel, transparent och självhostbar** — uta
 
 Applikationen är **produktionsklar** för självhostning av småföretag och föreningar. Följande säkerhetsmekanismer finns på plats:
 
-- **Autentisering**: JWT med access-token i minnet, refresh-token som httpOnly-cookie, server-side återkallning (jti), automatisk token-cleanup
+- **Autentisering**: JWT med access-token i minnet, refresh-token som httpOnly-cookie, server-side återkallning (jti), automatisk token-cleanup. `JWT_SECRET` krävs i produktion.
 - **Auktorisering**: Rollbaserad behörighet (OWNER / ADMIN / MEMBER) med org-scoped membership
 - **Input**: Zod-validering på alla API-endpoints, body-storleksgräns (1 MB), input-sanitering
 - **Transport**: Helmet-headers, CORS-konfiguration, rate limiting med skärpt gräns på auth-endpoints
 - **Webhooks**: HMAC-signaturverifiering for bank-webhooks via `x-webhook-signature` (global eller providerspecifik hemlighet)
 - **Infrastruktur**: Multi-stage Docker, non-root containers, healthchecks, log-rotation, graceful shutdown
-- **Drift**: Request-timeouts, konfigurerbar anslutningspool, strukturerad loggning, audit trail
-- **Tester**: 1 355 enhetstester (inkl. React Testing Library-komponenttester) + E2E med Playwright, CI via GitHub Actions
+- **Drift**: Request-timeouts, konfigurerbar anslutningspool, strukturerad loggning, audit trail, Swagger UI avstängd som standard i produktion och `/metrics` endast exponerad när `METRICS_TOKEN` är satt
+- **Tester**: 1 366 enhetstester (inkl. React Testing Library-komponenttester) + E2E med Playwright, CI via GitHub Actions
 
 Se [docs/production.md](docs/production.md) för fullständig driftsättningsguide.
 
 Bank-webhook-signaturer i produktion konfigureras via `BANK_WEBHOOK_HMAC_SECRET` eller `BANK_WEBHOOK_<PROVIDER>_HMAC_SECRET`.
+Produktionsreglage för introspektionsytor: `ENABLE_DOCS=true` exponerar `/docs`, och `METRICS_TOKEN` krävs för att exponera `/metrics`.
 
 ---
 
 ## Framtida utveckling
 
-Inga planerade funktioner för tillfället — alla roadmap-punkter (bankkoppling, fakturering, attestflöde, OCR) är implementerade.
+Inga större produktfunktioner är planerade för tillfället. Fokus ligger på säkerhetshärdning, driftförenkling och dokumentation som speglar faktisk kod och produktion.
 
 ---
 
@@ -173,9 +174,9 @@ Se `LICENSE`.
 
 | Lager | Teknik |
 |-------|--------|
-| **Frontend** | React 19 + Vite 7 + TypeScript 5.9 |
-| **Backend** | Node.js 25 + Fastify 5 + TypeScript |
-| **Databas** | PostgreSQL 16+ (Prisma 7.4) |
+| **Frontend** | React 19 + Vite 8 + TypeScript 6.0 |
+| **Backend** | Node.js 22+ + Fastify 5 + TypeScript 6.0 |
+| **Databas** | PostgreSQL 16+ (Prisma 7.7) |
 | **Auth** | JWT (access + refresh) med jti-baserad tokenåterkallning |
 | **Monorepo** | pnpm workspaces |
 | **Test** | Vitest + React Testing Library |
@@ -187,8 +188,8 @@ Se `LICENSE`.
 
 ### Förutsättningar
 
-- Node.js 20+
-- pnpm 9+
+- Node.js 22+
+- pnpm 8+
 - PostgreSQL 16+ (eller Docker)
 
 ### Lokal utveckling
@@ -303,13 +304,13 @@ muninsbok/
 
 ## Teststatus
 
-**1 355 enhetstester** fördelade på 127 testfiler:
+**1 366 enhetstester** fördelade på 127 testfiler:
 
 | Paket | Testfiler | Tester | Vad som testas |
 |-------|-----------|--------|----------------|
 | `@muninsbok/core` | 25 | 360 | Result-typer, organisationsnummer (Luhn), kontotyper, kontoplan (BAS), räkenskapsår (max 18 mån), verifikatrader, verifikatvalidering, dokument-MIME, rapporter (råbalans, resultat, balans, moms, SKV 4700, periodrapport, kontoanalys, boksluts-förhandsvisning, grundbok, huvudbok, verifikationslista), SIE-import/export (IB/UB/RES), resultatdisposition, budget (budget vs utfall-rapport), CSV-import (parser, delimiter-detection, datum-/beloppsformatering), i18n (sv/en-ordlistor, translate, createTranslator), fakturaberäkning (radbelopp, moms, totalsummor, statusövergångsmaskin) |
 | `@muninsbok/db` | 3 | 27 | Prisma→domän-mappers (organisation, räkenskapsår, konto, verifikat, verifikatrad, dokument), bankrepo-tester (connection, transaction) |
-| `@muninsbok/api` | 38 | 472 | Zod-schemavalidering, CRUD-endpoints (organisationer, konton, verifikat, räkenskapsår, budgetar, kunder, fakturor), rapporter (10 st + dashboard), global sökning, boksluts-förhandsvisning, health check, Prometheus metrics, felhantering, auth (register/login/refresh/logout), httpOnly-cookie, tokenåterkallning, rollhantering, RBAC, audit-logging, rate limiting, input-sanitering, helmet, swagger, CSV-import (parse/preview/execute-endpoints), återkommande mallar (schema/due/execute-endpoints), attestflöde (regler CRUD, skicka/godkänn/avvisa), fakturering (kunder CRUD, fakturor CRUD, statusändringar), bankkoppling (CRUD, OAuth, sync, matchning, webhook), tjänster (OCR, dokumentlagring, bank-adapter/sync/matchning), receipt-OCR e2e |
+| `@muninsbok/api` | 38 | 483 | Zod-schemavalidering, CRUD-endpoints (organisationer, konton, verifikat, räkenskapsår, budgetar, kunder, fakturor), rapporter (10 st + dashboard), global sökning, boksluts-förhandsvisning, health check, Prometheus metrics, felhantering, auth (register/login/refresh/logout), httpOnly-cookie, tokenåterkallning, rollhantering, RBAC, audit-logging, rate limiting, input-sanitering, helmet, swagger, CSV-import (parse/preview/execute-endpoints), återkommande mallar (schema/due/execute-endpoints), attestflöde (regler CRUD, skicka/godkänn/avvisa), fakturering (kunder CRUD, fakturor CRUD, statusändringar), bankkoppling (CRUD, OAuth, sync, matchning, webhook), tjänster (OCR, dokumentlagring, bank-adapter/sync/matchning), receipt-OCR e2e |
 | `@muninsbok/web` | 61 | 496 | ApiError-klass, fetchJson, auth-storage, dark mode (ThemeContext), verifikatformulär (beräkningar, radhantering, öre-konvertering), beloppsformatering, CSV-export, assert-utils, LocaleContext (flerspråksstöd), **komponenttester (React Testing Library)**: ThemeToggle, ConfirmDialog, DateFilter, ErrorBoundary, ReportPageTemplate, ReportSectionRows, ProtectedRoute, ToastContext, Login, NotFound, SearchDialog, CreateOrgDialog, DeleteOrgDialog, EditOrgDialog, DocumentSection, CreateFiscalYear, OrganizationSelect, **sidtester**: Dashboard, VoucherList, VoucherForm, Accounts, Reports, TrialBalance, IncomeStatement, BalanceSheet, VatReport, SkvVatDeclaration, PeriodReport, AccountAnalysis, Journal, GeneralLedger, VoucherListReport, YearEndClosing, FiscalYears, Budget, CsvImport, RecurringTemplates, Members, ApprovalRules, Customers, Invoices, InvoiceForm, InvoiceDetail, BankConnections, BankTransactions, Settings, NotFound m.fl. |
 
 ---
