@@ -33,4 +33,27 @@ describe("OpenAPI / Swagger", () => {
     const paths = Object.keys(spec.paths ?? {});
     expect(paths.length).toBeGreaterThan(0);
   });
+
+  it("does not expose Swagger UI in production by default", async () => {
+    const ctx = await buildTestApp(undefined, { isProduction: true });
+    const prodApp = ctx.app;
+
+    const uiRes = await prodApp.inject({ method: "GET", url: "/docs/" });
+    const specRes = await prodApp.inject({ method: "GET", url: "/docs/json" });
+
+    expect(uiRes.statusCode).toBe(404);
+    expect(specRes.statusCode).toBe(404);
+
+    await prodApp.close();
+  });
+
+  it("can expose Swagger UI in production when explicitly enabled", async () => {
+    const ctx = await buildTestApp(undefined, { isProduction: true, enableDocs: true });
+    const prodApp = ctx.app;
+
+    const res = await prodApp.inject({ method: "GET", url: "/docs/" });
+    expect(res.statusCode).toBe(200);
+
+    await prodApp.close();
+  });
 });
