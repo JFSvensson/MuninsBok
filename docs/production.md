@@ -57,13 +57,13 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 | `HOST` | Nej (default: `0.0.0.0`) | Lyssningsadress |
 | `PORT` | Nej (default: `3000`) | Lyssningsport |
 | `DATABASE_POOL_SIZE` | Nej (default: `20`) | Max antal databasanslutningar i poolen |
-| `API_KEY` | Nej | Legacy enkel delad-hemlighet-auth. Ignoreras när `JWT_SECRET` är satt och bör normalt inte användas i produktion. |
 | `ENABLE_DOCS` | Nej (default: `false` i produktion) | Exponerar Swagger UI på `/docs`. Rekommenderas endast i dev/staging eller bakom separat skydd. |
 | `METRICS_TOKEN` | Nej | Om satt registreras `/metrics` och kräver `Authorization: Bearer <token>`. Utan denna exponeras inte `/metrics` i produktion. |
 | `OCR_ENABLE_PDF` | Nej (default: `false`) | Aktiverar lokal PDF→bild-konvertering för OCR (kräver `pdftoppm`/Poppler i runtime) |
 | `BANK_WEBHOOK_HMAC_SECRET` | Rekommenderat | Global HMAC-hemlighet for bank-webhooks (`x-webhook-signature`) |
 | `BANK_WEBHOOK_<PROVIDER>_HMAC_SECRET` | Nej | Providerspecifik HMAC-hemlighet som prioriteras over global hemlighet |
 | `BANK_ENABLED_ORG_IDS` | Nej | Backend feature-gate för banking per organisation: tom/ej satt = alla, `*` = alla, annars kommaseparerad lista av org-id |
+| `BANK_OAUTH_REDIRECT_URI_ALLOWLIST` | Rekommenderat i produktion | Exakt kommaseparerad allowlist för tillåtna bank OAuth-callback-URL:er. Om den inte sätts används lokala dev-URL:er samt `CORS_ORIGIN + /bank/callback` när `CORS_ORIGIN` finns. |
 | `VITE_BANK_ENABLED_ORG_IDS` | Nej | Frontend feature-gate med samma syntax som backend; bör spegla `BANK_ENABLED_ORG_IDS` |
 
 Servern validerar vid start att `DATABASE_URL` finns — saknas den avslutas processen direkt med felmeddelande.
@@ -104,6 +104,22 @@ BANK_WEBHOOK_HMAC_SECRET=byt-till-lang-slumpmassig-hemlighet
 # Providerspecifik hemlighet (overskriver global for provider "sandbox")
 BANK_WEBHOOK_SANDBOX_HMAC_SECRET=annan-hemlighet-for-sandbox
 ```
+
+### Bank OAuth-callbacks
+
+För bankanslutningar verifierar API:t en signerad OAuth-`state` server-side och accepterar endast callback-URL:er från en explicit allowlist.
+
+Rekommenderad produktionsexempel:
+
+```dotenv
+BANK_OAUTH_REDIRECT_URI_ALLOWLIST=https://bok.example.se/bank/callback
+```
+
+Regler:
+
+- Matchningen är exakt efter normaliserad URL.
+- Om variabeln inte är satt används endast lokala utvecklings-URL:er (`http://127.0.0.1:5173/bank/callback`, `http://localhost:5173/bank/callback`) samt `CORS_ORIGIN + /bank/callback` när `CORS_ORIGIN` finns.
+- Lägg till alla legitima callback-URL:er uttryckligen vid flera domäner eller stagingmiljöer.
 
 ### Operativ checklista: rotation av webhook-hemligheter
 
@@ -378,7 +394,7 @@ docker compose logs --tail 100 api
 
 ## Säkerhetsrekommendationer
 
-1. **Sätt alltid `API_KEY`** i produktion — utan den är API:et öppet för alla.
+1. **Sätt alltid `JWT_SECRET`** i produktion — utan den startar inte API:t.
 2. **Använd starka databaslösenord** — inte standardvärdet `muninsbok`.
 3. **Begränsa nätverksåtkomst** — PostgreSQL ska bara vara tillgänglig från API-containern, aldrig publikt.
 4. **Kör databasbackup dagligen** och testa återställning regelbundet.
@@ -403,7 +419,7 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://muninsbok:ett-starkt-slumpmässigt-lösenord@postgres:5432/muninsbok
-      API_KEY: en-lång-hemlig-api-nyckel
+      JWT_SECRET: generera-en-64-bytes-hemlighet
       CORS_ORIGIN: https://bok.example.se
     restart: always
 ```
