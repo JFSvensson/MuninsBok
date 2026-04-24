@@ -26,7 +26,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --force
 
       - name: Verify rolldown Linux binding
         if: runner.os == 'Linux'
@@ -93,7 +93,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --force
 
       - name: Verify rolldown Linux binding
         if: runner.os == 'Linux'
