@@ -3,7 +3,7 @@
  * Separated from server startup for testability.
  */
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from "fastify";
-import { timingSafeEqual } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import cors from "@fastify/cors";
 import cookie from "@fastify/cookie";
 import helmet from "@fastify/helmet";
@@ -51,7 +51,6 @@ export interface BuildAppOptions {
   bankAdapter: IAggregatorBankAdapter;
   fastifyOptions?: FastifyServerOptions;
   corsOrigin?: string;
-  apiKey?: string;
   /** JWT secret. When set, enables JWT authentication. */
   jwtSecret?: string;
   /** Access token TTL (default: "15m") */
@@ -160,29 +159,6 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     await fastify.register(rbac);
   }
 
-  // Optional API key authentication (legacy / simple setups without JWT)
-  // When JWT is enabled, API key auth is skipped to avoid conflicts.
-  if (options.apiKey && !options.jwtSecret) {
-    fastify.addHook("onRequest", async (request, reply) => {
-      // Skip auth for health check
-      if (request.url === "/health") return;
-
-      const authHeader = request.headers.authorization;
-      const expected = `Bearer ${options.apiKey}`;
-      const providedBuffer = Buffer.from(authHeader ?? "", "utf8");
-      const expectedBuffer = Buffer.from(expected, "utf8");
-      const matches =
-        providedBuffer.length === expectedBuffer.length &&
-        timingSafeEqual(providedBuffer, expectedBuffer);
-
-      if (!matches) {
-        return reply
-          .status(401)
-          .send({ error: "Ogiltig eller saknad API-nyckel", code: "UNAUTHORIZED" });
-      }
-    });
-  }
-
   // Global error handler — structured JSON for all errors
   fastify.setErrorHandler(
     (error: Error & { statusCode?: number; code?: string }, request, reply) => {
@@ -220,6 +196,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   fastify.decorate("documentStorage", options.documentStorage);
   fastify.decorate("receiptOcr", options.receiptOcr);
   fastify.decorate("bankAdapter", options.bankAdapter);
+  fastify.decorate("bankAuthStateSecret", options.jwtSecret ?? randomUUID());
 
   const bankSync = createBankSyncService({
     repos: options.repos,
@@ -332,5 +309,6 @@ declare module "fastify" {
     receiptOcr: IReceiptOcrService;
     bankAdapter: IAggregatorBankAdapter;
     bankSync: IBankSyncService;
+    bankAuthStateSecret: string;
   }
 }
