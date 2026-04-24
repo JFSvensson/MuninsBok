@@ -23,6 +23,8 @@ if (missing.length > 0) {
 
 const nodeEnv = process.env["NODE_ENV"] ?? "development";
 const isProd = nodeEnv === "production";
+const enableDocs = process.env["ENABLE_DOCS"] === "true";
+const metricsToken = process.env["METRICS_TOKEN"];
 
 if (isProd && !process.env["JWT_SECRET"]) {
   console.error("JWT_SECRET måste sättas i produktion. Generera en hemlighet:");
@@ -48,7 +50,10 @@ const fastify = await buildApp({
   documentStorage,
   receiptOcr,
   bankAdapter,
+  isProduction: isProd,
+  enableDocs,
   corsOrigin: process.env["CORS_ORIGIN"] ?? "http://localhost:5173",
+  ...(metricsToken != null && { metricsToken }),
   ...(apiKey != null && { apiKey }),
   ...(jwtSecret != null && { jwtSecret }),
   fastifyOptions: {
