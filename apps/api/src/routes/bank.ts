@@ -71,12 +71,96 @@ function isBankingEnabledForOrganization(organizationId: string): boolean {
   return allowedIds.includes(organizationId);
 }
 
+const OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
+
+interface OauthStatePayload {
+  orgId: string;
+  externalConnectionId: string;
+  redirectUri: string;
+  exp: number;
+  nonce: string;
+}
+
+function normalizeRedirectUri(redirectUri: string): string {
+  return new URL(redirectUri).toString();
+}
+
+function resolveAllowedRedirectUris(): Set<string> {
+  const explicitAllowlist = process.env["BANK_OAUTH_REDIRECT_URI_ALLOWLIST"]?.trim();
+  if (explicitAllowlist) {
+    return new Set(
+      explicitAllowlist
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean)
+        .map(normalizeRedirectUri),
+    );
+  }
+
+  const defaults = new Set<string>([
+    "http://127.0.0.1:5173/bank/callback",
+    "http://localhost:5173/bank/callback",
+  ]);
+
+  const corsOrigin = process.env["CORS_ORIGIN"]?.trim();
+  if (corsOrigin) {
+    defaults.add(new URL("/bank/callback", corsOrigin).toString());
+  }
+
+  return defaults;
+}
+
+function createSignedOauthState(payload: OauthStatePayload, secret: string): string {
+  const encodedPayload = Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
+  const signature = createHmac("sha256", secret).update(encodedPayload).digest("hex");
+  return `${encodedPayload}.${signature}`;
+}
+
+function parseSignedOauthState(state: string, secret: string): OauthStatePayload | undefined {
+  const [encodedPayload, signature] = state.split(".");
+  if (!encodedPayload || !signature) {
+    return;
+  }
+
+  const expectedSignature = createHmac("sha256", secret).update(encodedPayload).digest("hex");
+  if (!signaturesMatch(signature, expectedSignature)) {
+    return;
+  }
+
+  try {
+    const parsed = JSON.parse(
+      Buffer.from(encodedPayload, "base64url").toString("utf8"),
+    ) as Partial<OauthStatePayload>;
+
+    if (
+      typeof parsed.orgId !== "string" ||
+      typeof parsed.externalConnectionId !== "string" ||
+      typeof parsed.redirectUri !== "string" ||
+      typeof parsed.exp !== "number" ||
+      typeof parsed.nonce !== "string"
+    ) {
+      return;
+    }
+
+    return {
+      orgId: parsed.orgId,
+      externalConnectionId: parsed.externalConnectionId,
+      redirectUri: parsed.redirectUri,
+      exp: parsed.exp,
+      nonce: parsed.nonce,
+    };
+  } catch {
+    return;
+  }
+}
+
 export async function bankRoutes(fastify: FastifyInstance) {
   const adapter = fastify.bankAdapter;
   const bankSync = fastify.bankSync;
   const bankMatching = createBankTransactionMatchingService({
     repos: fastify.repos,
   });
+  const allowedRedirectUris = resolveAllowedRedirectUris();
 
   fastify.addHook("preHandler", async (request, reply) => {
     const orgId = (request.params as Record<string, string | undefined>)["orgId"];
@@ -93,26 +177,68 @@ export async function bankRoutes(fastify: FastifyInstance) {
   });
 
   // POST /:orgId/bank/connect/init — generate OAuth authorization URL
-  fastify.post<{ Params: { orgId: string } }>("/:orgId/bank/connect/init", async (request) => {
-    const body = parseBody(bankConnectInitSchema, request.body);
-    const state = randomUUID();
-    const result = await adapter.createAuthorizationUrl({
-      organizationId: request.params.orgId,
-      connectionExternalId: body.externalConnectionId,
-      redirectUri: body.redirectUri,
-      state,
-    });
-    return { data: result };
-  });
+  fastify.post<{ Params: { orgId: string } }>(
+    "/:orgId/bank/connect/init",
+    async (request, reply) => {
+      const body = parseBody(bankConnectInitSchema, request.body);
+      const redirectUri = normalizeRedirectUri(body.redirectUri);
+      if (!allowedRedirectUris.has(redirectUri)) {
+        return reply.status(400).send({
+          error: "Redirect URI är inte tillåten",
+          code: "BANK_OAUTH_INVALID_REDIRECT_URI",
+        });
+      }
+
+      const state = createSignedOauthState(
+        {
+          orgId: request.params.orgId,
+          externalConnectionId: body.externalConnectionId,
+          redirectUri,
+          exp: Date.now() + OAUTH_STATE_TTL_MS,
+          nonce: randomUUID(),
+        },
+        fastify.bankAuthStateSecret,
+      );
+      const result = await adapter.createAuthorizationUrl({
+        organizationId: request.params.orgId,
+        connectionExternalId: body.externalConnectionId,
+        redirectUri,
+        state,
+      });
+      return { data: result };
+    },
+  );
 
   // POST /:orgId/bank/connect/callback — exchange auth code and persist connection
   fastify.post<{ Params: { orgId: string } }>(
     "/:orgId/bank/connect/callback",
     async (request, reply) => {
       const body = parseBody(bankConnectCallbackSchema, request.body);
+      const redirectUri = normalizeRedirectUri(body.redirectUri);
+      if (!allowedRedirectUris.has(redirectUri)) {
+        return reply.status(400).send({
+          error: "Redirect URI är inte tillåten",
+          code: "BANK_OAUTH_INVALID_REDIRECT_URI",
+        });
+      }
+
+      const statePayload = parseSignedOauthState(body.state, fastify.bankAuthStateSecret);
+      if (
+        !statePayload ||
+        statePayload.exp < Date.now() ||
+        statePayload.orgId !== request.params.orgId ||
+        statePayload.externalConnectionId !== body.externalConnectionId ||
+        statePayload.redirectUri !== redirectUri
+      ) {
+        return reply.status(400).send({
+          error: "Ogiltig eller utgången OAuth-state",
+          code: "BANK_OAUTH_INVALID_STATE",
+        });
+      }
+
       const tokenSet = await adapter.exchangeAuthorizationCode({
         code: body.code,
-        redirectUri: body.redirectUri,
+        redirectUri,
       });
 
       const result = await fastify.repos.bankConnections.create(request.params.orgId, {
