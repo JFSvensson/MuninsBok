@@ -3,6 +3,7 @@
  * Separated from server startup for testability.
  */
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from "fastify";
+import { timingSafeEqual } from "node:crypto";
 import cors from "@fastify/cors";
 import cookie from "@fastify/cookie";
 import helmet from "@fastify/helmet";
@@ -57,9 +58,18 @@ export interface BuildAppOptions {
   accessTokenTtl?: string;
   /** Refresh token TTL (default: "7d") */
   refreshTokenTtl?: string;
+  /** Whether to run with production-hardening toggles (defaults to NODE_ENV check). */
+  isProduction?: boolean;
+  /** Whether to expose Swagger UI endpoint (`/docs`). Defaults to false in production. */
+  enableDocs?: boolean;
+  /** Optional bearer token required to access `/metrics`. */
+  metricsToken?: string;
 }
 
 export async function buildApp(options: BuildAppOptions): Promise<FastifyInstance> {
+  const isProduction = options.isProduction ?? process.env["NODE_ENV"] === "production";
+  const enableDocs = options.enableDocs ?? !isProduction;
+
   const fastify = Fastify({
     ...(options.fastifyOptions ?? { logger: false }),
     bodyLimit: 1_048_576, // 1 MB — keep tight; file uploads use multipart streaming
@@ -114,9 +124,11 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     },
   });
 
-  await fastify.register(swaggerUi, {
-    routePrefix: "/docs",
-  });
+  if (enableDocs) {
+    await fastify.register(swaggerUi, {
+      routePrefix: "/docs",
+    });
+  }
 
   await fastify.register(rateLimit, {
     max: (request) => {
@@ -156,7 +168,14 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
       if (request.url === "/health") return;
 
       const authHeader = request.headers.authorization;
-      if (!authHeader || authHeader !== `Bearer ${options.apiKey}`) {
+      const expected = `Bearer ${options.apiKey}`;
+      const providedBuffer = Buffer.from(authHeader ?? "", "utf8");
+      const expectedBuffer = Buffer.from(expected, "utf8");
+      const matches =
+        providedBuffer.length === expectedBuffer.length &&
+        timingSafeEqual(providedBuffer, expectedBuffer);
+
+      if (!matches) {
         return reply
           .status(401)
           .send({ error: "Ogiltig eller saknad API-nyckel", code: "UNAUTHORIZED" });
@@ -268,8 +287,12 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     { prefix: "/api/organizations" },
   );
 
-  // Prometheus metrics endpoint (no auth, like /health)
-  await fastify.register(metricsRoute);
+  // Prometheus metrics endpoint
+  if (!isProduction || options.metricsToken) {
+    await fastify.register(metricsRoute, {
+      ...(options.metricsToken != null && { token: options.metricsToken }),
+    });
+  }
 
   // Health check with database connectivity test
   fastify.get("/health", async () => {
