@@ -35,6 +35,22 @@ const OWNER_MEMBERSHIP = {
   role: "OWNER" as const,
 };
 
+const TARGET_MEMBER_MEMBERSHIP = {
+  id: "mem-target-member",
+  userId: "user-2",
+  organizationId: "org-1",
+  role: "MEMBER" as const,
+  createdAt: new Date("2024-06-01"),
+};
+
+const TARGET_OWNER_MEMBERSHIP = {
+  id: "mem-target-owner",
+  userId: "user-4",
+  organizationId: "org-1",
+  role: "OWNER" as const,
+  createdAt: new Date("2024-04-01"),
+};
+
 describe("Member routes", () => {
   let app: FastifyInstance;
   let repos: MockRepos;
@@ -234,7 +250,9 @@ describe("Member routes", () => {
   // ---------- PATCH /:orgId/members/:userId ----------
   describe("PATCH /api/organizations/:orgId/members/:userId", () => {
     it("updates a member role", async () => {
-      repos.users.findMembership.mockResolvedValueOnce(ADMIN_MEMBERSHIP);
+      repos.users.findMembership
+        .mockResolvedValueOnce(ADMIN_MEMBERSHIP)
+        .mockResolvedValueOnce(TARGET_MEMBER_MEMBERSHIP);
       repos.users.updateMemberRole.mockResolvedValueOnce({ ...MEMBER, role: "ADMIN" });
 
       const res = await app.inject({
@@ -250,8 +268,9 @@ describe("Member routes", () => {
     });
 
     it("returns 404 when membership not found", async () => {
-      repos.users.findMembership.mockResolvedValueOnce(ADMIN_MEMBERSHIP);
-      repos.users.updateMemberRole.mockResolvedValueOnce(null);
+      repos.users.findMembership
+        .mockResolvedValueOnce(ADMIN_MEMBERSHIP)
+        .mockResolvedValueOnce(null);
 
       const res = await app.inject({
         method: "PATCH",
@@ -292,7 +311,9 @@ describe("Member routes", () => {
     });
 
     it("allows OWNER to promote member to OWNER", async () => {
-      repos.users.findMembership.mockResolvedValueOnce(OWNER_MEMBERSHIP);
+      repos.users.findMembership
+        .mockResolvedValueOnce(OWNER_MEMBERSHIP)
+        .mockResolvedValueOnce(TARGET_MEMBER_MEMBERSHIP);
       repos.users.updateMemberRole.mockResolvedValueOnce({ ...MEMBER, role: "OWNER" });
 
       const res = await app.inject({
@@ -305,12 +326,49 @@ describe("Member routes", () => {
       expect(res.statusCode).toBe(200);
       expect(JSON.parse(res.body).data.role).toBe("OWNER");
     });
+
+    it("returns 403 when ADMIN tries to demote an OWNER", async () => {
+      repos.users.findMembership
+        .mockResolvedValueOnce(ADMIN_MEMBERSHIP)
+        .mockResolvedValueOnce(TARGET_OWNER_MEMBERSHIP);
+
+      const res = await app.inject({
+        method: "PATCH",
+        url: "/api/organizations/org-1/members/user-4",
+        headers: authHeaders(),
+        payload: { role: "ADMIN" },
+      });
+
+      expect(res.statusCode).toBe(403);
+      expect(JSON.parse(res.body).code).toBe("INSUFFICIENT_ROLE_MANAGEMENT");
+    });
+
+    it("returns 409 when trying to demote the last OWNER", async () => {
+      repos.users.findMembership
+        .mockResolvedValueOnce(OWNER_MEMBERSHIP)
+        .mockResolvedValueOnce(OWNER_MEMBERSHIP);
+      repos.users.findMembersByOrganization.mockResolvedValueOnce([
+        { ...MEMBER, role: "OWNER", user: OWNER_MEMBERSHIP as never },
+      ]);
+
+      const res = await app.inject({
+        method: "PATCH",
+        url: "/api/organizations/org-1/members/user-1",
+        headers: authHeaders(),
+        payload: { role: "ADMIN" },
+      });
+
+      expect(res.statusCode).toBe(409);
+      expect(JSON.parse(res.body).code).toBe("LAST_OWNER_REQUIRED");
+    });
   });
 
   // ---------- DELETE /:orgId/members/:userId ----------
   describe("DELETE /api/organizations/:orgId/members/:userId", () => {
     it("removes a member", async () => {
-      repos.users.findMembership.mockResolvedValueOnce(ADMIN_MEMBERSHIP);
+      repos.users.findMembership
+        .mockResolvedValueOnce(ADMIN_MEMBERSHIP)
+        .mockResolvedValueOnce(TARGET_MEMBER_MEMBERSHIP);
       repos.users.removeMember.mockResolvedValueOnce(true);
 
       const res = await app.inject({
@@ -324,8 +382,9 @@ describe("Member routes", () => {
     });
 
     it("returns 404 when membership not found", async () => {
-      repos.users.findMembership.mockResolvedValueOnce(ADMIN_MEMBERSHIP);
-      repos.users.removeMember.mockResolvedValueOnce(null);
+      repos.users.findMembership
+        .mockResolvedValueOnce(ADMIN_MEMBERSHIP)
+        .mockResolvedValueOnce(null);
 
       const res = await app.inject({
         method: "DELETE",
@@ -335,6 +394,39 @@ describe("Member routes", () => {
 
       expect(res.statusCode).toBe(404);
       expect(JSON.parse(res.body).code).toBe("MEMBER_NOT_FOUND");
+    });
+
+    it("returns 403 when ADMIN tries to remove an OWNER", async () => {
+      repos.users.findMembership
+        .mockResolvedValueOnce(ADMIN_MEMBERSHIP)
+        .mockResolvedValueOnce(TARGET_OWNER_MEMBERSHIP);
+
+      const res = await app.inject({
+        method: "DELETE",
+        url: "/api/organizations/org-1/members/user-4",
+        headers: authHeaders(),
+      });
+
+      expect(res.statusCode).toBe(403);
+      expect(JSON.parse(res.body).code).toBe("INSUFFICIENT_ROLE_MANAGEMENT");
+    });
+
+    it("returns 409 when trying to remove the last OWNER", async () => {
+      repos.users.findMembership
+        .mockResolvedValueOnce(OWNER_MEMBERSHIP)
+        .mockResolvedValueOnce(OWNER_MEMBERSHIP);
+      repos.users.findMembersByOrganization.mockResolvedValueOnce([
+        { ...MEMBER, role: "OWNER", user: OWNER_MEMBERSHIP as never },
+      ]);
+
+      const res = await app.inject({
+        method: "DELETE",
+        url: "/api/organizations/org-1/members/user-1",
+        headers: authHeaders(),
+      });
+
+      expect(res.statusCode).toBe(409);
+      expect(JSON.parse(res.body).code).toBe("LAST_OWNER_REQUIRED");
     });
   });
 });
