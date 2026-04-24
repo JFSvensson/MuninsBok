@@ -75,6 +75,7 @@ test.describe("Banking e2e", () => {
       console.error(`Bank init error (${initResp.status()}):`, initError);
     }
     expect(initResp.ok()).toBeTruthy();
+    const initBody = await initResp.json();
 
     const callbackResp = await authedPost(
       request,
