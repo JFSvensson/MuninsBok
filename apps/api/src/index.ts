@@ -43,7 +43,6 @@ const documentStorage = new DocumentStorage();
 const receiptOcr = new TesseractReceiptOcrService();
 const bankAdapter = createBankAdapterFromEnv();
 
-const apiKey = process.env["API_KEY"];
 const jwtSecret = process.env["JWT_SECRET"];
 const fastify = await buildApp({
   repos,
@@ -54,14 +53,13 @@ const fastify = await buildApp({
   enableDocs,
   corsOrigin: process.env["CORS_ORIGIN"] ?? "http://localhost:5173",
   ...(metricsToken != null && { metricsToken }),
-  ...(apiKey != null && { apiKey }),
   ...(jwtSecret != null && { jwtSecret }),
   fastifyOptions: {
     logger: isProd
       ? {
           level: "info",
           redact: {
-            paths: ["req.headers.authorization", "req.headers.cookie", "req.headers['x-api-key']"],
+            paths: ["req.headers.authorization", "req.headers.cookie"],
             censor: "[REDACTED]",
           },
         }
