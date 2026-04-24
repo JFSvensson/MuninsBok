@@ -141,6 +141,7 @@ Applikationen är **produktionsklar** för självhostning av småföretag och f�
 - **Input**: Zod-validering på alla API-endpoints, body-storleksgräns (1 MB), input-sanitering
 - **Transport**: Helmet-headers, CORS-konfiguration, rate limiting med skärpt gräns på auth-endpoints
 - **Webhooks**: HMAC-signaturverifiering for bank-webhooks via `x-webhook-signature` (global eller providerspecifik hemlighet)
+- **Bank-OAuth**: Signerad `state` verifieras server-side och callback-URL:er begränsas via `BANK_OAUTH_REDIRECT_URI_ALLOWLIST`
 - **Infrastruktur**: Multi-stage Docker, non-root containers, healthchecks, log-rotation, graceful shutdown
 - **Drift**: Request-timeouts, konfigurerbar anslutningspool, strukturerad loggning, audit trail, Swagger UI avstängd som standard i produktion och `/metrics` endast exponerad när `METRICS_TOKEN` är satt
 - **Tester**: 1 366 enhetstester (inkl. React Testing Library-komponenttester) + E2E med Playwright, CI via GitHub Actions
