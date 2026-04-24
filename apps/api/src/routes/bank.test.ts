@@ -18,6 +18,7 @@ describe("Bank routes", () => {
 
   const orgId = "org-1";
   const connectionId = "conn-1";
+  const redirectUri = "http://127.0.0.1:5173/bank/callback";
   const oldEnabledOrgIds = process.env["BANK_ENABLED_ORG_IDS"];
 
   const mockConnection = {
@@ -70,6 +71,20 @@ describe("Bank routes", () => {
     bankAdapter = ctx.bankAdapter as any;
   });
 
+  async function initOauthState(externalConnectionId = "ext-conn-1"): Promise<string> {
+    const response = await app.inject({
+      method: "POST",
+      url: `/api/organizations/${orgId}/bank/connect/init`,
+      payload: {
+        externalConnectionId,
+        redirectUri,
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    return response.json().data.state as string;
+  }
+
   // ── POST /connect/init ──────────────────────────────────────────────────────
 
   describe("POST /:orgId/bank/connect/init", () => {
@@ -79,18 +94,19 @@ describe("Bank routes", () => {
         url: `/api/organizations/${orgId}/bank/connect/init`,
         payload: {
           externalConnectionId: "ext-conn-1",
-          redirectUri: "https://app.example.com/bank/callback",
+          redirectUri,
         },
       });
 
       expect(res.statusCode).toBe(200);
       const body = JSON.parse(res.body);
+      expect(body.data.state).toContain(".");
       expect(body.data.authorizationUrl).toContain("sandbox.aggregator.local");
       expect(bankAdapter.createAuthorizationUrl).toHaveBeenCalledWith(
         expect.objectContaining({
           organizationId: orgId,
           connectionExternalId: "ext-conn-1",
-          redirectUri: "https://app.example.com/bank/callback",
+          redirectUri,
         }),
       );
     });
@@ -99,7 +115,7 @@ describe("Bank routes", () => {
       const res = await app.inject({
         method: "POST",
         url: `/api/organizations/${orgId}/bank/connect/init`,
-        payload: { redirectUri: "https://app.example.com/bank/callback" },
+        payload: { redirectUri },
       });
 
       expect(res.statusCode).toBe(400);
@@ -114,28 +130,46 @@ describe("Bank routes", () => {
 
       expect(res.statusCode).toBe(400);
     });
+
+    it("returns 400 when redirectUri is outside allowlist", async () => {
+      const res = await app.inject({
+        method: "POST",
+        url: `/api/organizations/${orgId}/bank/connect/init`,
+        payload: {
+          externalConnectionId: "ext-1",
+          redirectUri: "https://evil.example.com/bank/callback",
+        },
+      });
+
+      expect(res.statusCode).toBe(400);
+      expect(JSON.parse(res.body).code).toBe("BANK_OAUTH_INVALID_REDIRECT_URI");
+    });
   });
 
   // ── POST /connect/callback ──────────────────────────────────────────────────
 
   describe("POST /:orgId/bank/connect/callback", () => {
-    const callbackPayload = {
-      code: "sandbox-code-abc",
-      externalConnectionId: "ext-conn-1",
-      redirectUri: "https://app.example.com/bank/callback",
-      displayName: "Testbanken",
-    };
+    function callbackPayload(state: string) {
+      return {
+        code: "sandbox-code-abc",
+        externalConnectionId: "ext-conn-1",
+        redirectUri,
+        state,
+        displayName: "Testbanken",
+      };
+    }
 
     it("creates connection and returns 201 without metadata", async () => {
       repos.bankConnections.create.mockResolvedValue({
         ok: true,
         value: mockConnection,
       });
+      const state = await initOauthState();
 
       const res = await app.inject({
         method: "POST",
         url: `/api/organizations/${orgId}/bank/connect/callback`,
-        payload: callbackPayload,
+        payload: callbackPayload(state),
       });
 
       expect(res.statusCode).toBe(201);
@@ -159,27 +193,76 @@ describe("Bank routes", () => {
         ok: false,
         error: { code: "DUPLICATE_CONNECTION", message: "Anslutning finns redan" },
       });
+      const state = await initOauthState();
 
       const res = await app.inject({
         method: "POST",
         url: `/api/organizations/${orgId}/bank/connect/callback`,
-        payload: callbackPayload,
+        payload: callbackPayload(state),
       });
 
       expect(res.statusCode).toBe(409);
     });
 
     it("returns 400 on missing code", async () => {
+      const state = await initOauthState();
       const res = await app.inject({
         method: "POST",
         url: `/api/organizations/${orgId}/bank/connect/callback`,
         payload: {
           externalConnectionId: "ext-conn-1",
-          redirectUri: "https://app.example.com/bank/callback",
+          redirectUri,
+          state,
         },
       });
 
       expect(res.statusCode).toBe(400);
+    });
+
+    it("returns 400 on missing state", async () => {
+      const res = await app.inject({
+        method: "POST",
+        url: `/api/organizations/${orgId}/bank/connect/callback`,
+        payload: {
+          code: "sandbox-code-abc",
+          externalConnectionId: "ext-conn-1",
+          redirectUri,
+        },
+      });
+
+      expect(res.statusCode).toBe(400);
+    });
+
+    it("returns 400 when state does not match callback payload", async () => {
+      const state = await initOauthState("ext-original");
+
+      const res = await app.inject({
+        method: "POST",
+        url: `/api/organizations/${orgId}/bank/connect/callback`,
+        payload: {
+          ...callbackPayload(state),
+          externalConnectionId: "ext-other",
+        },
+      });
+
+      expect(res.statusCode).toBe(400);
+      expect(JSON.parse(res.body).code).toBe("BANK_OAUTH_INVALID_STATE");
+    });
+
+    it("returns 400 when callback redirectUri is outside allowlist", async () => {
+      const state = await initOauthState();
+
+      const res = await app.inject({
+        method: "POST",
+        url: `/api/organizations/${orgId}/bank/connect/callback`,
+        payload: {
+          ...callbackPayload(state),
+          redirectUri: "https://evil.example.com/bank/callback",
+        },
+      });
+
+      expect(res.statusCode).toBe(400);
+      expect(JSON.parse(res.body).code).toBe("BANK_OAUTH_INVALID_REDIRECT_URI");
     });
   });
 
