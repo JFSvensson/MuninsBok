@@ -17,6 +17,10 @@ const ROLE_LEVEL: Record<MemberRole, number> = {
   OWNER: 2,
 };
 
+function canManageRole(requesterRole: MemberRole | undefined, targetRole: MemberRole): boolean {
+  return requesterRole != null && ROLE_LEVEL[requesterRole] >= ROLE_LEVEL[targetRole];
+}
+
 export async function memberRoutes(fastify: FastifyInstance) {
   const userRepo = fastify.repos.users;
 
@@ -78,6 +82,35 @@ export async function memberRoutes(fastify: FastifyInstance) {
         });
       }
 
+      const targetMembership = await userRepo.findMembership(
+        request.params.userId,
+        request.params.orgId,
+      );
+      if (!targetMembership) {
+        return reply.status(404).send({
+          error: "Medlemskapet hittades inte",
+          code: "MEMBER_NOT_FOUND",
+        });
+      }
+
+      if (!canManageRole(requesterRole, targetMembership.role)) {
+        return reply.status(403).send({
+          error: "Du kan inte hantera en medlem med högre roll än din egen",
+          code: "INSUFFICIENT_ROLE_MANAGEMENT",
+        });
+      }
+
+      if (targetMembership.role === "OWNER" && role !== "OWNER") {
+        const members = await userRepo.findMembersByOrganization(request.params.orgId);
+        const ownerCount = members.filter((member) => member.role === "OWNER").length;
+        if (ownerCount <= 1) {
+          return reply.status(409).send({
+            error: "Organisationen måste alltid ha minst en OWNER",
+            code: "LAST_OWNER_REQUIRED",
+          });
+        }
+      }
+
       const updated = await userRepo.updateMemberRole(
         request.params.userId,
         request.params.orgId,
@@ -99,6 +132,37 @@ export async function memberRoutes(fastify: FastifyInstance) {
     "/:orgId/members/:userId",
     { preHandler: [fastify.requireRole("ADMIN")] },
     async (request, reply) => {
+      const requesterRole = request.membership?.role;
+      const targetMembership = await userRepo.findMembership(
+        request.params.userId,
+        request.params.orgId,
+      );
+
+      if (!targetMembership) {
+        return reply.status(404).send({
+          error: "Medlemskapet hittades inte",
+          code: "MEMBER_NOT_FOUND",
+        });
+      }
+
+      if (!canManageRole(requesterRole, targetMembership.role)) {
+        return reply.status(403).send({
+          error: "Du kan inte hantera en medlem med högre roll än din egen",
+          code: "INSUFFICIENT_ROLE_MANAGEMENT",
+        });
+      }
+
+      if (targetMembership.role === "OWNER") {
+        const members = await userRepo.findMembersByOrganization(request.params.orgId);
+        const ownerCount = members.filter((member) => member.role === "OWNER").length;
+        if (ownerCount <= 1) {
+          return reply.status(409).send({
+            error: "Organisationen måste alltid ha minst en OWNER",
+            code: "LAST_OWNER_REQUIRED",
+          });
+        }
+      }
+
       const removed = await userRepo.removeMember(request.params.userId, request.params.orgId);
       if (!removed) {
         return reply.status(404).send({
