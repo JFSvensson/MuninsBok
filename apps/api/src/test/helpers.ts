@@ -418,7 +418,12 @@ export function createMockRepos(): MockRepos {
 /** Build a Fastify test app with mocked repositories */
 export async function buildTestApp(
   mocks?: MockRepos,
-  options?: { jwtSecret?: string },
+  options?: {
+    jwtSecret?: string;
+    isProduction?: boolean;
+    enableDocs?: boolean;
+    metricsToken?: string;
+  },
 ): Promise<{
   app: FastifyInstance;
   repos: MockRepos;
@@ -436,6 +441,9 @@ export async function buildTestApp(
     receiptOcr: receiptOcr as unknown as IReceiptOcrService,
     bankAdapter: bankAdapter as unknown as IAggregatorBankAdapter,
     ...(options?.jwtSecret != null && { jwtSecret: options.jwtSecret }),
+    ...(options?.isProduction != null && { isProduction: options.isProduction }),
+    ...(options?.enableDocs != null && { enableDocs: options.enableDocs }),
+    ...(options?.metricsToken != null && { metricsToken: options.metricsToken }),
   });
   return { app, repos, documentStorage, receiptOcr, bankAdapter };
 }
