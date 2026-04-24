@@ -31,7 +31,6 @@ async function authedPost(
     data,
   });
 }
-const initBody = await initResp.json();
 
 test.describe("Banking e2e", () => {
   test("sync -> create voucher from transaction -> status confirmed", async ({ page, request }) => {
