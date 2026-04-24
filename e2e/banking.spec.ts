@@ -31,6 +31,7 @@ async function authedPost(
     data,
   });
 }
+const initBody = await initResp.json();
 
 test.describe("Banking e2e", () => {
   test("sync -> create voucher from transaction -> status confirmed", async ({ page, request }) => {
@@ -84,6 +85,7 @@ test.describe("Banking e2e", () => {
         code: `sandbox-code-${Date.now()}`,
         externalConnectionId,
         redirectUri: "http://127.0.0.1:5173/bank/callback",
+        state: initBody.data.state,
         displayName: "Sandboxkonto E2E",
       },
     );
