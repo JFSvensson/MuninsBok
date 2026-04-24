@@ -9,6 +9,7 @@ export const bankConnectCallbackSchema = z.object({
   code: z.string().min(1),
   externalConnectionId: z.string().min(1),
   redirectUri: z.string().url(),
+  state: z.string().min(1),
   displayName: z.string().optional(),
 });
 
