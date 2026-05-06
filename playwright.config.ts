@@ -1,4 +1,10 @@
 import { defineConfig } from "@playwright/test";
+import { config as loadDotenv } from "dotenv";
+import { existsSync } from "fs";
+import { resolve } from "path";
+
+const envFile = resolve(__dirname, ".env");
+const dotenvVars = existsSync(envFile) ? (loadDotenv({ path: envFile }).parsed ?? {}) : {};
 
 export default defineConfig({
   testDir: "./e2e",
@@ -18,6 +24,7 @@ export default defineConfig({
       reuseExistingServer: !!process.env["PLAYWRIGHT_REUSE_SERVER"],
       timeout: 30_000,
       env: {
+        ...dotenvVars,
         ...process.env,
         NODE_OPTIONS: "--no-deprecation",
       },
@@ -28,6 +35,7 @@ export default defineConfig({
       reuseExistingServer: !!process.env["PLAYWRIGHT_REUSE_SERVER"],
       timeout: 30_000,
       env: {
+        ...dotenvVars,
         ...process.env,
         NODE_OPTIONS: "--no-deprecation",
       },
