@@ -17,12 +17,20 @@ export default defineConfig({
       port: 3000,
       reuseExistingServer: !!process.env["PLAYWRIGHT_REUSE_SERVER"],
       timeout: 30_000,
+      env: {
+        ...process.env,
+        NODE_OPTIONS: "--no-deprecation",
+      },
     },
     {
       command: "pnpm --filter @muninsbok/web dev",
       port: 5173,
       reuseExistingServer: !!process.env["PLAYWRIGHT_REUSE_SERVER"],
       timeout: 30_000,
+      env: {
+        ...process.env,
+        NODE_OPTIONS: "--no-deprecation",
+      },
     },
   ],
 });
