@@ -1,6 +1,9 @@
 name: CD
 
 on:
+  push:
+    tags:
+      - "v*"
   workflow_run:
     workflows: [CI]
     types: [completed]
@@ -16,7 +19,7 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'push' || github.event.workflow_run.conclusion == 'success' }}
     timeout-minutes: 20
     permissions:
       contents: read
@@ -24,9 +27,12 @@ jobs:
 
     outputs:
       image-tag: ${{ steps.meta.outputs.version }}
+      image-prefix: ${{ steps.meta.outputs.image_prefix }}
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v4
@@ -42,7 +48,11 @@ jobs:
         id: meta
         run: |
           OWNER_LOWER="${GITHUB_REPOSITORY_OWNER,,}"
-          TAG="sha-$(echo ${{ github.sha }} | cut -c1-7)"
+          if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
+            TAG="${GITHUB_REF_NAME}"
+          else
+            TAG="sha-$(echo ${{ github.sha }} | cut -c1-7)"
+          fi
           IMAGE_PREFIX="ghcr.io/$OWNER_LOWER/muninsbok"
           echo "version=$TAG" >> "$GITHUB_OUTPUT"
           echo "image_prefix=$IMAGE_PREFIX" >> "$GITHUB_OUTPUT"
@@ -100,12 +110,12 @@ jobs:
 
             # Pull latest images
             echo "Pulling images with tag ${{ needs.build-and-push.outputs.image-tag }}..."
-            docker pull ${{ env.IMAGE_PREFIX }}-api:${{ needs.build-and-push.outputs.image-tag }}
-            docker pull ${{ env.IMAGE_PREFIX }}-web:${{ needs.build-and-push.outputs.image-tag }}
+            docker pull ${{ needs.build-and-push.outputs.image-prefix }}-api:${{ needs.build-and-push.outputs.image-tag }}
+            docker pull ${{ needs.build-and-push.outputs.image-prefix }}-web:${{ needs.build-and-push.outputs.image-tag }}
 
             # Tag as "current" for docker-compose
-            docker tag ${{ env.IMAGE_PREFIX }}-api:${{ needs.build-and-push.outputs.image-tag }} ${{ env.IMAGE_PREFIX }}-api:current
-            docker tag ${{ env.IMAGE_PREFIX }}-web:${{ needs.build-and-push.outputs.image-tag }} ${{ env.IMAGE_PREFIX }}-web:current
+            docker tag ${{ needs.build-and-push.outputs.image-prefix }}-api:${{ needs.build-and-push.outputs.image-tag }} ${{ needs.build-and-push.outputs.image-prefix }}-api:current
+            docker tag ${{ needs.build-and-push.outputs.image-prefix }}-web:${{ needs.build-and-push.outputs.image-tag }} ${{ needs.build-and-push.outputs.image-prefix }}-web:current
 
             # Rolling restart (API first, then web)
             docker compose up -d --no-build api
