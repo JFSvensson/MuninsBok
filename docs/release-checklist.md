@@ -24,10 +24,11 @@ Bekräfta att CI är grön.
 
 CI/CD ska bygga och publicera:
 
-- ghcr.io/jfsvensson/muninsbok-api:current (eller versionsspecifik tagg)
-- ghcr.io/jfsvensson/muninsbok-web:current (eller versionsspecifik tagg)
+- ghcr.io/jfsvensson/muninsbok-api:latest (och versionsspecifik tagg, t.ex. v0.2.0)
+- ghcr.io/jfsvensson/muninsbok-web:latest (och versionsspecifik tagg, t.ex. v0.2.0)
 
 Verifiera att image-taggarna finns publicerade.
+Vid behov, sätt `IMAGE_TAG=vX.Y.Z` i `.env.docker` för att pinna en specifik release.
 
 ## 4. Distributionspaket
 

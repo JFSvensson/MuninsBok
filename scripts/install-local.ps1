@@ -14,6 +14,20 @@ function Require-Command {
   }
 }
 
+function Invoke-DockerCommand {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Description,
+    [Parameter(Mandatory = $true)]
+    [scriptblock]$Command
+  )
+
+  & $Command
+  if ($LASTEXITCODE -ne 0) {
+    throw "Misslyckades: $Description (exitkod $LASTEXITCODE)."
+  }
+}
+
 try {
   Require-Command "docker"
 
@@ -32,7 +46,7 @@ try {
     exit 1
   }
 
-  docker info | Out-Null
+  Invoke-DockerCommand -Description "docker info" -Command { docker info | Out-Null }
 
   $composeArgs = @("-f", "docker-compose.yml")
   if (-not $BuildLocal) {
@@ -40,17 +54,22 @@ try {
   }
 
   if ($NoStart) {
-    docker compose @composeArgs --env-file $EnvFile config | Out-Null
+    Invoke-DockerCommand -Description "docker compose config" -Command {
+      docker compose @composeArgs --env-file $EnvFile config | Out-Null
+    }
     Write-Host "Compose-konfiguration validerad."
     exit 0
   }
 
-  docker compose @composeArgs --env-file $EnvFile up -d
+  Invoke-DockerCommand -Description "docker compose up" -Command {
+    docker compose @composeArgs --env-file $EnvFile up -d
+  }
 
   Write-Host "Installation klar."
   Write-Host "Web: http://localhost:5173"
   Write-Host "API health: http://localhost:3000/health"
-  Write-Host "Status: docker compose @composeArgs --env-file $EnvFile ps"
+  $statusCommand = "docker compose " + ($composeArgs -join " ") + " --env-file $EnvFile ps"
+  Write-Host "Status: $statusCommand"
 }
 catch {
   Write-Error $_

@@ -8,9 +8,9 @@
 
 services:
   api:
-    image: ghcr.io/jfsvensson/muninsbok-api:current
+    image: ghcr.io/${IMAGE_NAMESPACE:-jfsvensson}/muninsbok-api:${IMAGE_TAG:-latest}
     build: !reset null
 
   web:
-    image: ghcr.io/jfsvensson/muninsbok-web:current
+    image: ghcr.io/${IMAGE_NAMESPACE:-jfsvensson}/muninsbok-web:${IMAGE_TAG:-latest}
     build: !reset null
