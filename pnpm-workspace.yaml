@@ -2,6 +2,13 @@ packages:
   - "apps/*"
   - "packages/*"
 
+onlyBuiltDependencies:
+  - "@prisma/engines"
+  - "core-js"
+  - "esbuild"
+  - "prisma"
+  - "tesseract.js"
+
 supportedArchitectures:
   os:
     - current
