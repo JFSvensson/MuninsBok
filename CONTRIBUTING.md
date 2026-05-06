@@ -5,7 +5,7 @@ Tack för att du vill bidra! Här är allt du behöver veta.
 ## Förutsättningar
 
 - **Node.js** ≥ 22
-- **pnpm** ≥ 8 (`corepack enable` aktiverar det)
+- **pnpm** ≥ 10 (`corepack enable` aktiverar det)
 - **PostgreSQL** 16+ (eller Docker)
 - **Git**
 
