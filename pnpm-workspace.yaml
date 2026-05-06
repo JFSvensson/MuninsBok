@@ -2,6 +2,13 @@ packages:
   - "apps/*"
   - "packages/*"
 
+allowBuilds:
+  "@prisma/engines": true
+  core-js: true
+  esbuild: true
+  prisma: true
+  tesseract.js: true
+
 onlyBuiltDependencies:
   - "@prisma/engines"
   - "core-js"
