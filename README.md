@@ -144,7 +144,7 @@ Applikationen är **produktionsklar** för självhostning av småföretag och f�
 - **Bank-OAuth**: Signerad `state` verifieras server-side och callback-URL:er begränsas via `BANK_OAUTH_REDIRECT_URI_ALLOWLIST`
 - **Infrastruktur**: Multi-stage Docker, non-root containers, healthchecks, log-rotation, graceful shutdown
 - **Drift**: Request-timeouts, konfigurerbar anslutningspool, strukturerad loggning, audit trail, Swagger UI avstängd som standard i produktion och `/metrics` endast exponerad när `METRICS_TOKEN` är satt
-- **Tester**: 1 366 enhetstester (inkl. React Testing Library-komponenttester) + E2E med Playwright, CI via GitHub Actions
+- **Tester**: 1 374 enhetstester (inkl. React Testing Library-komponenttester) + E2E med Playwright, CI via GitHub Actions
 
 Se [docs/production.md](docs/production.md) för fullständig driftsättningsguide.
 
@@ -177,9 +177,9 @@ Se `LICENSE`.
 |-------|--------|
 | **Frontend** | React 19 + Vite 8 + TypeScript 6.0 |
 | **Backend** | Node.js 22+ + Fastify 5 + TypeScript 6.0 |
-| **Databas** | PostgreSQL 16+ (Prisma 7.7) |
+| **Databas** | PostgreSQL 16+ (Prisma 7.8) |
 | **Auth** | JWT (access + refresh) med jti-baserad tokenåterkallning |
-| **Monorepo** | pnpm workspaces |
+| **Monorepo** | pnpm 11 workspaces |
 | **Test** | Vitest + React Testing Library |
 | **Deploy** | Docker Compose |
 
@@ -190,7 +190,7 @@ Se `LICENSE`.
 ### Förutsättningar
 
 - Node.js 22+
-- pnpm 8+
+- pnpm 11+
 - PostgreSQL 16+ (eller Docker)
 
 ### Lokal utveckling
@@ -357,13 +357,13 @@ muninsbok/
 
 ## Teststatus
 
-**1 366 enhetstester** fördelade på 127 testfiler:
+**1 374 enhetstester** fördelade på 127 testfiler:
 
 | Paket | Testfiler | Tester | Vad som testas |
 |-------|-----------|--------|----------------|
 | `@muninsbok/core` | 25 | 360 | Result-typer, organisationsnummer (Luhn), kontotyper, kontoplan (BAS), räkenskapsår (max 18 mån), verifikatrader, verifikatvalidering, dokument-MIME, rapporter (råbalans, resultat, balans, moms, SKV 4700, periodrapport, kontoanalys, boksluts-förhandsvisning, grundbok, huvudbok, verifikationslista), SIE-import/export (IB/UB/RES), resultatdisposition, budget (budget vs utfall-rapport), CSV-import (parser, delimiter-detection, datum-/beloppsformatering), i18n (sv/en-ordlistor, translate, createTranslator), fakturaberäkning (radbelopp, moms, totalsummor, statusövergångsmaskin) |
 | `@muninsbok/db` | 3 | 27 | Prisma→domän-mappers (organisation, räkenskapsår, konto, verifikat, verifikatrad, dokument), bankrepo-tester (connection, transaction) |
-| `@muninsbok/api` | 38 | 483 | Zod-schemavalidering, CRUD-endpoints (organisationer, konton, verifikat, räkenskapsår, budgetar, kunder, fakturor), rapporter (10 st + dashboard), global sökning, boksluts-förhandsvisning, health check, Prometheus metrics, felhantering, auth (register/login/refresh/logout), httpOnly-cookie, tokenåterkallning, rollhantering, RBAC, audit-logging, rate limiting, input-sanitering, helmet, swagger, CSV-import (parse/preview/execute-endpoints), återkommande mallar (schema/due/execute-endpoints), attestflöde (regler CRUD, skicka/godkänn/avvisa), fakturering (kunder CRUD, fakturor CRUD, statusändringar), bankkoppling (CRUD, OAuth, sync, matchning, webhook), tjänster (OCR, dokumentlagring, bank-adapter/sync/matchning), receipt-OCR e2e |
+| `@muninsbok/api` | 38 | 491 | Zod-schemavalidering, CRUD-endpoints (organisationer, konton, verifikat, räkenskapsår, budgetar, kunder, fakturor), rapporter (10 st + dashboard), global sökning, boksluts-förhandsvisning, health check, Prometheus metrics, felhantering, auth (register/login/refresh/logout), httpOnly-cookie, tokenåterkallning, rollhantering, RBAC, audit-logging, rate limiting, input-sanitering, helmet, swagger, CSV-import (parse/preview/execute-endpoints), återkommande mallar (schema/due/execute-endpoints), attestflöde (regler CRUD, skicka/godkänn/avvisa), fakturering (kunder CRUD, fakturor CRUD, statusändringar), bankkoppling (CRUD, OAuth, sync, matchning, webhook), tjänster (OCR, dokumentlagring, bank-adapter/sync/matchning), receipt-OCR e2e |
 | `@muninsbok/web` | 61 | 496 | ApiError-klass, fetchJson, auth-storage, dark mode (ThemeContext), verifikatformulär (beräkningar, radhantering, öre-konvertering), beloppsformatering, CSV-export, assert-utils, LocaleContext (flerspråksstöd), **komponenttester (React Testing Library)**: ThemeToggle, ConfirmDialog, DateFilter, ErrorBoundary, ReportPageTemplate, ReportSectionRows, ProtectedRoute, ToastContext, Login, NotFound, SearchDialog, CreateOrgDialog, DeleteOrgDialog, EditOrgDialog, DocumentSection, CreateFiscalYear, OrganizationSelect, **sidtester**: Dashboard, VoucherList, VoucherForm, Accounts, Reports, TrialBalance, IncomeStatement, BalanceSheet, VatReport, SkvVatDeclaration, PeriodReport, AccountAnalysis, Journal, GeneralLedger, VoucherListReport, YearEndClosing, FiscalYears, Budget, CsvImport, RecurringTemplates, Members, ApprovalRules, Customers, Invoices, InvoiceForm, InvoiceDetail, BankConnections, BankTransactions, Settings, NotFound m.fl. |
 
 ---

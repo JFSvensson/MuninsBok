@@ -7,15 +7,35 @@ och projektet använder [Semantic Versioning](https://semver.org/lang/sv/).
 
 ## [Unreleased]
 
-### Fixat
-- **Banking e2e**: routes `POST /bank/connect/init` och `POST /bank/connect/callback` returnerade 404 i e2e-tester. Orsak: Docker API-image var inte ombyggd efter kodändringar. Löst genom rebuild-rutin (`docker compose build --no-cache api`).
+## [0.2.0] — 2026-05-06
 
 ### Tillagt
 - **CONTRIBUTING.md**: ny sektion "Felsökning av Docker & e2e" med recovery-checklista och vanliga e2e-problem.
 - **docs/production.md**: ny sektion "Felsökning: API-container och kodmismatch" med diagnostik och åtgärder.
 - **.gitignore**: regler för lokala debug-loggar (`*.log`, `*-exit.txt`, `tmp-*`).
+- **pnpm-workspace.yaml**: `onlyBuiltDependencies`-lista för att godkänna build-skript för `@prisma/engines`, `core-js`, `esbuild`, `prisma` och `tesseract.js` — krävs av pnpm 11:s nya säkerhetsmodell.
 
-## [0.1.0] — 2025-06-22
+### Ändrat
+- **pnpm** uppgraderad från 8.15.1 → 10.33.4 → **11.0.6** (senaste stabila).
+  - `package.json`: `packageManager` och `engines.pnpm` uppdaterade.
+  - `apps/api/Dockerfile` och `apps/web/Dockerfile`: pnpm-pin uppdaterad.
+  - `.github/workflows/ci.yml`: båda `pnpm/action-setup`-steg uppdaterade.
+  - `pnpm-lock.yaml`: regenererad med nytt lockfile-format (lockfileVersion 9.0).
+- **Prisma** uppgraderad till 7.8.0 — `apps/api/Dockerfile` installerar nu `prisma@7.8.0` globalt (matchar `@prisma/client`-versionen).
+- **Docker**: basimage uppdaterad till `node:22-alpine`, nginx till `nginx:1.29-alpine`.
+- **CI** (`.github/workflows/ci.yml`): triggers utökade med `push.tags: ['v*']` för release-taggar.
+- **CD** (`.github/workflows/cd.yml`):
+  - GHCR-lowercase-fel åtgärdat (bash `${GITHUB_REPOSITORY_OWNER,,}` istället för ogiltigt `| lower`-filter).
+  - `deploy`-jobbet utkommenterat tills produktionsserver är konfigurerad.
+- **E2E**: `playwright.config.ts` laddar nu `.env` via `dotenv` så att `JWT_SECRET` finns tillgänglig lokalt.
+- **CONTRIBUTING.md**: pnpm-krav uppdaterat till `≥ 11`.
+- **README.md**: tech stack-tabell och teststatus uppdaterade (pnpm 11, Prisma 7.8, 1 374 tester).
+
+### Fixat
+- **Banking e2e**: routes `POST /bank/connect/init` och `POST /bank/connect/callback` returnerade 404 i e2e-tester. Orsak: Docker API-image var inte ombyggd efter kodändringar. Löst genom rebuild-rutin (`docker compose build --no-cache api`).
+- **JWT_SECRET**: lokal E2E-körning kraschade med "JWT_SECRET must be at least 32 characters" — `.env` lästes inte in av Playwright. Åtgärdat med `dotenv`-laddning i `playwright.config.ts`.
+
+## [0.1.0] — 2026-04-20
 
 ### Tillagt
 
