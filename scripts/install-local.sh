@@ -69,3 +69,4 @@ docker compose "${compose_args[@]}" --env-file "$ENV_FILE" up -d
 echo "Installation klar"
 echo "Web: http://localhost:5173"
 echo "API health: http://localhost:3000/health"
+echo "Status: docker compose ${compose_args[*]} --env-file $ENV_FILE ps"
