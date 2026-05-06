@@ -1,7 +1,7 @@
 # Build stage
-FROM node:25-alpine AS builder
+FROM node:22-alpine AS builder
 
-RUN npm install -g pnpm@8.15.0
+RUN npm install -g pnpm@8.15.1
 
 WORKDIR /app
 
@@ -32,9 +32,9 @@ RUN pnpm --filter @muninsbok/db build
 RUN pnpm --filter @muninsbok/api build
 
 # Production stage
-FROM node:25-alpine AS runner
+FROM node:22-alpine AS runner
 
-RUN npm install -g pnpm@8.15.0
+RUN npm install -g pnpm@8.15.1
 RUN apk add --no-cache poppler-utils
 
 WORKDIR /app
@@ -61,8 +61,9 @@ RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 # Ensure db package can resolve workspace core package at runtime
 RUN mkdir -p /app/packages/db/node_modules/@muninsbok && ln -sf /app/packages/core /app/packages/db/node_modules/@muninsbok/core
 
-# Prisma module/CLI is needed at runtime for migrate deploy and prisma.config.ts imports
-RUN npm install prisma@7.4.2 --no-save
+# Prisma CLI is needed at runtime for migrate deploy and prisma.config.ts imports
+# Keep Prisma CLI aligned with @prisma/client to avoid peer/dependency conflicts.
+RUN npm install -g prisma@7.8.0
 
 # Run as non-root user
 USER node
@@ -73,4 +74,4 @@ HEALTHCHECK --interval=10s --timeout=5s --retries=5 --start-period=15s \
   CMD wget -qO- http://127.0.0.1:3000/health || exit 1
 
 # Run migrations and start server
-CMD ["sh", "-ec", "MODE=\"${DB_MIGRATION_MODE:-deploy}\"; SCHEMA='packages/db/prisma/schema.prisma'; CONFIG='packages/db/prisma.config.ts'; echo \"DB migration mode: ${MODE}\"; case \"$MODE\" in deploy) npx prisma migrate deploy --config \"$CONFIG\" --schema \"$SCHEMA\" ;; fallback) npx prisma migrate deploy --config \"$CONFIG\" --schema \"$SCHEMA\" || npx prisma db push --accept-data-loss --config \"$CONFIG\" --schema \"$SCHEMA\" ;; push) npx prisma db push --accept-data-loss --config \"$CONFIG\" --schema \"$SCHEMA\" ;; skip) echo 'Skipping DB migration step' ;; *) echo \"Invalid DB_MIGRATION_MODE: $MODE (allowed: deploy, fallback, push, skip)\" >&2; exit 1 ;; esac; exec node apps/api/dist/index.js"]
+CMD ["sh", "-ec", "MODE=\"${DB_MIGRATION_MODE:-deploy}\"; SCHEMA='packages/db/prisma/schema.prisma'; CONFIG='packages/db/prisma.config.ts'; echo \"DB migration mode: ${MODE}\"; case \"$MODE\" in deploy) prisma migrate deploy --config \"$CONFIG\" --schema \"$SCHEMA\" ;; fallback) prisma migrate deploy --config \"$CONFIG\" --schema \"$SCHEMA\" || prisma db push --accept-data-loss --config \"$CONFIG\" --schema \"$SCHEMA\" ;; push) prisma db push --accept-data-loss --config \"$CONFIG\" --schema \"$SCHEMA\" ;; skip) echo 'Skipping DB migration step' ;; *) echo \"Invalid DB_MIGRATION_MODE: $MODE (allowed: deploy, fallback, push, skip)\" >&2; exit 1 ;; esac; exec node apps/api/dist/index.js"]

@@ -55,7 +55,7 @@
       "prettier --write"
     ]
   },
-  "packageManager": "pnpm@8.15.0",
+  "packageManager": "pnpm@8.15.1",
   "dependencies": {
     "@prisma/client": "^7.8.0"
   },
