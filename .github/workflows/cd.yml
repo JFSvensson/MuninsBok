@@ -84,46 +84,46 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    timeout-minutes: 10
-    environment: production
-
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          sparse-checkout: |
-            docker-compose.yml
-            scripts/deploy.sh
-
-      - name: Deploy to production server
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          script: |
-            set -euo pipefail
-
-            cd ${{ secrets.DEPLOY_PATH || '~/muninsbok' }}
-
-            # Pull latest images
-            echo "Pulling images with tag ${{ needs.build-and-push.outputs.image-tag }}..."
-            docker pull ${{ needs.build-and-push.outputs.image-prefix }}-api:${{ needs.build-and-push.outputs.image-tag }}
-            docker pull ${{ needs.build-and-push.outputs.image-prefix }}-web:${{ needs.build-and-push.outputs.image-tag }}
-
-            # Tag as "current" for docker-compose
-            docker tag ${{ needs.build-and-push.outputs.image-prefix }}-api:${{ needs.build-and-push.outputs.image-tag }} ${{ needs.build-and-push.outputs.image-prefix }}-api:current
-            docker tag ${{ needs.build-and-push.outputs.image-prefix }}-web:${{ needs.build-and-push.outputs.image-tag }} ${{ needs.build-and-push.outputs.image-prefix }}-web:current
-
-            # Rolling restart (API first, then web)
-            docker compose up -d --no-build api
-            echo "Waiting for API health check..."
-            timeout 60 bash -c 'until docker compose exec -T api wget -qO- http://localhost:3000/health; do sleep 2; done'
-
-            docker compose up -d --no-build web
-            echo "Deploy complete: ${{ needs.build-and-push.outputs.image-tag }}"
-
-            # Clean up old images
-            docker image prune -f --filter "until=168h"
+  # deploy:
+  #   runs-on: ubuntu-latest
+  #   needs: build-and-push
+  #   timeout-minutes: 10
+  #   environment: production
+  #
+  #   steps:
+  #     - uses: actions/checkout@v6
+  #       with:
+  #         sparse-checkout: |
+  #           docker-compose.yml
+  #           scripts/deploy.sh
+  #
+  #     - name: Deploy to production server
+  #       uses: appleboy/ssh-action@v1
+  #       with:
+  #         host: ${{ secrets.DEPLOY_HOST }}
+  #         username: ${{ secrets.DEPLOY_USER }}
+  #         key: ${{ secrets.DEPLOY_SSH_KEY }}
+  #         script: |
+  #           set -euo pipefail
+  #
+  #           cd ${{ secrets.DEPLOY_PATH || '~/muninsbok' }}
+  #
+  #           # Pull latest images
+  #           echo "Pulling images with tag ${{ needs.build-and-push.outputs.image-tag }}..."
+  #           docker pull ${{ needs.build-and-push.outputs.image-prefix }}-api:${{ needs.build-and-push.outputs.image-tag }}
+  #           docker pull ${{ needs.build-and-push.outputs.image-prefix }}-web:${{ needs.build-and-push.outputs.image-tag }}
+  #
+  #           # Tag as "current" for docker-compose
+  #           docker tag ${{ needs.build-and-push.outputs.image-prefix }}-api:${{ needs.build-and-push.outputs.image-tag }} ${{ needs.build-and-push.outputs.image-prefix }}-api:current
+  #           docker tag ${{ needs.build-and-push.outputs.image-prefix }}-web:${{ needs.build-and-push.outputs.image-tag }} ${{ needs.build-and-push.outputs.image-prefix }}-web:current
+  #
+  #           # Rolling restart (API first, then web)
+  #           docker compose up -d --no-build api
+  #           echo "Waiting for API health check..."
+  #           timeout 60 bash -c 'until docker compose exec -T api wget -qO- http://localhost:3000/health; do sleep 2; done'
+  #
+  #           docker compose up -d --no-build web
+  #           echo "Deploy complete: ${{ needs.build-and-push.outputs.image-tag }}"
+  #
+  #           # Clean up old images
+  #           docker image prune -f --filter "until=168h"
