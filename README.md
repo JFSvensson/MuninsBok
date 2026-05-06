@@ -285,6 +285,58 @@ Se [docs/production.md](docs/production.md) för:
 - Övervakning med health check
 - Säkerhetsrekommendationer
 
+### Lokal installation från releasepaket
+
+Om du vill distribuera appen for lokal installation utan att användaren bygger koden själv, använd Docker-baserat releasepaket.
+
+Paketet bör innehålla:
+
+- `docker-compose.yml`
+- `docker-compose.prod.yml`
+- `.env.docker.example`
+- `scripts/install-local.ps1`
+- `scripts/install-local.sh`
+
+#### Windows (PowerShell)
+
+1. Kopiera `.env.docker.example` till `.env.docker`.
+2. Uppdatera hemligheter i `.env.docker` (minst `JWT_SECRET`, `POSTGRES_PASSWORD`).
+3. Kör:
+
+```powershell
+./scripts/install-local.ps1
+```
+
+För att bygga lokala images i stället for att dra prebyggda images:
+
+```powershell
+./scripts/install-local.ps1 -BuildLocal
+```
+
+#### Linux/macOS
+
+1. Kopiera `.env.docker.example` till `.env.docker`.
+2. Uppdatera hemligheter i `.env.docker`.
+3. Gör skriptet körbart och kör:
+
+```bash
+chmod +x scripts/install-local.sh
+./scripts/install-local.sh
+```
+
+For lokal build i stället för prebyggda images:
+
+```bash
+./scripts/install-local.sh --build-local
+```
+
+Efter installation:
+
+- Web: http://localhost:5173
+- API health: http://localhost:3000/health
+
+En full releaseprocess finns i [docs/release-checklist.md](docs/release-checklist.md).
+
 ---
 
 ## Repo-struktur
