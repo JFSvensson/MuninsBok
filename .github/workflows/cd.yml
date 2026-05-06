@@ -12,7 +12,6 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner | lower }}/muninsbok
 
 jobs:
   build-and-push:
@@ -42,8 +41,11 @@ jobs:
       - name: Generate image tag
         id: meta
         run: |
+          OWNER_LOWER="${GITHUB_REPOSITORY_OWNER,,}"
           TAG="sha-$(echo ${{ github.sha }} | cut -c1-7)"
+          IMAGE_PREFIX="ghcr.io/$OWNER_LOWER/muninsbok"
           echo "version=$TAG" >> "$GITHUB_OUTPUT"
+          echo "image_prefix=$IMAGE_PREFIX" >> "$GITHUB_OUTPUT"
           echo "Image tag: $TAG"
 
       # ── API image ──
@@ -54,8 +56,8 @@ jobs:
           file: apps/api/Dockerfile
           push: true
           tags: |
-            ${{ env.IMAGE_PREFIX }}-api:${{ steps.meta.outputs.version }}
-            ${{ env.IMAGE_PREFIX }}-api:latest
+            ${{ steps.meta.outputs.image_prefix }}-api:${{ steps.meta.outputs.version }}
+            ${{ steps.meta.outputs.image_prefix }}-api:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -67,8 +69,8 @@ jobs:
           file: apps/web/Dockerfile
           push: true
           tags: |
-            ${{ env.IMAGE_PREFIX }}-web:${{ steps.meta.outputs.version }}
-            ${{ env.IMAGE_PREFIX }}-web:latest
+            ${{ steps.meta.outputs.image_prefix }}-web:${{ steps.meta.outputs.version }}
+            ${{ steps.meta.outputs.image_prefix }}-web:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
