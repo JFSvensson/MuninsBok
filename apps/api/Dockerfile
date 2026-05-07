@@ -61,6 +61,9 @@ RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 # Ensure db package can resolve workspace core package at runtime
 RUN mkdir -p /app/packages/db/node_modules/@muninsbok && ln -sf /app/packages/core /app/packages/db/node_modules/@muninsbok/core
 
+# Give node user ownership so Prisma engines can write cache files
+RUN chown -R node:node /app/node_modules
+
 # Run as non-root user
 USER node
 
