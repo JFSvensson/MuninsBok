@@ -61,9 +61,6 @@ RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 # Ensure db package can resolve workspace core package at runtime
 RUN mkdir -p /app/packages/db/node_modules/@muninsbok && ln -sf /app/packages/core /app/packages/db/node_modules/@muninsbok/core
 
-# Prisma CLI needed at runtime for migrate deploy; version must match @prisma/client.
-RUN npm install -g prisma@7.8.0
-
 # Run as non-root user
 USER node
 
@@ -73,4 +70,4 @@ HEALTHCHECK --interval=10s --timeout=5s --retries=5 --start-period=15s \
   CMD wget -qO- http://127.0.0.1:3000/health || exit 1
 
 # Run migrations and start server
-CMD ["sh", "-ec", "MODE=\"${DB_MIGRATION_MODE:-deploy}\"; SCHEMA='packages/db/prisma/schema.prisma'; CONFIG='packages/db/prisma.config.ts'; echo \"DB migration mode: ${MODE}\"; case \"$MODE\" in deploy) prisma migrate deploy --config \"$CONFIG\" --schema \"$SCHEMA\" ;; fallback) prisma migrate deploy --config \"$CONFIG\" --schema \"$SCHEMA\" || prisma db push --accept-data-loss --config \"$CONFIG\" --schema \"$SCHEMA\" ;; push) prisma db push --accept-data-loss --config \"$CONFIG\" --schema \"$SCHEMA\" ;; skip) echo 'Skipping DB migration step' ;; *) echo \"Invalid DB_MIGRATION_MODE: $MODE (allowed: deploy, fallback, push, skip)\" >&2; exit 1 ;; esac; exec node apps/api/dist/index.js"]
+CMD ["sh", "-ec", "MODE=\"${DB_MIGRATION_MODE:-deploy}\"; SCHEMA='packages/db/prisma/schema.prisma'; CONFIG='packages/db/prisma.config.ts'; PRISMA='node_modules/.bin/prisma'; echo \"DB migration mode: ${MODE}\"; case \"$MODE\" in deploy) $PRISMA migrate deploy --config \"$CONFIG\" --schema \"$SCHEMA\" ;; fallback) $PRISMA migrate deploy --config \"$CONFIG\" --schema \"$SCHEMA\" || $PRISMA db push --accept-data-loss --config \"$CONFIG\" --schema \"$SCHEMA\" ;; push) $PRISMA db push --accept-data-loss --config \"$CONFIG\" --schema \"$SCHEMA\" ;; skip) echo 'Skipping DB migration step' ;; *) echo \"Invalid DB_MIGRATION_MODE: $MODE (allowed: deploy, fallback, push, skip)\" >&2; exit 1 ;; esac; exec node apps/api/dist/index.js"]
