@@ -127,6 +127,7 @@ export interface IVoucherRepository {
   createCorrection(
     voucherId: string,
     organizationId: string,
+    context?: { userId?: string; requestId?: string },
   ): Promise<Result<Voucher, VoucherError>>;
   getNextVoucherNumber(fiscalYearId: string): Promise<number>;
   findNumberGaps(fiscalYearId: string, organizationId: string): Promise<number[]>;
