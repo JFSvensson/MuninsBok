@@ -326,6 +326,29 @@ gunzip -c /path/to/muninsbok_20260101_020000.sql.gz \
 docker compose start api
 ```
 
+### Verifiera återställd backup
+
+Efter återställning, kör integritetskontroller mot den återställda databasen.
+
+Exempel med separat testdatabas:
+
+```bash
+# 1) Återställ till testdatabas
+docker exec muninsbok-db createdb -U muninsbok muninsbok_restore_verify
+gunzip -c /path/to/muninsbok_20260101_020000.sql.gz \
+  | docker exec -i muninsbok-db psql -U muninsbok muninsbok_restore_verify
+
+# 2) Kör verifiering
+VERIFY_DATABASE_URL=postgresql://muninsbok:muninsbok@localhost:5432/muninsbok_restore_verify \
+  pnpm db:verify-restore
+
+# 3) Rensa testdatabas
+docker exec muninsbok-db dropdb -U muninsbok muninsbok_restore_verify
+```
+
+`pnpm db:verify-restore` returnerar exit-kod 1 vid blockerande fel (t.ex. obalanserade verifikat eller brutna referenser).
+Varningar skrivs ut men blockerar inte per automatik.
+
 Backuper från sidecarn ligger i volymen `backup_data`:
 
 ```bash
@@ -340,14 +363,15 @@ docker volume inspect muninsbok_backup_data
 
 ```bash
 # Skapa test-DB och återställ
-docker exec muninsbok-db createdb -U muninsbok muninsbok_test
-gunzip -c backup.sql.gz | docker exec -i muninsbok-db psql -U muninsbok muninsbok_test
+docker exec muninsbok-db createdb -U muninsbok muninsbok_restore_verify
+gunzip -c backup.sql.gz | docker exec -i muninsbok-db psql -U muninsbok muninsbok_restore_verify
 
-# Verifiera
-docker exec muninsbok-db psql -U muninsbok muninsbok_test -c "SELECT count(*) FROM vouchers;"
+# Verifiera bokföringsintegritet
+VERIFY_DATABASE_URL=postgresql://muninsbok:muninsbok@localhost:5432/muninsbok_restore_verify \
+  pnpm db:verify-restore
 
 # Rensa
-docker exec muninsbok-db dropdb -U muninsbok muninsbok_test
+docker exec muninsbok-db dropdb -U muninsbok muninsbok_restore_verify
 ```
 
 ---
