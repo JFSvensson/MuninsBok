@@ -70,6 +70,7 @@ export async function voucherRoutes(fastify: FastifyInstance) {
   // Create voucher
   fastify.post<{ Params: { orgId: string } }>("/:orgId/vouchers", async (request, reply) => {
     const parsed = parseBody(createVoucherSchema, request.body);
+    const userId = request.user?.sub;
 
     const { lines, documentIds, createdBy, ...rest } = parsed;
     const result = await voucherRepo.create({
@@ -82,7 +83,8 @@ export async function voucherRoutes(fastify: FastifyInstance) {
         ...(l.description != null && { description: l.description }),
       })),
       ...(documentIds != null && { documentIds }),
-      ...(createdBy != null && { createdBy }),
+      ...(createdBy != null ? { createdBy } : userId != null ? { createdBy: userId } : {}),
+      requestId: request.id,
     });
 
     if (!result.ok) {
@@ -96,9 +98,14 @@ export async function voucherRoutes(fastify: FastifyInstance) {
   fastify.post<{ Params: { orgId: string; voucherId: string } }>(
     "/:orgId/vouchers/:voucherId/correct",
     async (request, reply) => {
+      const userId = request.user?.sub;
       const result = await voucherRepo.createCorrection(
         request.params.voucherId,
         request.params.orgId,
+        {
+          ...(userId != null && { userId }),
+          requestId: request.id,
+        },
       );
 
       if (!result.ok) {
