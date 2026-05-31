@@ -67,6 +67,9 @@ Linux/macOS:
 - docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.docker ps
 - öppna webben: http://localhost:5173
 - kontrollera API health: http://localhost:3000/health
+- kör restore-verifiering mot testdatabas: pnpm db:verify-restore
+
+Release ska inte markeras som klar om restore-verifieringen ger blockerande fel (exit-kod 1).
 
 ## 7. Uppgradering till ny release
 
