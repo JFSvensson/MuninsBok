@@ -70,6 +70,7 @@ export interface ApprovalDecisionInput {
   readonly userId: string;
   readonly decision: "APPROVED" | "REJECTED";
   readonly comment?: string;
+  readonly requestId?: string;
 }
 
 export type ApprovalErrorCode =
