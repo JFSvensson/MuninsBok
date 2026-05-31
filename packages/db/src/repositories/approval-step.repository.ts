@@ -154,6 +154,7 @@ export class ApprovalStepRepository implements IApprovalStepRepository {
         resourceType: "ApprovalStep",
         resourceId: updated.id,
         userId: input.userId,
+        ...(input.requestId != null && { requestId: input.requestId }),
         payloadSummary,
         payloadHash: createHash("sha256").update(payloadSummary).digest("hex"),
       });
