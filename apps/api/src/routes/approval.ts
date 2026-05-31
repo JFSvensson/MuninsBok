@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { createHash, randomUUID } from "node:crypto";
 import {
   createApprovalRuleSchema,
   updateApprovalRuleSchema,
@@ -17,6 +18,53 @@ export async function approvalRoutes(fastify: FastifyInstance) {
   const ruleRepo = fastify.repos.approvalRules;
   const stepRepo = fastify.repos.approvalSteps;
   const voucherRepo = fastify.repos.vouchers;
+
+  async function writeAccountingEvent(input: {
+    organizationId: string;
+    eventType: string;
+    resourceType: string;
+    resourceId: string;
+    userId?: string;
+    requestId?: string;
+    payloadSummary?: string;
+  }): Promise<void> {
+    const executeRaw = fastify.repos.prisma.$executeRaw;
+    if (typeof executeRaw !== "function") return;
+
+    const payloadHash =
+      input.payloadSummary != null
+        ? createHash("sha256").update(input.payloadSummary).digest("hex")
+        : null;
+
+    await executeRaw`
+      INSERT INTO "accounting_events" (
+        "id",
+        "organization_id",
+        "event_type",
+        "resource_type",
+        "resource_id",
+        "user_id",
+        "request_id",
+        "payload_summary",
+        "payload_hash",
+        "occurred_at",
+        "created_at"
+      )
+      VALUES (
+        ${randomUUID()},
+        ${input.organizationId},
+        ${input.eventType},
+        ${input.resourceType},
+        ${input.resourceId},
+        ${input.userId ?? null},
+        ${input.requestId ?? null},
+        ${input.payloadSummary ?? null},
+        ${payloadHash},
+        NOW(),
+        NOW()
+      )
+    `;
+  }
 
   // ── Approval Rules (ADMIN+) ──────────────────────────────
 
@@ -105,6 +153,21 @@ export async function approvalRoutes(fastify: FastifyInstance) {
           },
         });
 
+        await writeAccountingEvent({
+          organizationId: orgId,
+          eventType: "VOUCHER_AUTO_APPROVED",
+          resourceType: "Voucher",
+          resourceId: voucherId,
+          ...(userId != null && { userId }),
+          requestId: request.id,
+          payloadSummary: JSON.stringify({
+            voucherId,
+            fromStatus: voucher.status,
+            toStatus: "APPROVED",
+            reason: "NO_MATCHING_APPROVAL_RULES",
+          }),
+        });
+
         const updated = await voucherRepo.findById(voucherId, orgId);
         return { data: updated };
       }
@@ -118,6 +181,21 @@ export async function approvalRoutes(fastify: FastifyInstance) {
           submittedAt: new Date(),
           submittedByUserId: userId,
         },
+      });
+
+      await writeAccountingEvent({
+        organizationId: orgId,
+        eventType: "VOUCHER_SUBMITTED",
+        resourceType: "Voucher",
+        resourceId: voucherId,
+        ...(userId != null && { userId }),
+        requestId: request.id,
+        payloadSummary: JSON.stringify({
+          voucherId,
+          fromStatus: voucher.status,
+          toStatus: "PENDING",
+          approvalStepCount: stepDefs.length,
+        }),
       });
 
       const updated = await voucherRepo.findById(voucherId, orgId);
@@ -169,6 +247,7 @@ export async function approvalRoutes(fastify: FastifyInstance) {
       const result = await stepRepo.decide({
         stepId,
         userId,
+        requestId: request.id,
         decision: input.decision,
         ...(input.comment != null && { comment: input.comment }),
       });
@@ -186,6 +265,22 @@ export async function approvalRoutes(fastify: FastifyInstance) {
         await fastify.repos.prisma.voucher.update({
           where: { id: voucherId },
           data: { status: newStatus },
+        });
+
+        await writeAccountingEvent({
+          organizationId: orgId,
+          eventType: "VOUCHER_STATUS_CHANGED",
+          resourceType: "Voucher",
+          resourceId: voucherId,
+          ...(userId != null && { userId }),
+          requestId: request.id,
+          payloadSummary: JSON.stringify({
+            voucherId,
+            fromStatus: voucher.status,
+            toStatus: newStatus,
+            decision: input.decision,
+            stepId,
+          }),
         });
       }
 
