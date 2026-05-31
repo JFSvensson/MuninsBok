@@ -1,6 +1,7 @@
 param(
   [switch]$BuildLocal,
   [string]$EnvFile = ".env.docker",
+  [switch]$WithBackup,
   [switch]$NoStart
 )
 
@@ -53,22 +54,27 @@ try {
     $composeArgs += @("-f", "docker-compose.prod.yml")
   }
 
+  $profileArgs = @()
+  if ($WithBackup) {
+    $profileArgs += @("--profile", "backup")
+  }
+
   if ($NoStart) {
     Invoke-DockerCommand -Description "docker compose config" -Command {
-      docker compose @composeArgs --env-file $EnvFile config | Out-Null
+      docker compose @profileArgs @composeArgs --env-file $EnvFile config | Out-Null
     }
     Write-Host "Compose-konfiguration validerad."
     exit 0
   }
 
   Invoke-DockerCommand -Description "docker compose up" -Command {
-    docker compose @composeArgs --env-file $EnvFile up -d
+    docker compose @profileArgs @composeArgs --env-file $EnvFile up -d
   }
 
   Write-Host "Installation klar."
   Write-Host "Web: http://localhost:5173"
   Write-Host "API health: http://localhost:3000/health"
-  $statusCommand = "docker compose " + ($composeArgs -join " ") + " --env-file $EnvFile ps"
+  $statusCommand = "docker compose " + (($profileArgs + $composeArgs) -join " ") + " --env-file $EnvFile ps"
   Write-Host "Status: $statusCommand"
 }
 catch {
