@@ -272,41 +272,44 @@ sudo systemctl status certbot.timer
 
 ## Backup & återställning
 
-### Daglig backup med pg_dump
+### Automatisk backup via compose-profil
 
-Skapa ett skript `/opt/muninsbok/backup.sh`:
+Applikationen har en backup-sidecar i `docker-compose.yml` under profilen `backup`.
+
+Aktivera den vid installation:
 
 ```bash
-#!/bin/bash
-set -euo pipefail
+# Linux/macOS
+./scripts/install-local.sh --with-backup
 
-BACKUP_DIR="/opt/muninsbok/backups"
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-BACKUP_FILE="${BACKUP_DIR}/muninsbok_${TIMESTAMP}.sql.gz"
-RETENTION_DAYS=30
-
-mkdir -p "$BACKUP_DIR"
-
-# Om PostgreSQL körs i Docker:
-docker exec muninsbok-db pg_dump -U muninsbok muninsbok | gzip > "$BACKUP_FILE"
-
-# Om PostgreSQL körs lokalt:
-# pg_dump -U muninsbok muninsbok | gzip > "$BACKUP_FILE"
-
-# Ta bort gamla backuper
-find "$BACKUP_DIR" -name "muninsbok_*.sql.gz" -mtime +${RETENTION_DAYS} -delete
-
-echo "Backup klar: ${BACKUP_FILE}"
+# Windows PowerShell
+./scripts/install-local.ps1 -WithBackup
 ```
 
-Gör skriptet körbart och lägg in som cron-jobb:
+Backup-containern kör `pg_dump` periodiskt och kan även säkerhetskopiera uppladdade filer.
+Filer sparas i Docker-volymen `backup_data`.
+
+Viktiga miljövariabler i `.env.docker`:
+
+```dotenv
+BACKUP_INTERVAL_MINUTES=60
+BACKUP_RETENTION_DAYS=35
+BACKUP_INCLUDE_UPLOADS=true
+
+# Optional external copy
+# BACKUP_S3_URI=s3://my-muninsbok-backups
+# BACKUP_S3_UPLOADS_PREFIX=uploads
+```
+
+Om `BACKUP_S3_URI` är satt laddas backupfiler upp till S3 (kräver giltiga AWS-credentials i miljön).
+
+### Engångsbackup manuellt
+
+Kör en omedelbar backup utan att vänta på intervall:
 
 ```bash
-chmod +x /opt/muninsbok/backup.sh
-
-# Daglig backup kl 02:00
-echo "0 2 * * * root /opt/muninsbok/backup.sh >> /var/log/muninsbok-backup.log 2>&1" \
-  | sudo tee /etc/cron.d/muninsbok-backup
+docker compose --profile backup -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.docker \
+  run --rm backup /bin/sh /scripts/backup/backup-once.sh
 ```
 
 ### Återställning
@@ -316,21 +319,17 @@ echo "0 2 * * * root /opt/muninsbok/backup.sh >> /var/log/muninsbok-backup.log 2
 docker compose stop api
 
 # Återställ dump
-gunzip -c /opt/muninsbok/backups/muninsbok_20260101_020000.sql.gz \
+gunzip -c /path/to/muninsbok_20260101_020000.sql.gz \
   | docker exec -i muninsbok-db psql -U muninsbok muninsbok
 
 # Starta API:t igen
 docker compose start api
 ```
 
-### Backup av uppladdade dokument
-
-Bifogade filer lagras i Docker-volymen `uploads_data`. Säkerhetskopiera den också:
+Backuper från sidecarn ligger i volymen `backup_data`:
 
 ```bash
-# Kopiera volymen
-docker run --rm -v muninsbok_uploads_data:/data -v /opt/muninsbok/backups:/backup \
-  alpine tar czf /backup/uploads_${TIMESTAMP}.tar.gz -C /data .
+docker volume inspect muninsbok_backup_data
 ```
 
 ### Testa backup regelbundet
