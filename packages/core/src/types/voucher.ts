@@ -41,6 +41,7 @@ export interface CreateVoucherInput {
   readonly lines: readonly CreateVoucherLineInput[];
   readonly documentIds?: readonly string[];
   readonly createdBy?: string;
+  readonly requestId?: string;
 }
 
 export type VoucherErrorCode =
