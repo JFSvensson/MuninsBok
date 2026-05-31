@@ -17,6 +17,7 @@ BACKUP_S3_UPLOADS_PREFIX="${BACKUP_S3_UPLOADS_PREFIX:-uploads}"
 
 TIMESTAMP="$(date -u +%Y%m%d_%H%M%S)"
 DB_FILE="${DB_BACKUP_DIR}/muninsbok_${TIMESTAMP}.sql.gz"
+DB_RAW_FILE="${DB_BACKUP_DIR}/muninsbok_${TIMESTAMP}.sql"
 
 mkdir -p "${DB_BACKUP_DIR}"
 mkdir -p "${UPLOADS_BACKUP_DIR}"
@@ -28,7 +29,14 @@ pg_dump \
   -h "${POSTGRES_HOST}" \
   -p "${POSTGRES_PORT}" \
   -U "${POSTGRES_USER}" \
-  "${POSTGRES_DB}" | gzip > "${DB_FILE}"
+  "${POSTGRES_DB}" > "${DB_RAW_FILE}"
+
+gzip -f "${DB_RAW_FILE}"
+
+if [ ! -s "${DB_FILE}" ]; then
+  echo "Database backup file is missing or empty: ${DB_FILE}" >&2
+  exit 1
+fi
 
 if [ "${INCLUDE_UPLOADS}" = "true" ] && [ -d "/uploads" ]; then
   UPLOADS_FILE="${UPLOADS_BACKUP_DIR}/uploads_${TIMESTAMP}.tar.gz"
