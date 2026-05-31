@@ -3,6 +3,7 @@ set -euo pipefail
 
 BUILD_LOCAL=false
 NO_START=false
+WITH_BACKUP=false
 ENV_FILE=".env.docker"
 
 while [[ $# -gt 0 ]]; do
@@ -15,6 +16,10 @@ while [[ $# -gt 0 ]]; do
       NO_START=true
       shift
       ;;
+    --with-backup)
+      WITH_BACKUP=true
+      shift
+      ;;
     --env-file)
       ENV_FILE="${2:-}"
       if [[ -z "$ENV_FILE" ]]; then
@@ -25,7 +30,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     *)
       echo "Okänd flagga: $1" >&2
-      echo "Användning: ./scripts/install-local.sh [--build-local] [--no-start] [--env-file .env.docker]" >&2
+      echo "Användning: ./scripts/install-local.sh [--build-local] [--with-backup] [--no-start] [--env-file .env.docker]" >&2
       exit 1
       ;;
   esac
@@ -58,15 +63,20 @@ if [[ "$BUILD_LOCAL" == "false" ]]; then
   compose_args+=( -f docker-compose.prod.yml )
 fi
 
+profile_args=()
+if [[ "$WITH_BACKUP" == "true" ]]; then
+  profile_args+=( --profile backup )
+fi
+
 if [[ "$NO_START" == "true" ]]; then
-  docker compose "${compose_args[@]}" --env-file "$ENV_FILE" config >/dev/null
+  docker compose "${profile_args[@]}" "${compose_args[@]}" --env-file "$ENV_FILE" config >/dev/null
   echo "Compose-konfiguration validerad"
   exit 0
 fi
 
-docker compose "${compose_args[@]}" --env-file "$ENV_FILE" up -d
+docker compose "${profile_args[@]}" "${compose_args[@]}" --env-file "$ENV_FILE" up -d
 
 echo "Installation klar"
 echo "Web: http://localhost:5173"
 echo "API health: http://localhost:3000/health"
-echo "Status: docker compose ${compose_args[*]} --env-file $ENV_FILE ps"
+echo "Status: docker compose ${profile_args[*]} ${compose_args[*]} --env-file $ENV_FILE ps"
