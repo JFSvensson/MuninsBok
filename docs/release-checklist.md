@@ -39,6 +39,9 @@ Bifoga dessa filer i release (zip/tar):
 - .env.docker.example
 - scripts/install-local.ps1
 - scripts/install-local.sh
+- scripts/backup/Dockerfile
+- scripts/backup/backup-loop.sh
+- scripts/backup/backup-once.sh
 - docs/production.md
 - docs/release-checklist.md
 
@@ -49,6 +52,7 @@ Windows (PowerShell):
 - kopiera .env.docker.example till .env.docker
 - fyll i hemligheter (framförallt JWT_SECRET och databaslösenord)
 - kör: ./scripts/install-local.ps1
+- valfritt (automatisk backup): ./scripts/install-local.ps1 -WithBackup
 
 Linux/macOS:
 
@@ -56,6 +60,7 @@ Linux/macOS:
 - fyll i hemligheter
 - gör scriptet körbart: chmod +x scripts/install-local.sh
 - kör: ./scripts/install-local.sh
+- valfritt (automatisk backup): ./scripts/install-local.sh --with-backup
 
 ## 6. Verifiering efter installation
 
