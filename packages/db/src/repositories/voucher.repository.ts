@@ -1,4 +1,5 @@
 import type { PrismaClient } from "../generated/prisma/client.js";
+import { createHash, randomUUID } from "node:crypto";
 import type {
   Voucher,
   CreateVoucherInput,
@@ -17,6 +18,59 @@ const voucherInclude = {
   correctedByVoucher: true,
   approvalSteps: true,
 } as const;
+
+interface AccountingEventInput {
+  id?: string;
+  organizationId: string;
+  eventType: string;
+  resourceType: string;
+  resourceId: string;
+  userId?: string;
+  requestId?: string;
+  payloadSummary?: string;
+  payloadHash?: string;
+  correctionEventId?: string;
+}
+
+function buildPayloadHash(summary: string): string {
+  return createHash("sha256").update(summary).digest("hex");
+}
+
+async function writeAccountingEvent(
+  executor: { $executeRaw: PrismaClient["$executeRaw"] },
+  input: AccountingEventInput,
+): Promise<void> {
+  await executor.$executeRaw`
+    INSERT INTO "accounting_events" (
+      "id",
+      "organization_id",
+      "event_type",
+      "resource_type",
+      "resource_id",
+      "user_id",
+      "request_id",
+      "payload_summary",
+      "payload_hash",
+      "correction_event_id",
+      "occurred_at",
+      "created_at"
+    )
+    VALUES (
+      ${input.id ?? randomUUID()},
+      ${input.organizationId},
+      ${input.eventType},
+      ${input.resourceType},
+      ${input.resourceId},
+      ${input.userId ?? null},
+      ${input.requestId ?? null},
+      ${input.payloadSummary ?? null},
+      ${input.payloadHash ?? null},
+      ${input.correctionEventId ?? null},
+      NOW(),
+      NOW()
+    )
+  `;
+}
 
 export class VoucherRepository implements IVoucherRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -132,35 +186,59 @@ export class VoucherRepository implements IVoucherRepository {
     // Build account lookup for IDs
     const accountMap = new Map(accounts.map((a) => [a.number, a.id]));
 
-    // Create voucher with lines in transaction
-    const voucher = await this.prisma.voucher.create({
-      data: {
-        organizationId: input.organizationId,
-        fiscalYearId: input.fiscalYearId,
-        number: nextNumber,
-        date: input.date,
-        description: input.description,
-        ...(input.createdBy != null && { createdBy: input.createdBy }),
-        lines: {
-          create: input.lines.map((line) => {
-            const accountId = accountMap.get(line.accountNumber);
-            if (!accountId) throw new Error(`Konto ${line.accountNumber} finns inte`);
-            return {
-              accountId,
-              accountNumber: line.accountNumber,
-              debit: line.debit,
-              credit: line.credit,
-              ...(line.description != null && { description: line.description }),
-            };
-          }),
+    const voucher = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.voucher.create({
+        data: {
+          organizationId: input.organizationId,
+          fiscalYearId: input.fiscalYearId,
+          number: nextNumber,
+          date: input.date,
+          description: input.description,
+          ...(input.createdBy != null && { createdBy: input.createdBy }),
+          lines: {
+            create: input.lines.map((line) => {
+              const accountId = accountMap.get(line.accountNumber);
+              if (!accountId) throw new Error(`Konto ${line.accountNumber} finns inte`);
+              return {
+                accountId,
+                accountNumber: line.accountNumber,
+                debit: line.debit,
+                credit: line.credit,
+                ...(line.description != null && { description: line.description }),
+              };
+            }),
+          },
+          documents: input.documentIds
+            ? {
+                connect: input.documentIds.map((id) => ({ id })),
+              }
+            : {},
         },
-        documents: input.documentIds
-          ? {
-              connect: input.documentIds.map((id) => ({ id })),
-            }
-          : {},
-      },
-      include: voucherInclude,
+        include: voucherInclude,
+      });
+
+      const totalDebit = input.lines.reduce((sum, line) => sum + line.debit, 0);
+      const totalCredit = input.lines.reduce((sum, line) => sum + line.credit, 0);
+      const payloadSummary = JSON.stringify({
+        voucherId: created.id,
+        voucherNumber: created.number,
+        lineCount: input.lines.length,
+        totalDebit,
+        totalCredit,
+        date: input.date.toISOString(),
+      });
+
+      await writeAccountingEvent(tx, {
+        organizationId: input.organizationId,
+        eventType: "VOUCHER_CREATED",
+        resourceType: "Voucher",
+        resourceId: created.id,
+        ...(input.createdBy != null && { userId: input.createdBy }),
+        payloadSummary,
+        payloadHash: buildPayloadHash(payloadSummary),
+      });
+
+      return created;
     });
 
     return ok(toVoucher(voucher));
@@ -195,25 +273,45 @@ export class VoucherRepository implements IVoucherRepository {
     // Get next voucher number
     const nextNumber = await this.getNextVoucherNumber(original.fiscalYearId);
 
-    // Create correction voucher with reversed lines
-    const correction = await this.prisma.voucher.create({
-      data: {
-        organizationId,
-        fiscalYearId: original.fiscalYearId,
-        number: nextNumber,
-        date: new Date(),
-        description: `Rättelse av verifikat #${original.number}`,
-        correctsVoucherId: original.id,
-        lines: {
-          create: original.lines.map((line) => ({
-            accountId: line.accountId,
-            accountNumber: line.accountNumber,
-            debit: line.credit, // Swap debit/credit
-            credit: line.debit,
-          })),
+    const correction = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.voucher.create({
+        data: {
+          organizationId,
+          fiscalYearId: original.fiscalYearId,
+          number: nextNumber,
+          date: new Date(),
+          description: `Rättelse av verifikat #${original.number}`,
+          correctsVoucherId: original.id,
+          lines: {
+            create: original.lines.map((line) => ({
+              accountId: line.accountId,
+              accountNumber: line.accountNumber,
+              debit: line.credit, // Swap debit/credit
+              credit: line.debit,
+            })),
+          },
         },
-      },
-      include: voucherInclude,
+        include: voucherInclude,
+      });
+
+      const payloadSummary = JSON.stringify({
+        voucherId: created.id,
+        voucherNumber: created.number,
+        correctsVoucherId: original.id,
+        correctedVoucherNumber: original.number,
+        lineCount: original.lines.length,
+      });
+
+      await writeAccountingEvent(tx, {
+        organizationId,
+        eventType: "VOUCHER_CORRECTED",
+        resourceType: "Voucher",
+        resourceId: created.id,
+        payloadSummary,
+        payloadHash: buildPayloadHash(payloadSummary),
+      });
+
+      return created;
     });
 
     return ok(toVoucher(correction));
