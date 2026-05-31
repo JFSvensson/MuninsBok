@@ -18,4 +18,4 @@ COPY backup-loop.sh /scripts/backup/backup-loop.sh
 
 RUN chmod +x /scripts/backup/backup-once.sh /scripts/backup/backup-loop.sh
 
-ENTRYPOINT ["/bin/sh", "/scripts/backup/backup-loop.sh"]
+CMD ["/bin/sh", "/scripts/backup/backup-loop.sh"]
