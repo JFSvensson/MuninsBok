@@ -186,7 +186,11 @@ describe("Voucher routes", () => {
       const res = await app.inject({ method: "POST", url: `${baseUrl}/v-1/correct` });
 
       expect(res.statusCode).toBe(201);
-      expect(repos.vouchers.createCorrection).toHaveBeenCalledWith("v-1", orgId);
+      expect(repos.vouchers.createCorrection).toHaveBeenCalledWith(
+        "v-1",
+        orgId,
+        expect.objectContaining({ requestId: expect.any(String) }),
+      );
     });
 
     it("returns 404 for unknown voucher", async () => {
