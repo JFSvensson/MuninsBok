@@ -269,6 +269,7 @@ export interface MockPrisma {
   fiscalYear: MockPrismaModel;
   voucher: MockPrismaModel;
   $queryRaw: ReturnType<typeof vi.fn>;
+  $executeRaw: ReturnType<typeof vi.fn>;
   $transaction: ReturnType<typeof vi.fn>;
   [model: string]: MockPrismaModel | ReturnType<typeof vi.fn>;
 }
@@ -385,6 +386,7 @@ export function createMockRepos(): MockRepos {
       count: vi.fn(),
     },
     $queryRaw: vi.fn().mockResolvedValue([{ "?column?": 1 }]),
+    $executeRaw: vi.fn().mockResolvedValue(1),
     $transaction: vi.fn(),
   };
 
