@@ -37,6 +37,7 @@ model Organization {
   bankTransactions BankTransaction[]
   bankSyncRuns     BankSyncRun[]
   bankWebhookEvents BankWebhookEvent[]
+  accountingEvents AccountingEvent[]
 
   @@map("organizations")
 }
@@ -673,4 +674,32 @@ model BankWebhookEvent {
   @@index([receivedAt])
   @@index([connectionId])
   @@map("bank_webhook_events")
+}
+
+// ============================================
+// ACCOUNTING EVENT (persistent treatment history)
+// ============================================
+
+model AccountingEvent {
+  id                  String   @id @default(cuid())
+  organizationId      String   @map("organization_id")
+  eventType           String   @map("event_type")
+  resourceType        String   @map("resource_type")
+  resourceId          String   @map("resource_id")
+  userId              String?  @map("user_id")
+  requestId           String?  @map("request_id")
+  payloadSummary      String?  @map("payload_summary")
+  payloadHash         String?  @map("payload_hash")
+  correctionEventId   String?  @map("correction_event_id")
+  occurredAt          DateTime @default(now()) @map("occurred_at")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, occurredAt])
+  @@index([resourceType, resourceId])
+  @@index([eventType])
+  @@index([correctionEventId])
+  @@map("accounting_events")
 }
