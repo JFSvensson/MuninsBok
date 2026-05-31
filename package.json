@@ -25,6 +25,7 @@
     "db:migrate": "pnpm --filter @muninsbok/db migrate",
     "db:push": "pnpm --filter @muninsbok/db push",
     "db:seed": "pnpm --filter @muninsbok/db seed",
+    "db:verify-restore": "pnpm --filter @muninsbok/db verify:restore",
     "prepare": "husky"
   },
   "devDependencies": {
