@@ -81,6 +81,39 @@ services:
         max-size: "10m"
         max-file: "5"
 
+  backup:
+    build:
+      context: ./scripts/backup
+      dockerfile: Dockerfile
+    container_name: muninsbok-backup
+    profiles:
+      - backup
+    env_file: .env.docker
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      BACKUP_INTERVAL_MINUTES: ${BACKUP_INTERVAL_MINUTES:-60}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-35}
+      BACKUP_INCLUDE_UPLOADS: ${BACKUP_INCLUDE_UPLOADS:-true}
+      BACKUP_S3_URI: ${BACKUP_S3_URI:-}
+      BACKUP_S3_UPLOADS_PREFIX: ${BACKUP_S3_UPLOADS_PREFIX:-uploads}
+    volumes:
+      - backup_data:/backups
+      - uploads_data:/uploads:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
 volumes:
   postgres_data:
   uploads_data:
+  backup_data:
