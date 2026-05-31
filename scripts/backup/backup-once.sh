@@ -1,0 +1,52 @@
+#!/bin/sh
+set -eu
+
+: "${POSTGRES_HOST:?POSTGRES_HOST is required}"
+: "${POSTGRES_PORT:?POSTGRES_PORT is required}"
+: "${POSTGRES_USER:?POSTGRES_USER is required}"
+: "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}"
+: "${POSTGRES_DB:?POSTGRES_DB is required}"
+
+BACKUP_ROOT="${BACKUP_ROOT:-/backups}"
+DB_BACKUP_DIR="${BACKUP_ROOT}/db"
+UPLOADS_BACKUP_DIR="${BACKUP_ROOT}/uploads"
+RETENTION_DAYS="${BACKUP_RETENTION_DAYS:-35}"
+INCLUDE_UPLOADS="${BACKUP_INCLUDE_UPLOADS:-true}"
+BACKUP_S3_URI="${BACKUP_S3_URI:-}"
+BACKUP_S3_UPLOADS_PREFIX="${BACKUP_S3_UPLOADS_PREFIX:-uploads}"
+
+TIMESTAMP="$(date -u +%Y%m%d_%H%M%S)"
+DB_FILE="${DB_BACKUP_DIR}/muninsbok_${TIMESTAMP}.sql.gz"
+
+mkdir -p "${DB_BACKUP_DIR}"
+mkdir -p "${UPLOADS_BACKUP_DIR}"
+
+export PGPASSWORD="${POSTGRES_PASSWORD}"
+
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] creating database backup ${DB_FILE}"
+pg_dump \
+  -h "${POSTGRES_HOST}" \
+  -p "${POSTGRES_PORT}" \
+  -U "${POSTGRES_USER}" \
+  "${POSTGRES_DB}" | gzip > "${DB_FILE}"
+
+if [ "${INCLUDE_UPLOADS}" = "true" ] && [ -d "/uploads" ]; then
+  UPLOADS_FILE="${UPLOADS_BACKUP_DIR}/uploads_${TIMESTAMP}.tar.gz"
+  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] creating uploads backup ${UPLOADS_FILE}"
+  tar czf "${UPLOADS_FILE}" -C /uploads .
+fi
+
+if [ -n "${BACKUP_S3_URI}" ]; then
+  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] uploading backups to ${BACKUP_S3_URI}"
+  aws s3 cp "${DB_FILE}" "${BACKUP_S3_URI}/db/$(basename "${DB_FILE}")"
+
+  if [ "${INCLUDE_UPLOADS}" = "true" ] && [ -d "/uploads" ] && [ -f "${UPLOADS_FILE:-}" ]; then
+    aws s3 cp "${UPLOADS_FILE}" "${BACKUP_S3_URI}/${BACKUP_S3_UPLOADS_PREFIX}/$(basename "${UPLOADS_FILE}")"
+  fi
+fi
+
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] pruning local backups older than ${RETENTION_DAYS} days"
+find "${DB_BACKUP_DIR}" -name "muninsbok_*.sql.gz" -mtime +"${RETENTION_DAYS}" -delete
+find "${UPLOADS_BACKUP_DIR}" -name "uploads_*.tar.gz" -mtime +"${RETENTION_DAYS}" -delete
+
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] backup completed"
