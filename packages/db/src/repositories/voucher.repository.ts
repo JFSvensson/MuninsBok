@@ -234,6 +234,7 @@ export class VoucherRepository implements IVoucherRepository {
         resourceType: "Voucher",
         resourceId: created.id,
         ...(input.createdBy != null && { userId: input.createdBy }),
+        ...(input.requestId != null && { requestId: input.requestId }),
         payloadSummary,
         payloadHash: buildPayloadHash(payloadSummary),
       });
@@ -251,6 +252,7 @@ export class VoucherRepository implements IVoucherRepository {
   async createCorrection(
     voucherId: string,
     organizationId: string,
+    context?: { userId?: string; requestId?: string },
   ): Promise<Result<Voucher, VoucherError>> {
     // Find the original voucher
     const original = await this.prisma.voucher.findFirst({
@@ -307,6 +309,8 @@ export class VoucherRepository implements IVoucherRepository {
         eventType: "VOUCHER_CORRECTED",
         resourceType: "Voucher",
         resourceId: created.id,
+        ...(context?.userId != null && { userId: context.userId }),
+        ...(context?.requestId != null && { requestId: context.requestId }),
         payloadSummary,
         payloadHash: buildPayloadHash(payloadSummary),
       });
