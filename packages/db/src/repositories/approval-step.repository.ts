@@ -1,4 +1,5 @@
 import type { PrismaClient } from "../generated/prisma/client.js";
+import { createHash, randomUUID } from "node:crypto";
 import type {
   ApprovalStep,
   ApprovalDecisionInput,
@@ -7,6 +8,54 @@ import type {
 } from "@muninsbok/core/types";
 import { ok, err, type Result } from "@muninsbok/core/types";
 import { toApprovalStep } from "../mappers.js";
+
+interface AccountingEventInput {
+  organizationId: string;
+  eventType: string;
+  resourceType: string;
+  resourceId: string;
+  userId?: string;
+  requestId?: string;
+  payloadSummary?: string;
+  payloadHash?: string;
+  correctionEventId?: string;
+}
+
+async function writeAccountingEvent(
+  executor: { $executeRaw: PrismaClient["$executeRaw"] },
+  input: AccountingEventInput,
+): Promise<void> {
+  await executor.$executeRaw`
+    INSERT INTO "accounting_events" (
+      "id",
+      "organization_id",
+      "event_type",
+      "resource_type",
+      "resource_id",
+      "user_id",
+      "request_id",
+      "payload_summary",
+      "payload_hash",
+      "correction_event_id",
+      "occurred_at",
+      "created_at"
+    )
+    VALUES (
+      ${randomUUID()},
+      ${input.organizationId},
+      ${input.eventType},
+      ${input.resourceType},
+      ${input.resourceId},
+      ${input.userId ?? null},
+      ${input.requestId ?? null},
+      ${input.payloadSummary ?? null},
+      ${input.payloadHash ?? null},
+      ${input.correctionEventId ?? null},
+      NOW(),
+      NOW()
+    )
+  `;
+}
 
 export class ApprovalStepRepository implements IApprovalStepRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -55,28 +104,67 @@ export class ApprovalStepRepository implements IApprovalStepRepository {
   }
 
   async decide(input: ApprovalDecisionInput): Promise<Result<ApprovalStep, ApprovalError>> {
-    const step = await this.prisma.approvalStep.findUnique({
-      where: { id: input.stepId },
+    const txResult = await this.prisma.$transaction(async (tx) => {
+      const step = await tx.approvalStep.findUnique({
+        where: { id: input.stepId },
+        include: {
+          voucher: {
+            select: {
+              id: true,
+              organizationId: true,
+            },
+          },
+        },
+      });
+
+      if (!step) {
+        return {
+          kind: "error" as const,
+          error: { code: "NOT_FOUND" as const, message: "Atteststeget hittades inte" },
+        };
+      }
+
+      if (step.status !== "PENDING") {
+        return {
+          kind: "error" as const,
+          error: { code: "ALREADY_DECIDED" as const, message: "Steget har redan beslutats" },
+        };
+      }
+
+      const updated = await tx.approvalStep.update({
+        where: { id: input.stepId },
+        data: {
+          status: input.decision,
+          approverUserId: input.userId,
+          decidedAt: new Date(),
+          ...(input.comment !== undefined && { comment: input.comment }),
+        },
+      });
+
+      const payloadSummary = JSON.stringify({
+        stepId: updated.id,
+        voucherId: step.voucher.id,
+        decision: input.decision,
+        stepOrder: step.stepOrder,
+      });
+
+      await writeAccountingEvent(tx, {
+        organizationId: step.voucher.organizationId,
+        eventType: "APPROVAL_DECISION",
+        resourceType: "ApprovalStep",
+        resourceId: updated.id,
+        userId: input.userId,
+        payloadSummary,
+        payloadHash: createHash("sha256").update(payloadSummary).digest("hex"),
+      });
+
+      return { kind: "ok" as const, updated };
     });
 
-    if (!step) {
-      return err({ code: "NOT_FOUND", message: "Atteststeget hittades inte" });
+    if (txResult.kind === "error") {
+      return err(txResult.error);
     }
 
-    if (step.status !== "PENDING") {
-      return err({ code: "ALREADY_DECIDED", message: "Steget har redan beslutats" });
-    }
-
-    const updated = await this.prisma.approvalStep.update({
-      where: { id: input.stepId },
-      data: {
-        status: input.decision,
-        approverUserId: input.userId,
-        decidedAt: new Date(),
-        ...(input.comment !== undefined && { comment: input.comment }),
-      },
-    });
-
-    return ok(toApprovalStep(updated));
+    return ok(toApprovalStep(txResult.updated));
   }
 }
