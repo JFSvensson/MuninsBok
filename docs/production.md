@@ -376,6 +376,23 @@ docker exec muninsbok-db psql -U muninsbok -d muninsbok -c "SHOW archive_mode;"
 docker exec muninsbok-db psql -U muninsbok -d muninsbok -c "SHOW archive_command;"
 ```
 
+Verifiera att nya WAL-filer faktiskt produceras:
+
+```bash
+docker compose --profile backup -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.docker \
+  run --rm backup /bin/sh /scripts/backup/verify-wal-archive.sh
+```
+
+Tröskelvärden för kontrollen styrs via:
+
+```dotenv
+# Nyaste WAL-fil får vara max så här gammal
+WAL_ARCHIVE_MAX_AGE_MINUTES=120
+
+# Minsta antal filer som måste finnas i arkivet
+WAL_ARCHIVE_MIN_FILES=1
+```
+
 ### Testa backup regelbundet
 
 > **Viktig princip**: En backup som inte har testats är ingen backup.
