@@ -61,6 +61,118 @@ jobs:
       - name: Run tests
         run: pnpm -r test
 
+  restore-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: build-and-test
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: muninsbok
+          POSTGRES_PASSWORD: muninsbok
+          POSTGRES_DB: muninsbok
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U muninsbok"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://muninsbok:muninsbok@localhost:5432/muninsbok
+      VERIFY_DATABASE_URL: postgresql://muninsbok:muninsbok@localhost:5432/muninsbok_restore_verify
+      POSTGRES_USER: muninsbok
+      POSTGRES_PASSWORD: muninsbok
+      POSTGRES_DB: muninsbok
+      JWT_SECRET: ci-test-secret-that-is-long-enough-for-jwt-signing
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.0.6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --force
+
+      - name: Verify rolldown Linux binding
+        if: runner.os == 'Linux'
+        run: node -e "require('@rolldown/binding-linux-x64-gnu')"
+
+      - name: Cache Prisma generated client
+        uses: actions/cache@v5
+        with:
+          path: packages/db/src/generated
+          key: prisma-${{ hashFiles('packages/db/prisma/schema.prisma') }}
+
+      - name: Generate Prisma client
+        run: pnpm --filter @muninsbok/db exec prisma generate
+
+      - name: Run database migrations
+        run: pnpm --filter @muninsbok/db exec prisma migrate deploy
+
+      - name: Seed restore verification data
+        run: pnpm --filter @muninsbok/db seed
+
+      - name: Run restore verification
+        run: |
+          set -euo pipefail
+
+          RESTORE_DB="muninsbok_restore_verify"
+          BACKUP_FILE="$(mktemp /tmp/muninsbok-restore-XXXXXX)"
+
+          cleanup() {
+            docker run --rm --network host \
+              -e PGPASSWORD="$POSTGRES_PASSWORD" \
+              -e POSTGRES_USER="$POSTGRES_USER" \
+              -e POSTGRES_DB="$POSTGRES_DB" \
+              postgres:16-alpine \
+              dropdb --if-exists -h localhost -p 5432 -U "$POSTGRES_USER" "$RESTORE_DB" || true
+
+            rm -f "$BACKUP_FILE"
+          }
+
+          trap cleanup EXIT
+
+          docker run --rm --network host \
+            -e PGPASSWORD="$POSTGRES_PASSWORD" \
+            -e POSTGRES_USER="$POSTGRES_USER" \
+            -e POSTGRES_DB="$POSTGRES_DB" \
+            postgres:16-alpine \
+            sh -lc 'pg_dump -h localhost -p 5432 -U "$POSTGRES_USER" "$POSTGRES_DB"' | gzip > "$BACKUP_FILE"
+
+          docker run --rm --network host \
+            -e PGPASSWORD="$POSTGRES_PASSWORD" \
+            -e POSTGRES_USER="$POSTGRES_USER" \
+            -e POSTGRES_DB="$POSTGRES_DB" \
+            postgres:16-alpine \
+            dropdb --if-exists -h localhost -p 5432 -U "$POSTGRES_USER" "$RESTORE_DB"
+
+          docker run --rm --network host \
+            -e PGPASSWORD="$POSTGRES_PASSWORD" \
+            -e POSTGRES_USER="$POSTGRES_USER" \
+            -e POSTGRES_DB="$POSTGRES_DB" \
+            postgres:16-alpine \
+            createdb -h localhost -p 5432 -U "$POSTGRES_USER" "$RESTORE_DB"
+
+          gunzip -c "$BACKUP_FILE" | docker run --rm -i --network host \
+            -e PGPASSWORD="$POSTGRES_PASSWORD" \
+            -e POSTGRES_USER="$POSTGRES_USER" \
+            -e POSTGRES_DB="$POSTGRES_DB" \
+            postgres:16-alpine \
+            psql -h localhost -p 5432 -U "$POSTGRES_USER" "$RESTORE_DB"
+
+          pnpm db:verify-restore
+
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 20

@@ -10,6 +10,7 @@ Kör från repo-roten:
 - pnpm -r build
 - pnpm test
 - npx playwright test --workers=1
+- verifiera att CI-jobbet `restore-verify` är grönt (dump -> restore -> `pnpm db:verify-restore`)
 
 Bekräfta att CI är grön.
 
@@ -68,6 +69,8 @@ Linux/macOS:
 - öppna webben: http://localhost:5173
 - kontrollera API health: http://localhost:3000/health
 - kör restore-verifiering mot testdatabas: pnpm db:verify-restore
+
+CI ska redan ha verifierat restoreflödet via jobbet `restore-verify`. Den lokala kontrollen här är en extra driftverifiering inför eller efter faktisk installation.
 
 Release ska inte markeras som klar om restore-verifieringen ger blockerande fel (exit-kod 1).
 

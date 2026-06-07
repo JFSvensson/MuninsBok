@@ -144,7 +144,7 @@ Applikationen är **produktionsklar** för självhostning av småföretag och f�
 - **Bank-OAuth**: Signerad `state` verifieras server-side och callback-URL:er begränsas via `BANK_OAUTH_REDIRECT_URI_ALLOWLIST`
 - **Infrastruktur**: Multi-stage Docker, non-root containers, healthchecks, log-rotation, graceful shutdown
 - **Drift**: Request-timeouts, konfigurerbar anslutningspool, strukturerad loggning, audit trail, Swagger UI avstängd som standard i produktion och `/metrics` endast exponerad när `METRICS_TOKEN` är satt
-- **Tester**: 1 374 enhetstester (inkl. React Testing Library-komponenttester) + E2E med Playwright, CI via GitHub Actions
+- **Tester**: 1 374 enhetstester (inkl. React Testing Library-komponenttester) + E2E med Playwright, CI via GitHub Actions inklusive restore-gate för backup -> restore -> integritetsverifiering
 
 Se [docs/production.md](docs/production.md) för fullständig driftsättningsguide.
 
