@@ -287,6 +287,7 @@ Aktivera den vid installation:
 ```
 
 Backup-containern kör `pg_dump` periodiskt och kan även säkerhetskopiera uppladdade filer.
+Den kan även ta snapshots av PostgreSQL:s WAL-arkiv för en PITR-grund.
 Filer sparas i Docker-volymen `backup_data`.
 
 Viktiga miljövariabler i `.env.docker`:
@@ -295,13 +296,20 @@ Viktiga miljövariabler i `.env.docker`:
 BACKUP_INTERVAL_MINUTES=60
 BACKUP_RETENTION_DAYS=35
 BACKUP_INCLUDE_UPLOADS=true
+BACKUP_INCLUDE_WAL_ARCHIVE=true
+
+# PostgreSQL WAL archive settings
+POSTGRES_ARCHIVE_MODE=on
+POSTGRES_ARCHIVE_TIMEOUT_SECONDS=300
 
 # Optional external copy
 # BACKUP_S3_URI=s3://my-muninsbok-backups
 # BACKUP_S3_UPLOADS_PREFIX=uploads
+# BACKUP_S3_WAL_PREFIX=wal-archive
 ```
 
 Om `BACKUP_S3_URI` är satt laddas backupfiler upp till S3 (kräver giltiga AWS-credentials i miljön).
+WAL-snapshots lagras under `wal-archive`.
 
 ### Engångsbackup manuellt
 
@@ -353,6 +361,19 @@ Backuper från sidecarn ligger i volymen `backup_data`:
 
 ```bash
 docker volume inspect muninsbok_backup_data
+```
+
+WAL-arkivsegment från PostgreSQL ligger i en separat volym:
+
+```bash
+docker volume inspect muninsbok_wal_archive_data
+```
+
+Verifiera att WAL-arkivering är aktiv:
+
+```bash
+docker exec muninsbok-db psql -U muninsbok -d muninsbok -c "SHOW archive_mode;"
+docker exec muninsbok-db psql -U muninsbok -d muninsbok -c "SHOW archive_command;"
 ```
 
 ### Testa backup regelbundet
