@@ -69,6 +69,7 @@ Linux/macOS:
 - öppna webben: http://localhost:5173
 - kontrollera API health: http://localhost:3000/health
 - kör restore-verifiering mot testdatabas: pnpm db:verify-restore
+- verifiera WAL-arkivering: docker exec muninsbok-db psql -U muninsbok -d muninsbok -c "SHOW archive_mode;"
 
 CI ska redan ha verifierat restoreflödet via jobbet `restore-verify`. Den lokala kontrollen här är en extra driftverifiering inför eller efter faktisk installation.
 
