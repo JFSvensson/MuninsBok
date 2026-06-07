@@ -43,6 +43,7 @@ Bifoga dessa filer i release (zip/tar):
 - scripts/backup/Dockerfile
 - scripts/backup/backup-loop.sh
 - scripts/backup/backup-once.sh
+- scripts/backup/verify-wal-archive.sh
 - docs/production.md
 - docs/release-checklist.md
 
@@ -70,6 +71,7 @@ Linux/macOS:
 - kontrollera API health: http://localhost:3000/health
 - kör restore-verifiering mot testdatabas: pnpm db:verify-restore
 - verifiera WAL-arkivering: docker exec muninsbok-db psql -U muninsbok -d muninsbok -c "SHOW archive_mode;"
+- verifiera WAL-aktivitet: docker compose --profile backup -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.docker run --rm backup /bin/sh /scripts/backup/verify-wal-archive.sh
 
 CI ska redan ha verifierat restoreflödet via jobbet `restore-verify`. Den lokala kontrollen här är en extra driftverifiering inför eller efter faktisk installation.
 
