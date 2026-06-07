@@ -290,6 +290,8 @@ Backup-containern kör `pg_dump` periodiskt och kan även säkerhetskopiera uppl
 Den kan även ta snapshots av PostgreSQL:s WAL-arkiv för en PITR-grund.
 Filer sparas i Docker-volymen `backup_data`.
 
+För faktisk restore till vald tidpunkt behövs även en fysisk base backup. Det finns ett separat one-shot-script för detta.
+
 Viktiga miljövariabler i `.env.docker`:
 
 ```dotenv
@@ -319,6 +321,17 @@ Kör en omedelbar backup utan att vänta på intervall:
 docker compose --profile backup -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.docker \
   run --rm backup /bin/sh /scripts/backup/backup-once.sh
 ```
+
+### Skapa fysisk base backup för PITR
+
+Kör detta separat när du vill ta en fysisk PostgreSQL-base backup som kan kombineras med WAL-arkivet:
+
+```bash
+docker compose --profile backup -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.docker \
+  run --rm backup /bin/sh /scripts/backup/base-backup-once.sh
+```
+
+Base backups sparas under `backup_data/base` och kan även laddas upp till S3 via `BACKUP_S3_BASE_PREFIX`.
 
 ### Återställning
 
@@ -392,6 +405,25 @@ WAL_ARCHIVE_MAX_AGE_MINUTES=120
 # Minsta antal filer som måste finnas i arkivet
 WAL_ARCHIVE_MIN_FILES=1
 ```
+
+### Förbered restore till vald tidpunkt
+
+Följande script förbereder en isolerad PostgreSQL-datakatalog för restore till en viss tidpunkt.
+Det återställer base backupen och skriver recovery-konfiguration för WAL-replay.
+
+```bash
+docker compose --profile backup -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.docker \
+  run --rm \
+  -e BASE_BACKUP_FILE=/backups/base/muninsbok_base_20260607_120000.tar.gz \
+  -e RECOVERY_TARGET_TIME="2026-06-07 12:35:00+00" \
+  -e TARGET_ROOT=/restore-target \
+  backup /bin/sh /scripts/backup/prepare-pitr-restore.sh
+```
+
+Scriptet skriver ut ett `docker run`-kommando för att starta en isolerad PostgreSQL-instans på den förberedda katalogen.
+För att använda en fryst WAL-snapshot i stället för live-arkivet, sätt även `WAL_ARCHIVE_SNAPSHOT_FILE`.
+
+Detta är avsiktligt separerat från standarddriften för att följa SOLID/Clean Code-principen: vanlig backup, base backup och PITR-restore är tre olika driftsteg med olika riskprofil.
 
 ### Testa backup regelbundet
 
