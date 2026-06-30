@@ -1,4 +1,4 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { BAS_SIMPLIFIED } from "@muninsbok/core/chart-of-accounts";
 import { isValidOrgNumber } from "@muninsbok/core/types";
 import { createOrganizationSchema, updateOrganizationSchema } from "../schemas/index.js";
@@ -9,6 +9,23 @@ export async function organizationRoutes(fastify: FastifyInstance) {
   const accountRepo = fastify.repos.accounts;
   const userRepo = fastify.repos.users;
 
+  async function requireOwner(request: FastifyRequest, reply: FastifyReply) {
+    const membership = request.membership;
+    if (!membership) {
+      return reply.status(401).send({
+        error: "Autentisering krävs",
+        code: "UNAUTHORIZED",
+      });
+    }
+
+    if (membership.role !== "OWNER") {
+      return reply.status(403).send({
+        error: "Rollen OWNER eller högre krävs",
+        code: "INSUFFICIENT_ROLE",
+      });
+    }
+  }
+
   // List organizations (filtered by membership when authenticated)
   fastify.get("/", async (request) => {
     const userId = request.user?.sub;
@@ -16,8 +33,7 @@ export async function organizationRoutes(fastify: FastifyInstance) {
       const organizations = await orgRepo.findByUserMembership(userId);
       return { data: organizations };
     }
-    const organizations = await orgRepo.findAll();
-    return { data: organizations };
+    return { data: [] };
   });
 
   // Get single organization (org validated by preHandler hook)
