@@ -11,6 +11,10 @@ import type { FastifyInstance } from "fastify";
 import fp from "fastify-plugin";
 
 async function requestLogging(fastify: FastifyInstance): Promise<void> {
+  function sanitizeUrl(url: string): string {
+    return url.split("?")[0] ?? url;
+  }
+
   fastify.addHook("onRequest", async (request, reply) => {
     // Prefer a client-supplied trace id (e.g. from a gateway), fall back to UUID
     const incomingId = request.headers["x-request-id"];
@@ -28,7 +32,7 @@ async function requestLogging(fastify: FastifyInstance): Promise<void> {
     request.log.info(
       {
         method: request.method,
-        url: request.url,
+        url: sanitizeUrl(request.url),
         statusCode: reply.statusCode,
         durationMs: Math.round(reply.elapsedTime),
       },

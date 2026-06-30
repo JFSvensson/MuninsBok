@@ -24,6 +24,10 @@ interface JwtUser {
 const WRITE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 async function auditLogging(fastify: FastifyInstance): Promise<void> {
+  function sanitizeUrl(url: string): string {
+    return url.split("?")[0] ?? url;
+  }
+
   fastify.addHook("onResponse", async (request, reply) => {
     if (!WRITE_METHODS.has(request.method)) return;
 
@@ -35,7 +39,7 @@ async function auditLogging(fastify: FastifyInstance): Promise<void> {
         userId: user?.sub ?? null,
         requestId: request.id,
         method: request.method,
-        url: request.url,
+        url: sanitizeUrl(request.url),
         statusCode: reply.statusCode,
         durationMs: Math.round(reply.elapsedTime),
         timestamp: new Date().toISOString(),
