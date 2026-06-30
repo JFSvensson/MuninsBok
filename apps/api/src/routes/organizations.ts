@@ -1,4 +1,4 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { BAS_SIMPLIFIED } from "@muninsbok/core/chart-of-accounts";
 import { isValidOrgNumber } from "@muninsbok/core/types";
 import { createOrganizationSchema, updateOrganizationSchema } from "../schemas/index.js";
@@ -9,10 +9,7 @@ export async function organizationRoutes(fastify: FastifyInstance) {
   const accountRepo = fastify.repos.accounts;
   const userRepo = fastify.repos.users;
 
-  async function requireOwner(
-    request: Parameters<FastifyInstance["get"]>[1],
-    reply: Parameters<FastifyInstance["get"]>[2],
-  ) {
+  async function requireOwner(request: FastifyRequest, reply: FastifyReply) {
     const membership = request.membership;
     if (!membership) {
       return reply.status(401).send({

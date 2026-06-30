@@ -68,11 +68,7 @@ export interface UpdateVoucherTemplateInput {
 // ── Error types ─────────────────────────────────────────────
 
 export type VoucherTemplateErrorCode =
-  | "NOT_FOUND"
-  | "DUPLICATE_NAME"
-  | "NO_LINES"
-  | "INVALID_LINE"
-  | "NAME_REQUIRED";
+  "NOT_FOUND" | "DUPLICATE_NAME" | "NO_LINES" | "INVALID_LINE" | "NAME_REQUIRED";
 
 export interface VoucherTemplateError {
   readonly code: VoucherTemplateErrorCode;
