@@ -74,11 +74,7 @@ export interface ApprovalDecisionInput {
 }
 
 export type ApprovalErrorCode =
-  | "NOT_FOUND"
-  | "ALREADY_DECIDED"
-  | "NOT_AUTHORIZED"
-  | "WRONG_STEP_ORDER"
-  | "VOUCHER_NOT_PENDING";
+  "NOT_FOUND" | "ALREADY_DECIDED" | "NOT_AUTHORIZED" | "WRONG_STEP_ORDER" | "VOUCHER_NOT_PENDING";
 
 export interface ApprovalError {
   readonly code: ApprovalErrorCode;

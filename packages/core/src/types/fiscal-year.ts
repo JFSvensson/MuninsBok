@@ -20,11 +20,7 @@ export interface CreateFiscalYearInput {
 
 export interface FiscalYearError {
   readonly code:
-    | "INVALID_DATE_RANGE"
-    | "OVERLAPPING_YEAR"
-    | "YEAR_CLOSED"
-    | "NOT_FOUND"
-    | "INVALID_LENGTH";
+    "INVALID_DATE_RANGE" | "OVERLAPPING_YEAR" | "YEAR_CLOSED" | "NOT_FOUND" | "INVALID_LENGTH";
   readonly message: string;
 }
 
