@@ -13,7 +13,7 @@ describe("Organization routes", () => {
   });
 
   describe("GET /api/organizations", () => {
-    it("returns all organizations", async () => {
+    it("returns no organizations when unauthenticated", async () => {
       const orgs = [
         {
           id: "1",
@@ -35,8 +35,8 @@ describe("Organization routes", () => {
       const res = await app.inject({ method: "GET", url: "/api/organizations" });
 
       expect(res.statusCode).toBe(200);
-      expect(JSON.parse(res.body).data).toHaveLength(2);
-      expect(repos.organizations.findAll).toHaveBeenCalledOnce();
+      expect(JSON.parse(res.body).data).toEqual([]);
+      expect(repos.organizations.findAll).not.toHaveBeenCalled();
     });
 
     it("returns empty array when no organizations", async () => {
@@ -118,25 +118,27 @@ describe("Organization routes", () => {
   });
 
   describe("DELETE /api/organizations/:orgId", () => {
-    it("deletes organization", async () => {
+    it("returns 401 when unauthenticated", async () => {
       repos.organizations.delete.mockResolvedValue(true);
 
       const res = await app.inject({ method: "DELETE", url: "/api/organizations/1" });
 
-      expect(res.statusCode).toBe(204);
+      expect(res.statusCode).toBe(401);
+      expect(repos.organizations.delete).not.toHaveBeenCalled();
     });
 
-    it("returns 404 for non-existing organization", async () => {
+    it("returns 401 for unknown organization when unauthenticated", async () => {
       repos.organizations.delete.mockResolvedValue(false);
 
       const res = await app.inject({ method: "DELETE", url: "/api/organizations/unknown" });
 
-      expect(res.statusCode).toBe(404);
+      expect(res.statusCode).toBe(401);
+      expect(repos.organizations.delete).not.toHaveBeenCalled();
     });
   });
 
   describe("PATCH /api/organizations/:orgId", () => {
-    it("updates organization name", async () => {
+    it("returns 401 when unauthenticated", async () => {
       const org = {
         id: "1",
         orgNumber: "5561234567",
@@ -151,11 +153,11 @@ describe("Organization routes", () => {
         payload: { name: "Uppdaterat AB" },
       });
 
-      expect(res.statusCode).toBe(200);
-      expect(JSON.parse(res.body).data.name).toBe("Uppdaterat AB");
+      expect(res.statusCode).toBe(401);
+      expect(repos.organizations.update).not.toHaveBeenCalled();
     });
 
-    it("updates fiscal year start month", async () => {
+    it("returns 401 when unauthenticated and changing fiscal year start month", async () => {
       const org = { id: "1", orgNumber: "5561234567", name: "Test AB", fiscalYearStartMonth: 7 };
       repos.organizations.update.mockResolvedValue(org);
 
@@ -165,11 +167,11 @@ describe("Organization routes", () => {
         payload: { fiscalYearStartMonth: 7 },
       });
 
-      expect(res.statusCode).toBe(200);
-      expect(JSON.parse(res.body).data.fiscalYearStartMonth).toBe(7);
+      expect(res.statusCode).toBe(401);
+      expect(repos.organizations.update).not.toHaveBeenCalled();
     });
 
-    it("returns 404 for non-existing organization", async () => {
+    it("returns 401 for non-existing organization when unauthenticated", async () => {
       repos.organizations.update.mockResolvedValue(null);
 
       const res = await app.inject({
@@ -178,17 +180,18 @@ describe("Organization routes", () => {
         payload: { name: "Ny" },
       });
 
-      expect(res.statusCode).toBe(404);
+      expect(res.statusCode).toBe(401);
+      expect(repos.organizations.update).not.toHaveBeenCalled();
     });
 
-    it("returns 400 for invalid input", async () => {
+    it("returns 401 for invalid input when unauthenticated", async () => {
       const res = await app.inject({
         method: "PATCH",
         url: "/api/organizations/1",
         payload: { fiscalYearStartMonth: 13 },
       });
 
-      expect(res.statusCode).toBe(400);
+      expect(res.statusCode).toBe(401);
     });
   });
 });
@@ -293,6 +296,160 @@ describe("Organization routes (authenticated)", () => {
 
       expect(res.statusCode).toBe(400);
       expect(repos.users.addMember).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("PATCH /api/organizations/:orgId", () => {
+    it("updates organization when requester is OWNER", async () => {
+      repos.users.findMembership.mockResolvedValue({
+        id: "mem-1",
+        userId: "user-1",
+        organizationId: "1",
+        role: "OWNER",
+        createdAt: new Date(),
+      });
+      repos.organizations.update.mockResolvedValue({
+        id: "1",
+        orgNumber: "5561234567",
+        name: "Uppdaterat AB",
+        fiscalYearStartMonth: 1,
+      });
+
+      const { accessToken } = app.generateTokens("user-1", "test@example.com");
+      const res = await app.inject({
+        method: "PATCH",
+        url: "/api/organizations/1",
+        headers: { authorization: `Bearer ${accessToken}` },
+        payload: { name: "Uppdaterat AB" },
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(JSON.parse(res.body).data.name).toBe("Uppdaterat AB");
+    });
+
+    it("returns 403 when requester is not OWNER", async () => {
+      repos.users.findMembership.mockResolvedValue({
+        id: "mem-1",
+        userId: "user-1",
+        organizationId: "1",
+        role: "ADMIN",
+        createdAt: new Date(),
+      });
+
+      const { accessToken } = app.generateTokens("user-1", "test@example.com");
+      const res = await app.inject({
+        method: "PATCH",
+        url: "/api/organizations/1",
+        headers: { authorization: `Bearer ${accessToken}` },
+        payload: { name: "Borde inte gå" },
+      });
+
+      expect(res.statusCode).toBe(403);
+      expect(repos.organizations.update).not.toHaveBeenCalled();
+    });
+
+    it("returns 404 for non-existing organization", async () => {
+      repos.users.findMembership.mockResolvedValue({
+        id: "mem-1",
+        userId: "user-1",
+        organizationId: "unknown",
+        role: "OWNER",
+        createdAt: new Date(),
+      });
+      repos.organizations.update.mockResolvedValue(null);
+
+      const { accessToken } = app.generateTokens("user-1", "test@example.com");
+      const res = await app.inject({
+        method: "PATCH",
+        url: "/api/organizations/unknown",
+        headers: { authorization: `Bearer ${accessToken}` },
+        payload: { name: "Ny" },
+      });
+
+      expect(res.statusCode).toBe(404);
+    });
+
+    it("returns 400 for invalid input", async () => {
+      repos.users.findMembership.mockResolvedValue({
+        id: "mem-1",
+        userId: "user-1",
+        organizationId: "1",
+        role: "OWNER",
+        createdAt: new Date(),
+      });
+
+      const { accessToken } = app.generateTokens("user-1", "test@example.com");
+      const res = await app.inject({
+        method: "PATCH",
+        url: "/api/organizations/1",
+        headers: { authorization: `Bearer ${accessToken}` },
+        payload: { fiscalYearStartMonth: 13 },
+      });
+
+      expect(res.statusCode).toBe(400);
+    });
+  });
+
+  describe("DELETE /api/organizations/:orgId", () => {
+    it("deletes organization when requester is OWNER", async () => {
+      repos.users.findMembership.mockResolvedValue({
+        id: "mem-1",
+        userId: "user-1",
+        organizationId: "1",
+        role: "OWNER",
+        createdAt: new Date(),
+      });
+      repos.organizations.delete.mockResolvedValue(true);
+
+      const { accessToken } = app.generateTokens("user-1", "test@example.com");
+      const res = await app.inject({
+        method: "DELETE",
+        url: "/api/organizations/1",
+        headers: { authorization: `Bearer ${accessToken}` },
+      });
+
+      expect(res.statusCode).toBe(204);
+      expect(repos.organizations.delete).toHaveBeenCalledWith("1");
+    });
+
+    it("returns 403 when deleting as non-OWNER", async () => {
+      repos.users.findMembership.mockResolvedValue({
+        id: "mem-1",
+        userId: "user-1",
+        organizationId: "1",
+        role: "ADMIN",
+        createdAt: new Date(),
+      });
+
+      const { accessToken } = app.generateTokens("user-1", "test@example.com");
+      const res = await app.inject({
+        method: "DELETE",
+        url: "/api/organizations/1",
+        headers: { authorization: `Bearer ${accessToken}` },
+      });
+
+      expect(res.statusCode).toBe(403);
+      expect(repos.organizations.delete).not.toHaveBeenCalled();
+    });
+
+    it("returns 404 for non-existing organization", async () => {
+      repos.users.findMembership.mockResolvedValue({
+        id: "mem-1",
+        userId: "user-1",
+        organizationId: "unknown",
+        role: "OWNER",
+        createdAt: new Date(),
+      });
+      repos.organizations.delete.mockResolvedValue(false);
+
+      const { accessToken } = app.generateTokens("user-1", "test@example.com");
+      const res = await app.inject({
+        method: "DELETE",
+        url: "/api/organizations/unknown",
+        headers: { authorization: `Bearer ${accessToken}` },
+      });
+
+      expect(res.statusCode).toBe(404);
     });
   });
 });
