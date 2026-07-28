@@ -31,11 +31,11 @@
     "verify:restore": "tsx src/verify-restore.ts"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "^7.8.0",
+    "@prisma/adapter-pg": "^7.9.0",
+    "@prisma/client": "^7.9.0",
     "dotenv": "^17.4.2",
     "pg": "^8.22.0",
-    "prisma": "^7.8.0"
+    "prisma": "^7.9.0"
   },
   "devDependencies": {
     "@muninsbok/core": "workspace:*",
