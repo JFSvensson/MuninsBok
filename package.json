@@ -30,8 +30,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.62.0",
-    "@types/node": "^26.1.1",
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^26.1.2",
     "@vitest/coverage-v8": "^4.1.10",
     "dotenv": "^17.4.2",
     "eslint": "^10.8.0",
@@ -39,7 +39,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.2.0",
     "prettier": "^3.9.6",
-    "prisma": "^7.9.0",
+    "prisma": "^7.9.1",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.65.0"
   },
@@ -58,9 +58,9 @@
   },
   "packageManager": "pnpm@11.0.6",
   "dependencies": {
-    "@prisma/client": "^7.9.0"
+    "@prisma/client": "^7.9.1"
   },
   "optionalDependencies": {
-    "@rolldown/binding-linux-x64-gnu": "1.2.0"
+    "@rolldown/binding-linux-x64-gnu": "1.2.1"
   }
 }
