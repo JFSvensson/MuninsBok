@@ -222,6 +222,11 @@ jobs:
       - name: Run database migrations
         run: pnpm --filter @muninsbok/db exec prisma migrate deploy
 
+      - name: Verify concurrent voucher numbering
+        run: pnpm --filter @muninsbok/db exec vitest run src/repositories/voucher.repository.integration.test.ts
+        env:
+          RUN_DB_INTEGRATION_TESTS: "true"
+
       - name: Build all packages
         run: pnpm -r build
 
