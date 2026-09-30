@@ -13,15 +13,17 @@ describe("Audit logging plugin", () => {
   });
 
   it("logs write operations with audit flag", async () => {
-    repos.organizations.create.mockResolvedValue({
-      id: "org-new",
-      orgNumber: "5591234567",
-      name: "Audit AB",
-      fiscalYearStartMonth: 1,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+    repos.organizations.createWithInitialData.mockResolvedValue({
+      ok: true,
+      value: {
+        id: "org-new",
+        orgNumber: "5591234567",
+        name: "Audit AB",
+        fiscalYearStartMonth: 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
     });
-    repos.accounts.createMany.mockResolvedValue([]);
 
     // Spy on the Pino logger info method
     const logSpy = vi.fn();
@@ -71,7 +73,7 @@ describe("Audit logging plugin", () => {
     const authApp = authCtx.app;
     const authRepos = authCtx.repos;
 
-    authRepos.organizations.create.mockResolvedValue({
+    authRepos.organizations.createWithInitialData.mockResolvedValue({
       ok: true,
       value: {
         id: "org-new",
@@ -81,14 +83,6 @@ describe("Audit logging plugin", () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       },
-    });
-    authRepos.accounts.createMany.mockResolvedValue([]);
-    authRepos.users.addMember.mockResolvedValue({
-      id: "mem-1",
-      userId: "user-42",
-      organizationId: "org-new",
-      role: "OWNER",
-      createdAt: new Date(),
     });
 
     // Hook must be added BEFORE ready()

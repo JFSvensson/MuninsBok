@@ -89,6 +89,11 @@ export interface IOrganizationRepository {
   findAll(): Promise<Organization[]>;
   findByUserMembership(userId: string): Promise<Organization[]>;
   create(input: CreateOrganizationInput): Promise<Result<Organization, OrganizationError>>;
+  createWithInitialData(
+    input: CreateOrganizationInput,
+    initialAccounts: readonly CreateAccountInput[],
+    ownerUserId?: string,
+  ): Promise<Result<Organization, OrganizationError>>;
   update(
     id: string,
     data: Partial<Pick<Organization, "name" | "fiscalYearStartMonth">>,

@@ -1,13 +1,15 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { BAS_SIMPLIFIED } from "@muninsbok/core/chart-of-accounts";
 import { isValidOrgNumber } from "@muninsbok/core/types";
-import { createOrganizationSchema, updateOrganizationSchema } from "../schemas/index.js";
+import {
+  createOrganizationSchema,
+  deleteOrganizationSchema,
+  updateOrganizationSchema,
+} from "../schemas/index.js";
 import { parseBody } from "../utils/parse-body.js";
 
 export async function organizationRoutes(fastify: FastifyInstance) {
   const orgRepo = fastify.repos.organizations;
-  const accountRepo = fastify.repos.accounts;
-  const userRepo = fastify.repos.users;
 
   async function requireOwner(request: FastifyRequest, reply: FastifyReply) {
     const membership = request.membership;
@@ -53,32 +55,25 @@ export async function organizationRoutes(fastify: FastifyInstance) {
       });
     }
 
-    const result = await orgRepo.create({
-      ...rest,
-      ...(fiscalYearStartMonth != null && { fiscalYearStartMonth }),
-    });
-    if (!result.ok) {
-      return reply.status(400).send({ error: result.error });
-    }
-
-    // Initialize with BAS simplified chart of accounts
-    const org = result.value;
-    await accountRepo.createMany(
-      org.id,
+    const userId = request.user?.sub;
+    const result = await orgRepo.createWithInitialData(
+      {
+        ...rest,
+        ...(fiscalYearStartMonth != null && { fiscalYearStartMonth }),
+      },
       BAS_SIMPLIFIED.map((a) => ({
         number: a.number,
         name: a.name,
         type: a.type,
         isVatAccount: a.isVatAccount,
       })),
+      userId,
     );
-
-    // Auto-assign creator as OWNER
-    const userId = request.user?.sub;
-    if (userId) {
-      await userRepo.addMember(userId, org.id, "OWNER");
+    if (!result.ok) {
+      return reply.status(400).send({ error: result.error });
     }
 
+    const org = result.value;
     return reply.status(201).send({ data: org });
   });
 
@@ -106,6 +101,7 @@ export async function organizationRoutes(fastify: FastifyInstance) {
     "/:orgId",
     { preHandler: [requireOwner] },
     async (request, reply) => {
+      parseBody(deleteOrganizationSchema, request.body);
       const deleted = await orgRepo.delete(request.params.orgId);
       if (!deleted) {
         return reply.status(404).send({ error: "Organisationen hittades inte" });

@@ -59,6 +59,8 @@ describe("DeleteOrganizationDialog", () => {
     const deleteBtn = screen.getByRole("button", { name: "Radera organisation" });
     expect(deleteBtn).toBeDisabled();
     await user.type(screen.getByLabelText(/Skriv/), "Test AB");
+    expect(deleteBtn).toBeDisabled();
+    await user.click(screen.getByRole("checkbox"));
     expect(deleteBtn).toBeEnabled();
   });
 

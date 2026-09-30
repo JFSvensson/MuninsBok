@@ -3,6 +3,7 @@ import type {
   Organization,
   CreateOrganizationInput,
   OrganizationError,
+  CreateAccountInput,
   IOrganizationRepository,
 } from "@muninsbok/core/types";
 import { ok, err, type Result } from "@muninsbok/core/types";
@@ -41,6 +42,14 @@ export class OrganizationRepository implements IOrganizationRepository {
   }
 
   async create(input: CreateOrganizationInput): Promise<Result<Organization, OrganizationError>> {
+    return this.createWithInitialData(input, []);
+  }
+
+  async createWithInitialData(
+    input: CreateOrganizationInput,
+    initialAccounts: readonly CreateAccountInput[],
+    ownerUserId?: string,
+  ): Promise<Result<Organization, OrganizationError>> {
     // Validate
     if (!input.name || input.name.trim().length === 0) {
       return err({
@@ -65,6 +74,10 @@ export class OrganizationRepository implements IOrganizationRepository {
         orgNumber: normalizedOrgNumber,
         name: input.name.trim(),
         fiscalYearStartMonth: fiscalMonth,
+        accounts: { create: [...initialAccounts] },
+        ...(ownerUserId != null && {
+          members: { create: { userId: ownerUserId, role: "OWNER" } },
+        }),
       },
     });
 

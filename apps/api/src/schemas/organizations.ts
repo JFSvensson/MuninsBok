@@ -11,3 +11,7 @@ export const updateOrganizationSchema = z.object({
   name: nameField.optional(),
   fiscalYearStartMonth: z.number().int().min(1).max(12).optional(),
 });
+
+export const deleteOrganizationSchema = z.object({
+  exportOrBackupConfirmed: z.literal(true),
+});

@@ -89,15 +89,17 @@ describe("Dashboard", () => {
     expect(screen.getByText("Lön")).toBeInTheDocument();
   });
 
-  it("navigates to voucher detail on row click", async () => {
+  it("opens voucher details through a keyboard-operable link", async () => {
     mockGetDashboard.mockResolvedValue({ data: baseDashboard });
     const user = userEvent.setup();
     renderWithProviders(<Dashboard />);
 
-    const row = await screen.findByText("Hyra");
-    await user.click(row.closest("tr")!);
+    const link = await screen.findByRole("link", { name: "Hyra" });
+    expect(link).toHaveAttribute("href", "/vouchers/v-1");
+    link.focus();
+    await user.keyboard("{Enter}");
 
-    expect(mockNavigate).toHaveBeenCalledWith("/vouchers/v-1");
+    expect(link).toHaveFocus();
   });
 
   it("renders quick link buttons", async () => {

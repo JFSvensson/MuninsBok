@@ -21,10 +21,12 @@ export function DeleteOrganizationDialog({
 }: Props) {
   const queryClient = useQueryClient();
   const [confirmName, setConfirmName] = useState("");
+  const [exportOrBackupConfirmed, setExportOrBackupConfirmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleClose = useCallback(() => {
     setConfirmName("");
+    setExportOrBackupConfirmed(false);
     setError(null);
     onClose();
   }, [onClose]);
@@ -32,7 +34,7 @@ export function DeleteOrganizationDialog({
   const dialogRef = useDialogFocus(open, handleClose);
 
   const mutation = useMutation({
-    mutationFn: () => api.deleteOrganization(organizationId),
+    mutationFn: () => api.deleteOrganization(organizationId, true),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["organizations"] });
       onDeleted();
@@ -49,7 +51,7 @@ export function DeleteOrganizationDialog({
     mutation.mutate();
   };
 
-  const canDelete = confirmName === organizationName;
+  const canDelete = confirmName === organizationName && exportOrBackupConfirmed;
 
   if (!open) return null;
 
@@ -92,6 +94,16 @@ export function DeleteOrganizationDialog({
               autoFocus
             />
           </div>
+
+          <label>
+            <input
+              type="checkbox"
+              checked={exportOrBackupConfirmed}
+              onChange={(e) => setExportOrBackupConfirmed(e.target.checked)}
+            />
+            Jag bekräftar att organisationens bokföringsdata har exporterats eller
+            säkerhetskopierats.
+          </label>
 
           <div className={dialogStyles.actions}>
             <button type="button" className="secondary" onClick={handleClose}>

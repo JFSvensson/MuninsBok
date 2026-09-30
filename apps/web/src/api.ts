@@ -308,8 +308,11 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
-  deleteOrganization: (orgId: string) =>
-    fetchVoid(`${API_BASE}/organizations/${orgId}`, { method: "DELETE" }),
+  deleteOrganization: (orgId: string, exportOrBackupConfirmed: true) =>
+    fetchVoid(`${API_BASE}/organizations/${orgId}`, {
+      method: "DELETE",
+      body: JSON.stringify({ exportOrBackupConfirmed }),
+    }),
 
   // Fiscal Years
   getFiscalYears: (orgId: string) =>

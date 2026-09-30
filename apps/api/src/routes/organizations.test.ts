@@ -77,8 +77,7 @@ describe("Organization routes", () => {
         name: "Ny Förening",
         fiscalYearStartMonth: 1,
       };
-      repos.organizations.create.mockResolvedValue({ ok: true, value: org });
-      repos.accounts.createMany.mockResolvedValue(50);
+      repos.organizations.createWithInitialData.mockResolvedValue({ ok: true, value: org });
 
       const res = await app.inject({
         method: "POST",
@@ -88,7 +87,7 @@ describe("Organization routes", () => {
 
       expect(res.statusCode).toBe(201);
       expect(JSON.parse(res.body).data.name).toBe("Ny Förening");
-      expect(repos.accounts.createMany).toHaveBeenCalledOnce();
+      expect(repos.organizations.createWithInitialData).toHaveBeenCalledOnce();
     });
 
     it("returns 400 for invalid input", async () => {
@@ -102,7 +101,7 @@ describe("Organization routes", () => {
     });
 
     it("returns 400 when create fails", async () => {
-      repos.organizations.create.mockResolvedValue({
+      repos.organizations.createWithInitialData.mockResolvedValue({
         ok: false,
         error: { code: "INVALID_NAME", message: "Namn måste anges" },
       });
@@ -258,15 +257,7 @@ describe("Organization routes (authenticated)", () => {
         name: "Ny Förening",
         fiscalYearStartMonth: 1,
       };
-      repos.organizations.create.mockResolvedValue({ ok: true, value: org });
-      repos.accounts.createMany.mockResolvedValue(50);
-      repos.users.addMember.mockResolvedValue({
-        id: "mem-1",
-        userId: "user-1",
-        organizationId: "new-org",
-        role: "OWNER",
-        createdAt: new Date(),
-      });
+      repos.organizations.createWithInitialData.mockResolvedValue({ ok: true, value: org });
 
       const { accessToken } = app.generateTokens("user-1", "test@example.com");
       const res = await app.inject({
@@ -277,11 +268,15 @@ describe("Organization routes (authenticated)", () => {
       });
 
       expect(res.statusCode).toBe(201);
-      expect(repos.users.addMember).toHaveBeenCalledWith("user-1", "new-org", "OWNER");
+      expect(repos.organizations.createWithInitialData).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.any(Array),
+        "user-1",
+      );
     });
 
     it("does not call addMember when create fails", async () => {
-      repos.organizations.create.mockResolvedValue({
+      repos.organizations.createWithInitialData.mockResolvedValue({
         ok: false,
         error: { code: "INVALID_NAME", message: "Namn måste anges" },
       });
@@ -295,7 +290,7 @@ describe("Organization routes (authenticated)", () => {
       });
 
       expect(res.statusCode).toBe(400);
-      expect(repos.users.addMember).not.toHaveBeenCalled();
+      expect(repos.organizations.createWithInitialData).toHaveBeenCalledOnce();
     });
   });
 
@@ -406,10 +401,32 @@ describe("Organization routes (authenticated)", () => {
         method: "DELETE",
         url: "/api/organizations/1",
         headers: { authorization: `Bearer ${accessToken}` },
+        payload: { exportOrBackupConfirmed: true },
       });
 
       expect(res.statusCode).toBe(204);
       expect(repos.organizations.delete).toHaveBeenCalledWith("1");
+    });
+
+    it("requires export or backup confirmation before deletion", async () => {
+      repos.users.findMembership.mockResolvedValue({
+        id: "mem-1",
+        userId: "user-1",
+        organizationId: "1",
+        role: "OWNER",
+        createdAt: new Date(),
+      });
+
+      const { accessToken } = app.generateTokens("user-1", "test@example.com");
+      const res = await app.inject({
+        method: "DELETE",
+        url: "/api/organizations/1",
+        headers: { authorization: `Bearer ${accessToken}` },
+        payload: { exportOrBackupConfirmed: false },
+      });
+
+      expect(res.statusCode).toBe(400);
+      expect(repos.organizations.delete).not.toHaveBeenCalled();
     });
 
     it("returns 403 when deleting as non-OWNER", async () => {
@@ -447,6 +464,7 @@ describe("Organization routes (authenticated)", () => {
         method: "DELETE",
         url: "/api/organizations/unknown",
         headers: { authorization: `Bearer ${accessToken}` },
+        payload: { exportOrBackupConfirmed: true },
       });
 
       expect(res.statusCode).toBe(404);

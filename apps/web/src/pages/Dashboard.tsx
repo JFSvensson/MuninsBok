@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useOrganization } from "../context/OrganizationContext";
 import { defined } from "../utils/assert";
 import { api } from "../api";
@@ -362,14 +362,12 @@ export function Dashboard() {
             </thead>
             <tbody>
               {d.latestVouchers.map((v) => (
-                <tr
-                  key={v.id}
-                  className="clickable-row"
-                  onClick={() => navigate(`/vouchers/${v.id}`)}
-                >
+                <tr key={v.id}>
                   <td>{v.number}</td>
                   <td>{formatDate(v.date)}</td>
-                  <td>{v.description}</td>
+                  <td>
+                    <Link to={`/vouchers/${v.id}`}>{v.description}</Link>
+                  </td>
                   <td className="text-right amount">{formatAmount(v.amount)} kr</td>
                 </tr>
               ))}

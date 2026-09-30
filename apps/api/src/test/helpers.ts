@@ -52,6 +52,7 @@ export function createMockOrganizationRepo(): MockedRepo<IOrganizationRepository
     findAll: vi.fn(),
     findByUserMembership: vi.fn(),
     create: vi.fn(),
+    createWithInitialData: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
   } as MockedRepo<IOrganizationRepository>;

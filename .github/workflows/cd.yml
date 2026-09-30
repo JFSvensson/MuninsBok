@@ -1,13 +1,9 @@
 name: CD
 
 on:
-  push:
-    tags:
-      - "v*"
   workflow_run:
     workflows: [CI]
     types: [completed]
-    branches: [main]
 
 concurrency:
   group: cd-production
@@ -19,7 +15,7 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' || github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.event == 'push' && github.event.workflow_run.conclusion == 'success' }}
     timeout-minutes: 20
     permissions:
       contents: read
@@ -46,12 +42,14 @@ jobs:
 
       - name: Generate image tag
         id: meta
+        env:
+          SOURCE_REF: ${{ github.event.workflow_run.head_branch }}
         run: |
           OWNER_LOWER="${GITHUB_REPOSITORY_OWNER,,}"
-          if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
-            TAG="${GITHUB_REF_NAME}"
+          if [[ "$SOURCE_REF" == v* ]]; then
+            TAG="$SOURCE_REF"
           else
-            TAG="sha-$(echo ${{ github.sha }} | cut -c1-7)"
+            TAG="sha-$(echo ${{ github.event.workflow_run.head_sha }} | cut -c1-7)"
           fi
           IMAGE_PREFIX="ghcr.io/$OWNER_LOWER/muninsbok"
           echo "version=$TAG" >> "$GITHUB_OUTPUT"

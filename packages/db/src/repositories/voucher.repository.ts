@@ -72,6 +72,21 @@ async function writeAccountingEvent(
   `;
 }
 
+async function allocateVoucherNumber(
+  transaction: Pick<PrismaClient, "$queryRaw" | "voucher">,
+  fiscalYearId: string,
+): Promise<number> {
+  await transaction.$queryRaw<Array<{ id: string }>>`
+    SELECT id FROM fiscal_years WHERE id = ${fiscalYearId} FOR UPDATE
+  `;
+  const lastVoucher = await transaction.voucher.findFirst({
+    where: { fiscalYearId },
+    orderBy: { number: "desc" },
+    select: { number: true },
+  });
+  return (lastVoucher?.number ?? 0) + 1;
+}
+
 export class VoucherRepository implements IVoucherRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
@@ -147,6 +162,20 @@ export class VoucherRepository implements IVoucherRepository {
   }
 
   async create(input: CreateVoucherInput): Promise<Result<Voucher, VoucherError>> {
+    const documentIds = [...new Set(input.documentIds ?? [])];
+    if (documentIds.length > 0) {
+      const documents = await this.prisma.document.findMany({
+        where: { id: { in: documentIds }, organizationId: input.organizationId },
+        select: { id: true },
+      });
+      if (documents.length !== documentIds.length) {
+        return err({
+          code: "NOT_FOUND",
+          message: "Ett eller flera dokument hittades inte",
+        });
+      }
+    }
+
     // Get fiscal year and accounts for validation
     const [fiscalYear, accounts] = await Promise.all([
       this.prisma.fiscalYear.findFirst({
@@ -180,13 +209,11 @@ export class VoucherRepository implements IVoucherRepository {
       return validation;
     }
 
-    // Get next voucher number
-    const nextNumber = await this.getNextVoucherNumber(input.fiscalYearId);
-
     // Build account lookup for IDs
     const accountMap = new Map(accounts.map((a) => [a.number, a.id]));
 
     const voucher = await this.prisma.$transaction(async (tx) => {
+      const nextNumber = await allocateVoucherNumber(tx, input.fiscalYearId);
       const created = await tx.voucher.create({
         data: {
           organizationId: input.organizationId,
@@ -208,11 +235,12 @@ export class VoucherRepository implements IVoucherRepository {
               };
             }),
           },
-          documents: input.documentIds
-            ? {
-                connect: input.documentIds.map((id) => ({ id })),
-              }
-            : {},
+          documents:
+            documentIds.length > 0
+              ? {
+                  connect: documentIds.map((id) => ({ id })),
+                }
+              : {},
         },
         include: voucherInclude,
       });
@@ -272,10 +300,8 @@ export class VoucherRepository implements IVoucherRepository {
       });
     }
 
-    // Get next voucher number
-    const nextNumber = await this.getNextVoucherNumber(original.fiscalYearId);
-
     const correction = await this.prisma.$transaction(async (tx) => {
+      const nextNumber = await allocateVoucherNumber(tx, original.fiscalYearId);
       const created = await tx.voucher.create({
         data: {
           organizationId,

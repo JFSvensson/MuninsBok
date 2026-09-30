@@ -49,6 +49,19 @@ export class DocumentRepository implements IDocumentRepository {
       });
     }
 
+    if (input.voucherId != null) {
+      const voucher = await this.prisma.voucher.findFirst({
+        where: { id: input.voucherId, organizationId: input.organizationId },
+        select: { id: true },
+      });
+      if (!voucher) {
+        return err({
+          code: "NOT_FOUND",
+          message: "Verifikatet hittades inte",
+        });
+      }
+    }
+
     const doc = await this.prisma.document.create({
       data: {
         organizationId: input.organizationId,

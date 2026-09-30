@@ -7,10 +7,19 @@
 # The CD pipeline uses the "current" tag which it updates on each deploy.
 
 services:
+  postgres:
+    ports: !reset []
+
   api:
     image: ghcr.io/${IMAGE_NAMESPACE:-jfsvensson}/muninsbok-api:${IMAGE_TAG:-latest}
     build: !reset null
+    ports: !override
+      - "127.0.0.1:3000:3000"
+    environment:
+      DB_MIGRATION_MODE: deploy
 
   web:
     image: ghcr.io/${IMAGE_NAMESPACE:-jfsvensson}/muninsbok-web:${IMAGE_TAG:-latest}
     build: !reset null
+    ports: !override
+      - "127.0.0.1:5173:80"
