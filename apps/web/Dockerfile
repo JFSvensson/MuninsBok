@@ -1,7 +1,7 @@
 # Build stage
 FROM node:26-alpine AS builder
 
-RUN npm install -g pnpm@11.0.6
+RUN npm install -g pnpm@11.11.0
 
 WORKDIR /app
 
@@ -26,7 +26,7 @@ RUN pnpm --filter @muninsbok/core build
 RUN pnpm --filter @muninsbok/web build
 
 # Production stage - nginx
-FROM nginx:1.31-alpine AS runner
+FROM nginx:1.31.6-alpine3.24-slim AS runner
 
 # Copy built files
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html

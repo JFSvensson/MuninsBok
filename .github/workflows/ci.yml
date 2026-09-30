@@ -21,7 +21,7 @@ jobs:
 
       - uses: pnpm/action-setup@v6
         with:
-          version: 11.0.6
+          version: 11.11.0
 
       - uses: actions/setup-node@v7
         with:
@@ -94,7 +94,7 @@ jobs:
 
       - uses: pnpm/action-setup@v6
         with:
-          version: 11.0.6
+          version: 11.11.0
 
       - uses: actions/setup-node@v7
         with:
@@ -202,7 +202,7 @@ jobs:
 
       - uses: pnpm/action-setup@v6
         with:
-          version: 11.0.6
+          version: 11.11.0
 
       - uses: actions/setup-node@v7
         with:
@@ -229,6 +229,37 @@ jobs:
 
       - name: Build all packages
         run: pnpm -r build
+
+      - name: Build API image for migration startup test
+        run: docker build -f apps/api/Dockerfile -t muninsbok-api-startup-test .
+
+      - name: Ensure failed migrations prevent API startup
+        run: |
+          set -eu
+          log_file="$(mktemp)"
+          trap 'rm -f "$log_file"' EXIT
+
+          set +e
+          timeout 60s docker run --rm \
+            -e DB_MIGRATION_MODE=deploy \
+            -e DATABASE_URL=postgresql://invalid:invalid@127.0.0.1:1/muninsbok \
+            -e NODE_ENV=production \
+            -e JWT_SECRET=ci-migration-startup-test-secret \
+            -e CORS_ORIGIN=http://localhost \
+            muninsbok-api-startup-test >"$log_file" 2>&1
+          exit_code=$?
+          set -e
+
+          cat "$log_file"
+          if [ "$exit_code" -eq 0 ] || [ "$exit_code" -eq 124 ]; then
+            echo "Expected migration failure to stop the API (exit code: $exit_code)" >&2
+            exit 1
+          fi
+          grep -q "DB migration mode: deploy" "$log_file"
+          if grep -q "Server listening on" "$log_file"; then
+            echo "API started despite failed migrations" >&2
+            exit 1
+          fi
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium

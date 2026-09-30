@@ -22,11 +22,15 @@ export function DeleteOrganizationDialog({
   const queryClient = useQueryClient();
   const [confirmName, setConfirmName] = useState("");
   const [exportOrBackupConfirmed, setExportOrBackupConfirmed] = useState(false);
+  const [exportOrBackupType, setExportOrBackupType] = useState<"" | "export" | "backup">("");
+  const [exportOrBackupReference, setExportOrBackupReference] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const handleClose = useCallback(() => {
     setConfirmName("");
     setExportOrBackupConfirmed(false);
+    setExportOrBackupType("");
+    setExportOrBackupReference("");
     setError(null);
     onClose();
   }, [onClose]);
@@ -34,7 +38,11 @@ export function DeleteOrganizationDialog({
   const dialogRef = useDialogFocus(open, handleClose);
 
   const mutation = useMutation({
-    mutationFn: () => api.deleteOrganization(organizationId, true),
+    mutationFn: () =>
+      api.deleteOrganization(organizationId, {
+        exportOrBackupType: exportOrBackupType as "export" | "backup",
+        exportOrBackupReference: exportOrBackupReference.trim(),
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["organizations"] });
       onDeleted();
@@ -51,7 +59,11 @@ export function DeleteOrganizationDialog({
     mutation.mutate();
   };
 
-  const canDelete = confirmName === organizationName && exportOrBackupConfirmed;
+  const canDelete =
+    confirmName === organizationName &&
+    exportOrBackupConfirmed &&
+    exportOrBackupType !== "" &&
+    exportOrBackupReference.trim().length > 0;
 
   if (!open) return null;
 
@@ -104,6 +116,30 @@ export function DeleteOrganizationDialog({
             Jag bekräftar att organisationens bokföringsdata har exporterats eller
             säkerhetskopierats.
           </label>
+
+          <div className="form-group">
+            <label htmlFor="export-backup-type">Underlagstyp</label>
+            <select
+              id="export-backup-type"
+              value={exportOrBackupType}
+              onChange={(e) => setExportOrBackupType(e.target.value as "" | "export" | "backup")}
+            >
+              <option value="">Välj typ</option>
+              <option value="export">Exporterad bokföring</option>
+              <option value="backup">Säkerhetskopia</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="export-backup-reference">Referens (filnamn eller backup-ID)</label>
+            <input
+              id="export-backup-reference"
+              type="text"
+              value={exportOrBackupReference}
+              onChange={(e) => setExportOrBackupReference(e.target.value)}
+              maxLength={200}
+            />
+          </div>
 
           <div className={dialogStyles.actions}>
             <button type="button" className="secondary" onClick={handleClose}>

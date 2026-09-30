@@ -61,6 +61,10 @@ describe("DeleteOrganizationDialog", () => {
     await user.type(screen.getByLabelText(/Skriv/), "Test AB");
     expect(deleteBtn).toBeDisabled();
     await user.click(screen.getByRole("checkbox"));
+    expect(deleteBtn).toBeDisabled();
+    await user.selectOptions(screen.getByLabelText("Underlagstyp"), "backup");
+    expect(deleteBtn).toBeDisabled();
+    await user.type(screen.getByLabelText("Referens (filnamn eller backup-ID)"), "backup-123");
     expect(deleteBtn).toBeEnabled();
   });
 

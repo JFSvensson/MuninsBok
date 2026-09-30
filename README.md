@@ -134,7 +134,7 @@ Målet är att göra bokföring **enkel, transparent och självhostbar** — uta
 
 ## Produktionsstatus
 
-Applikationen är **produktionsklar** för självhostning av småföretag och föreningar. Följande säkerhetsmekanismer finns på plats:
+Applikationen har ett **produktionsinriktat säkerhets- och driftsfundament** för självhostning av småföretag och föreningar. Produktionsberedskap för en viss installation förutsätter även att driftkonfiguration, nätverksskydd, backup och återställning verifieras enligt [driftsättningsguiden](docs/production.md). Följande säkerhetsmekanismer finns på plats:
 
 - **Autentisering**: JWT med access-token i minnet, refresh-token som httpOnly-cookie, server-side återkallning (jti), automatisk token-cleanup. `JWT_SECRET` krävs i produktion.
 - **Auktorisering**: Rollbaserad behörighet (OWNER / ADMIN / MEMBER) med org-scoped membership
@@ -144,7 +144,7 @@ Applikationen är **produktionsklar** för självhostning av småföretag och f�
 - **Bank-OAuth**: Signerad `state` verifieras server-side och callback-URL:er begränsas via `BANK_OAUTH_REDIRECT_URI_ALLOWLIST`
 - **Infrastruktur**: Multi-stage Docker, non-root containers, healthchecks, log-rotation, graceful shutdown
 - **Drift**: Request-timeouts, konfigurerbar anslutningspool, strukturerad loggning, audit trail, Swagger UI avstängd som standard i produktion och `/metrics` endast exponerad när `METRICS_TOKEN` är satt
-- **Tester**: 1 374 enhetstester (inkl. React Testing Library-komponenttester) + E2E med Playwright, CI via GitHub Actions inklusive restore-gate för backup -> restore -> integritetsverifiering
+- **Tester**: 1 387 enhetstester (inkl. React Testing Library-komponenttester) + E2E med Playwright, CI via GitHub Actions inklusive restore-gate för backup -> restore -> integritetsverifiering
 
 Se [docs/production.md](docs/production.md) för fullständig driftsättningsguide.
 
@@ -357,13 +357,13 @@ muninsbok/
 
 ## Teststatus
 
-**1 374 enhetstester** fördelade på 127 testfiler:
+**1 387 enhetstester** fördelade på 130 unit-testfiler, plus ett opt-in PostgreSQL-integrationstest:
 
 | Paket | Testfiler | Tester | Vad som testas |
 |-------|-----------|--------|----------------|
 | `@muninsbok/core` | 25 | 360 | Result-typer, organisationsnummer (Luhn), kontotyper, kontoplan (BAS), räkenskapsår (max 18 mån), verifikatrader, verifikatvalidering, dokument-MIME, rapporter (råbalans, resultat, balans, moms, SKV 4700, periodrapport, kontoanalys, boksluts-förhandsvisning, grundbok, huvudbok, verifikationslista), SIE-import/export (IB/UB/RES), resultatdisposition, budget (budget vs utfall-rapport), CSV-import (parser, delimiter-detection, datum-/beloppsformatering), i18n (sv/en-ordlistor, translate, createTranslator), fakturaberäkning (radbelopp, moms, totalsummor, statusövergångsmaskin) |
-| `@muninsbok/db` | 3 | 27 | Prisma→domän-mappers (organisation, räkenskapsår, konto, verifikat, verifikatrad, dokument), bankrepo-tester (connection, transaction) |
-| `@muninsbok/api` | 38 | 491 | Zod-schemavalidering, CRUD-endpoints (organisationer, konton, verifikat, räkenskapsår, budgetar, kunder, fakturor), rapporter (10 st + dashboard), global sökning, boksluts-förhandsvisning, health check, Prometheus metrics, felhantering, auth (register/login/refresh/logout), httpOnly-cookie, tokenåterkallning, rollhantering, RBAC, audit-logging, rate limiting, input-sanitering, helmet, swagger, CSV-import (parse/preview/execute-endpoints), återkommande mallar (schema/due/execute-endpoints), attestflöde (regler CRUD, skicka/godkänn/avvisa), fakturering (kunder CRUD, fakturor CRUD, statusändringar), bankkoppling (CRUD, OAuth, sync, matchning, webhook), tjänster (OCR, dokumentlagring, bank-adapter/sync/matchning), receipt-OCR e2e |
+| `@muninsbok/db` | 6 + 1 integration | 31 + 1 opt-in | Prisma→domän-mappers, bankrepo-tester, tenantägarskap, atomär organisationsprovisionering och verifikatnumrering; integrationstestet kör parallell nummerallokering mot PostgreSQL |
+| `@muninsbok/api` | 38 | 500 | Zod-schemavalidering, CRUD-endpoints (organisationer, konton, verifikat, räkenskapsår, budgetar, kunder, fakturor), rapporter (10 st + dashboard), global sökning, boksluts-förhandsvisning, health check, Prometheus metrics, felhantering, auth (register/login/refresh/logout), httpOnly-cookie, tokenåterkallning, rollhantering, RBAC, audit-logging, rate limiting, input-sanitering, helmet, swagger, CSV-import (parse/preview/execute-endpoints), återkommande mallar (schema/due/execute-endpoints), attestflöde (regler CRUD, skicka/godkänn/avvisa), fakturering (kunder CRUD, fakturor CRUD, statusändringar), bankkoppling (CRUD, OAuth, sync, matchning, webhook), tjänster (OCR, dokumentlagring, bank-adapter/sync/matchning), receipt-OCR e2e |
 | `@muninsbok/web` | 61 | 496 | ApiError-klass, fetchJson, auth-storage, dark mode (ThemeContext), verifikatformulär (beräkningar, radhantering, öre-konvertering), beloppsformatering, CSV-export, assert-utils, LocaleContext (flerspråksstöd), **komponenttester (React Testing Library)**: ThemeToggle, ConfirmDialog, DateFilter, ErrorBoundary, ReportPageTemplate, ReportSectionRows, ProtectedRoute, ToastContext, Login, NotFound, SearchDialog, CreateOrgDialog, DeleteOrgDialog, EditOrgDialog, DocumentSection, CreateFiscalYear, OrganizationSelect, **sidtester**: Dashboard, VoucherList, VoucherForm, Accounts, Reports, TrialBalance, IncomeStatement, BalanceSheet, VatReport, SkvVatDeclaration, PeriodReport, AccountAnalysis, Journal, GeneralLedger, VoucherListReport, YearEndClosing, FiscalYears, Budget, CsvImport, RecurringTemplates, Members, ApprovalRules, Customers, Invoices, InvoiceForm, InvoiceDetail, BankConnections, BankTransactions, Settings, NotFound m.fl. |
 
 ---

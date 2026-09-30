@@ -101,11 +101,23 @@ export async function organizationRoutes(fastify: FastifyInstance) {
     "/:orgId",
     { preHandler: [requireOwner] },
     async (request, reply) => {
-      parseBody(deleteOrganizationSchema, request.body);
+      const evidence = parseBody(deleteOrganizationSchema, request.body);
       const deleted = await orgRepo.delete(request.params.orgId);
       if (!deleted) {
         return reply.status(404).send({ error: "Organisationen hittades inte" });
       }
+      request.log.info(
+        {
+          audit: true,
+          action: "ORGANIZATION_DELETED",
+          organizationId: request.params.orgId,
+          userId: request.user?.sub ?? null,
+          exportOrBackupConfirmed: evidence.exportOrBackupConfirmed,
+          exportOrBackupType: evidence.exportOrBackupType,
+          exportOrBackupReference: evidence.exportOrBackupReference,
+        },
+        "audit: organization deleted after export or backup attestation",
+      );
       return reply.status(204).send();
     },
   );

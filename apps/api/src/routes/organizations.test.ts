@@ -401,7 +401,11 @@ describe("Organization routes (authenticated)", () => {
         method: "DELETE",
         url: "/api/organizations/1",
         headers: { authorization: `Bearer ${accessToken}` },
-        payload: { exportOrBackupConfirmed: true },
+        payload: {
+          exportOrBackupConfirmed: true,
+          exportOrBackupType: "backup",
+          exportOrBackupReference: "backup-2026-09-30",
+        },
       });
 
       expect(res.statusCode).toBe(204);
@@ -423,6 +427,27 @@ describe("Organization routes (authenticated)", () => {
         url: "/api/organizations/1",
         headers: { authorization: `Bearer ${accessToken}` },
         payload: { exportOrBackupConfirmed: false },
+      });
+
+      expect(res.statusCode).toBe(400);
+      expect(repos.organizations.delete).not.toHaveBeenCalled();
+    });
+
+    it("requires an export or backup reference before deletion", async () => {
+      repos.users.findMembership.mockResolvedValue({
+        id: "mem-1",
+        userId: "user-1",
+        organizationId: "1",
+        role: "OWNER",
+        createdAt: new Date(),
+      });
+
+      const { accessToken } = app.generateTokens("user-1", "test@example.com");
+      const res = await app.inject({
+        method: "DELETE",
+        url: "/api/organizations/1",
+        headers: { authorization: `Bearer ${accessToken}` },
+        payload: { exportOrBackupConfirmed: true, exportOrBackupType: "backup" },
       });
 
       expect(res.statusCode).toBe(400);
@@ -464,7 +489,11 @@ describe("Organization routes (authenticated)", () => {
         method: "DELETE",
         url: "/api/organizations/unknown",
         headers: { authorization: `Bearer ${accessToken}` },
-        payload: { exportOrBackupConfirmed: true },
+        payload: {
+          exportOrBackupConfirmed: true,
+          exportOrBackupType: "export",
+          exportOrBackupReference: "example.se",
+        },
       });
 
       expect(res.statusCode).toBe(404);

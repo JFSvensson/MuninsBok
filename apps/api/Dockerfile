@@ -1,7 +1,7 @@
 # Build stage
 FROM node:26-alpine AS builder
 
-RUN npm install -g pnpm@11.0.6
+RUN npm install -g pnpm@11.11.0
 
 WORKDIR /app
 
@@ -34,7 +34,7 @@ RUN pnpm --filter @muninsbok/api build
 # Production stage
 FROM node:26-alpine AS runner
 
-RUN npm install -g pnpm@11.0.6
+RUN npm install -g pnpm@11.11.0
 RUN apk add --no-cache poppler-utils
 
 WORKDIR /app
@@ -56,7 +56,9 @@ COPY --from=builder /app/apps/api/package.json ./apps/api/
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 
 # Install production dependencies only
-RUN pnpm install --frozen-lockfile --prod --ignore-scripts
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts \
+    && npm uninstall -g pnpm \
+    && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 
 # Ensure db package can resolve workspace core package at runtime
 RUN mkdir -p /app/packages/db/node_modules/@muninsbok && ln -sf /app/packages/core /app/packages/db/node_modules/@muninsbok/core

@@ -14,4 +14,6 @@ export const updateOrganizationSchema = z.object({
 
 export const deleteOrganizationSchema = z.object({
   exportOrBackupConfirmed: z.literal(true),
+  exportOrBackupType: z.enum(["export", "backup"]),
+  exportOrBackupReference: z.string().trim().min(1).max(200),
 });
