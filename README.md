@@ -128,7 +128,7 @@ Målet är att göra bokföring **enkel, transparent och självhostbar** — uta
 - Strukturerad loggning med json-file-drivrutin och log-rotation
 - Request-timeouts och konfigurerbar databaspool
 - Swagger/OpenAPI-dokumentation (UI avstängd som standard i produktion; aktiveras via `ENABLE_DOCS=true`)
-- CD-pipeline — automatiserad deploy via GitHub Actions → GHCR → SSH
+- CD-pipeline — GitHub Actions bygger och publicerar API- och webbimages till GHCR efter godkänd CI. Automatisk produktionsdeploy är för närvarande avstängd tills produktionsservern är konfigurerad.
 
 ---
 
@@ -144,7 +144,7 @@ Applikationen har ett **produktionsinriktat säkerhets- och driftsfundament** f�
 - **Bank-OAuth**: Signerad `state` verifieras server-side och callback-URL:er begränsas via `BANK_OAUTH_REDIRECT_URI_ALLOWLIST`
 - **Infrastruktur**: Multi-stage Docker, non-root containers, healthchecks, log-rotation, graceful shutdown
 - **Drift**: Request-timeouts, konfigurerbar anslutningspool, strukturerad loggning, audit trail, Swagger UI avstängd som standard i produktion och `/metrics` endast exponerad när `METRICS_TOKEN` är satt
-- **Tester**: 1 387 enhetstester (inkl. React Testing Library-komponenttester) + E2E med Playwright, CI via GitHub Actions inklusive restore-gate för backup -> restore -> integritetsverifiering
+- **Tester**: 1 387 enhetstester (inkl. React Testing Library-komponenttester) + E2E med Playwright; CI via GitHub Actions inklusive restore-gate för backup -> restore -> integritetsverifiering. Senaste kända lokala E2E-körningen är blockerad: 2 av 13 tester passerade och 11 fick `ECONNREFUSED` mot API-port 3000. Se [release-checklistan](docs/release-checklist.md) för status och felsökning; release kräver en grön omkörning.
 
 Se [docs/production.md](docs/production.md) för fullständig driftsättningsguide.
 
@@ -177,7 +177,7 @@ Se `LICENSE`.
 |-------|--------|
 | **Frontend** | React 19 + Vite 8 + TypeScript 6.0 |
 | **Backend** | Node.js 22+ + Fastify 5 + TypeScript 6.0 |
-| **Databas** | PostgreSQL 16+ (Prisma 7.8) |
+| **Databas** | PostgreSQL 16+ (Prisma 7.9) |
 | **Auth** | JWT (access + refresh) med jti-baserad tokenåterkallning |
 | **Monorepo** | pnpm 11 workspaces |
 | **Test** | Vitest + React Testing Library |

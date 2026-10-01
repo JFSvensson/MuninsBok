@@ -14,6 +14,40 @@ Kör från repo-roten:
 
 Bekräfta att CI är grön.
 
+### Aktuell verifieringsstatus
+
+- Senaste kända lokala körningen (2026-10-01) av `npx playwright test --workers=1`: **2 passerade, 11 misslyckades**.
+- De misslyckade testerna kunde inte ansluta till API:t på `127.0.0.1:3000` / `localhost:3000` (`ECONNREFUSED`). Health-kontrollen på `/health` kunde inte heller nå API:t.
+- **Releasegrinden är blockerad** tills API-startfelet har diagnostiserats, hela E2E-sviten körts om och samtliga tester passerar. Felutskriften visar att API:t inte var tillgängligt; den fastställer ensam inte varför uppstarten misslyckades.
+
+### Felsökning: Playwright får `ECONNREFUSED` på API-port 3000
+
+`playwright.config.ts` startar redan API:t (`pnpm --filter @muninsbok/api dev`) och webben. Kör inte en extra `pnpm dev` parallellt med Playwright som första åtgärd. Kontrollera API:ts uppstartslogg i Playwright-utskriften. På Windows PowerShell:
+
+```powershell
+# Kontrollera att repo-roten har en lokal miljöfil; skapa den vid behov och fyll i värdena.
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+
+# Använd endast en lokal testdatabas: db:push ändrar databasschemat.
+# Starta PostgreSQL och säkerställ att Prisma-klienten/schema är förberedda.
+docker compose up -d postgres
+pnpm db:generate
+pnpm db:push
+pnpm --filter @muninsbok/core build
+
+# Generera ett lokalt JWT_SECRET och lägg värdet i .env (committa det inte).
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+Kontrollera att `.env` har en `DATABASE_URL` till den lokala testdatabasen och ett giltigt `JWT_SECRET`; lägg inte in hemligheter i Git. Om Playwright-loggen inte visar varför API:t stannar, starta `pnpm --filter @muninsbok/api dev` i en separat terminal. När loggen visar att servern lyssnar, verifiera i den första terminalen:
+
+```powershell
+Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue
+Invoke-RestMethod http://127.0.0.1:3000/health
+```
+
+Stoppa den manuellt startade API-processen med Ctrl+C innan Playwright körs igen; Playwright startar själv API och webb. Åtgärda fel med miljövariabler, databasanslutning/migrering eller portkonflikt utifrån loggen. Kör sedan `npx playwright test --workers=1` och kräv **13/13 passerade** innan releasegrinden kan markeras som klar.
+
 ## 2. Versionsmarkning
 
 - Uppdatera version i release notes/CHANGELOG.

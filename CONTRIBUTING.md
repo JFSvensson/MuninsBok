@@ -163,8 +163,24 @@ Remove-Item -Recurse -Force test-results, playwright-report -ErrorAction Silentl
 |---------|-------|---------|
 | Route 404 trots att koden finns | Gammal Docker-image | `docker compose build --no-cache api` |
 | Databasfel / connection refused | Postgres-container nere | `docker compose up -d postgres` |
+| Playwright `ECONNREFUSED` till `127.0.0.1:3000` | API-processen startade inte eller hann inte lyssna; kontrollera dess uppstartslogg, `.env`, PostgreSQL och portkonflikter | Följ PowerShell-stegen under **Playwright: API:t går inte att nå** nedan |
 | Test hänger vid start | Port redan upptagen | Stäng processen på port 3000/5173 |
 | UI-element hittas inte | Frontend ej ombyggd | `docker compose build --no-cache web` |
+
+### Playwright: API:t går inte att nå
+
+Playwright-konfigurationen startar API och webb automatiskt. Vid `ECONNREFUSED` ska du först läsa API:ts uppstartslogg; felet betyder att ingen API-process accepterade anslutningen, inte att ett API-svar hade fel statuskod. Kontrollera lokala förutsättningar från repo-roten i PowerShell:
+
+```powershell
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+docker compose up -d postgres
+pnpm db:generate
+pnpm db:push
+pnpm --filter @muninsbok/core build
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+Använd endast en lokal testdatabas för `db:push`. Fyll i dess `DATABASE_URL` och lägg det genererade `JWT_SECRET` i `.env`; committa inte hemligheter. Om Playwright-loggen inte visar varför API:t stannar, kör `pnpm --filter @muninsbok/api dev` i en separat terminal. När API:t lyssnar, kontrollera porten med `Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue` och testa `Invoke-RestMethod http://127.0.0.1:3000/health`. Stoppa den manuellt startade processen med Ctrl+C innan Playwright körs igen, eftersom Playwright startar API:t automatiskt. Efter åtgärd ska hela sviten passera med `npx playwright test --workers=1`.
 
 ## Rapportera buggar
 

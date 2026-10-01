@@ -7,6 +7,11 @@ och projektet använder [Semantic Versioning](https://semver.org/lang/sv/).
 
 ## [Unreleased]
 
+### Ändrat
+- **docs/release-checklist.md**: dokumenterar senaste lokala Playwright-resultatet (2/13 godkända), blockerar release tills hela E2E-sviten passerar och lägger till PowerShell-felsökning för API `ECONNREFUSED` på port 3000.
+- **CONTRIBUTING.md**: lägger till felsökningssteg för API-start, `.env`, PostgreSQL och Playwright.
+- **README.md**: synkroniserar Playwright-status, Prisma-version (7.9) och CD-status med aktuell konfiguration (GHCR-publicering aktiv, produktionsdeploy avstängd).
+
 ## [0.2.0] — 2026-05-06
 
 ### Tillagt
