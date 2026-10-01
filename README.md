@@ -144,7 +144,7 @@ Applikationen har ett **produktionsinriktat säkerhets- och driftsfundament** f�
 - **Bank-OAuth**: Signerad `state` verifieras server-side och callback-URL:er begränsas via `BANK_OAUTH_REDIRECT_URI_ALLOWLIST`
 - **Infrastruktur**: Multi-stage Docker, non-root containers, healthchecks, log-rotation, graceful shutdown
 - **Drift**: Request-timeouts, konfigurerbar anslutningspool, strukturerad loggning, audit trail, Swagger UI avstängd som standard i produktion och `/metrics` endast exponerad när `METRICS_TOKEN` är satt
-- **Tester**: 1 387 enhetstester (inkl. React Testing Library-komponenttester) + E2E med Playwright; CI via GitHub Actions inklusive restore-gate för backup -> restore -> integritetsverifiering. Senaste kända lokala E2E-körningen är blockerad: 2 av 13 tester passerade och 11 fick `ECONNREFUSED` mot API-port 3000. Se [release-checklistan](docs/release-checklist.md) för status och felsökning; release kräver en grön omkörning.
+- **Tester**: 1 387 enhetstester (inkl. React Testing Library-komponenttester) + E2E med Playwright; senaste lokala E2E-körningen (2026-10-01) passerade **13/13** efter återställd databasanslutning och tillämpad migration. CI via GitHub Actions inkluderar restore-gate för backup -> restore -> integritetsverifiering. Se [release-checklistan](docs/release-checklist.md) för releasegrindar och felsökning.
 
 Se [docs/production.md](docs/production.md) för fullständig driftsättningsguide.
 

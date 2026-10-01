@@ -16,9 +16,9 @@ Bekräfta att CI är grön.
 
 ### Aktuell verifieringsstatus
 
-- Senaste kända lokala körningen (2026-10-01) av `npx playwright test --workers=1`: **2 passerade, 11 misslyckades**.
-- De misslyckade testerna kunde inte ansluta till API:t på `127.0.0.1:3000` / `localhost:3000` (`ECONNREFUSED`). Health-kontrollen på `/health` kunde inte heller nå API:t.
-- **Releasegrinden är blockerad** tills API-startfelet har diagnostiserats, hela E2E-sviten körts om och samtliga tester passerar. Felutskriften visar att API:t inte var tillgängligt; den fastställer ensam inte varför uppstarten misslyckades.
+- Senaste lokala körningen (2026-10-01) av `npx playwright test --workers=1`: **13 passerade, 0 misslyckades**.
+- Lokal API-start verifierad: `/health` rapporterade `status: ok` och `database: ok`.
+- Den tidigare lokala blockeringen berodde på en stoppad befintlig PostgreSQL-container, en inaktuell `DATABASE_URL` i repo-rotens ignorerade `.env` och en väntande migration (`0006_add_accounting_events`). Behåll den här statusen som verifieringshistorik; kör alltid om kvalitetsgrindarna för den aktuella releasen.
 
 ### Felsökning: Playwright får `ECONNREFUSED` på API-port 3000
 
@@ -28,11 +28,13 @@ Bekräfta att CI är grön.
 # Kontrollera att repo-roten har en lokal miljöfil; skapa den vid behov och fyll i värdena.
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 
-# Använd endast en lokal testdatabas: db:push ändrar databasschemat.
-# Starta PostgreSQL och säkerställ att Prisma-klienten/schema är förberedda.
+# Starta PostgreSQL. Om Compose rapporterar att muninsbok-db redan finns,
+# inspektera containern innan du startar den befintliga containern i stället.
 docker compose up -d postgres
+docker compose ps postgres
 pnpm db:generate
-pnpm db:push
+pnpm --filter @muninsbok/db exec prisma migrate status
+pnpm --filter @muninsbok/db exec prisma migrate deploy
 pnpm --filter @muninsbok/core build
 
 # Generera ett lokalt JWT_SECRET och lägg värdet i .env (committa det inte).
@@ -45,6 +47,10 @@ Kontrollera att `.env` har en `DATABASE_URL` till den lokala testdatabasen och e
 Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue
 Invoke-RestMethod http://127.0.0.1:3000/health
 ```
+
+Om `docker compose up -d postgres` misslyckas med en namnkrock för `muninsbok-db`, kontrollera först containerns Compose-projekt och status med `docker inspect muninsbok-db --format 'project={{index .Config.Labels "com.docker.compose.project"}} state={{.State.Status}}'`. Starta bara den befintliga containern med `docker start muninsbok-db` om den är rätt lokala databas; ta inte bort containern eller dess volymer som felsökningsåtgärd.
+
+Verifiera att `.env`-filens `DATABASE_URL` autentiserar mot den aktiva databasen. PostgreSQL kan använda lokalt `trust` och ändå neka samma lösenord från Windows; health-endpointens databasstatus eller en hostanslutning verifierar den faktiska appanslutningen. Kontrollera Prisma-status och tillämpa endast väntande, versionshanterade migrationer med `prisma migrate deploy`; använd inte `db:push` mot en databas som innehåller data.
 
 Stoppa den manuellt startade API-processen med Ctrl+C innan Playwright körs igen; Playwright startar själv API och webb. Åtgärda fel med miljövariabler, databasanslutning/migrering eller portkonflikt utifrån loggen. Kör sedan `npx playwright test --workers=1` och kräv **13/13 passerade** innan releasegrinden kan markeras som klar.
 

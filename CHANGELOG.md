@@ -8,9 +8,12 @@ och projektet använder [Semantic Versioning](https://semver.org/lang/sv/).
 ## [Unreleased]
 
 ### Ändrat
-- **docs/release-checklist.md**: dokumenterar senaste lokala Playwright-resultatet (2/13 godkända), blockerar release tills hela E2E-sviten passerar och lägger till PowerShell-felsökning för API `ECONNREFUSED` på port 3000.
-- **CONTRIBUTING.md**: lägger till felsökningssteg för API-start, `.env`, PostgreSQL och Playwright.
-- **README.md**: synkroniserar Playwright-status, Prisma-version (7.9) och CD-status med aktuell konfiguration (GHCR-publicering aktiv, produktionsdeploy avstängd).
+- **docs/release-checklist.md**: uppdaterar lokal verifieringsstatus till 13/13 E2E-godkända och dokumenterar återställning av databasanslutning och väntande migrationer.
+- **CONTRIBUTING.md**: dokumenterar felsökning av API-start, stale lokala databasuppgifter, gamla Compose-containrar och väntande Prisma-migrationer.
+- **README.md**: uppdaterar lokal E2E-status efter lyckad omkörning; Prisma-version (7.9) och CD-status speglar aktuell konfiguration.
+
+### Fixat
+- **Lokal API/E2E-start**: återställde anslutningen genom att synkronisera den ignorerade `.env`-filen med den befintliga PostgreSQL-containerns uppgifter och tillämpade den väntande `0006_add_accounting_events`-migrationen. API health rapporterar `database: ok`; Playwright passerar 13/13 tester.
 
 ## [0.2.0] — 2026-05-06
 
