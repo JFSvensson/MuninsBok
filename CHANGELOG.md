@@ -13,6 +13,7 @@ och projektet använder [Semantic Versioning](https://semver.org/lang/sv/).
 - **README.md**: uppdaterar lokal E2E-status efter lyckad omkörning; Prisma-version (7.9) och CD-status speglar aktuell konfiguration.
 
 ### Fixat
+- **docker-compose.yml**: webbcontainerns healthcheck använder nu `wget`, som finns i den slim-baserade nginx-imagen, i stället för `curl` som saknas.
 - **Lokal API/E2E-start**: återställde anslutningen genom att synkronisera den ignorerade `.env`-filen med den befintliga PostgreSQL-containerns uppgifter och tillämpade den väntande `0006_add_accounting_events`-migrationen. API health rapporterar `database: ok`; Playwright passerar 13/13 tester.
 
 ## [0.2.0] — 2026-05-06
