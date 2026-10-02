@@ -7,13 +7,31 @@ och projektet använder [Semantic Versioning](https://semver.org/lang/sv/).
 
 ## [Unreleased]
 
+## [0.3.1] — 2026-10-02
+
+### Fixat
+- **docker-compose.yml**: webbcontainerns healthcheck använder nu `wget`, som finns i den slim-baserade nginx-imagen, i stället för `curl` som saknas. Detta gjorde att den lokalt ombyggda webb-imagen — som innehåller bekräftelseflödet för organisationsradering — kunde markeras som healthy.
+
+## [0.3.0] — 2026-10-01
+
+### Tillagt
+- **Organisationsradering med bekräftelse**: radering kräver namnbekräftelse, OWNER-roll samt export-/backupunderlag (typ och referens), och audit-loggas.
+- **Accounting events**: ny persistent händelselogg (`accounting_events`, migration 0006) för verifikatskapande, rättelser och attestbeslut, med `userId` och `requestId`.
+- **Automatisk backup**: backup-tjänst via Compose-profil, installationsscript med `--with-backup`/`-WithBackup`, S3-uppladdning och retention-hantering.
+- **WAL-arkivering och PITR**: WAL-arkivkonfiguration, base backup-script, verifieringsscript (`verify-wal-archive.sh`) och PITR-förberedelse.
+- **Restore-verifiering**: `pnpm db:verify-restore` samt CI-jobb `restore-verify` (dump → restore → integritetskontroll).
+- **Integrationstester**: samtidig verifikatskapande och löpnumrering.
+
 ### Ändrat
+- **Basimages**: Node 22→26-alpine och nginx 1.29→1.31 i Docker-images.
+- **Loggning**: URL-sanitering i request- och audit-loggning.
+- **Beroenden**: uppgraderingar via Dependabot (Fastify-plugins, @types/node, GitHub Actions m.fl.); TypeScript 7.0.2 återställdes till 6.0.3 för typescript-eslint-kompatibilitet.
+- **Prisma/Docker**: Prisma 7.9 med `prisma.config.ts` och styrbar migreringshantering i containern (`DB_MIGRATION_MODE`: deploy/fallback/push/skip).
 - **docs/release-checklist.md**: uppdaterar lokal verifieringsstatus till 13/13 E2E-godkända och dokumenterar återställning av databasanslutning och väntande migrationer.
 - **CONTRIBUTING.md**: dokumenterar felsökning av API-start, stale lokala databasuppgifter, gamla Compose-containrar och väntande Prisma-migrationer.
 - **README.md**: uppdaterar lokal E2E-status efter lyckad omkörning; Prisma-version (7.9) och CD-status speglar aktuell konfiguration.
 
 ### Fixat
-- **docker-compose.yml**: webbcontainerns healthcheck använder nu `wget`, som finns i den slim-baserade nginx-imagen, i stället för `curl` som saknas.
 - **Lokal API/E2E-start**: återställde anslutningen genom att synkronisera den ignorerade `.env`-filen med den befintliga PostgreSQL-containerns uppgifter och tillämpade den väntande `0006_add_accounting_events`-migrationen. API health rapporterar `database: ok`; Playwright passerar 13/13 tester.
 
 ## [0.2.0] — 2026-05-06

@@ -65,8 +65,8 @@ Stoppa den manuellt startade API-processen med Ctrl+C innan Playwright körs ige
 
 CI/CD ska bygga och publicera:
 
-- ghcr.io/jfsvensson/muninsbok-api:latest (och versionsspecifik tagg, t.ex. v0.2.0)
-- ghcr.io/jfsvensson/muninsbok-web:latest (och versionsspecifik tagg, t.ex. v0.2.0)
+- ghcr.io/jfsvensson/muninsbok-api:latest (och versionsspecifik tagg, t.ex. v0.3.1)
+- ghcr.io/jfsvensson/muninsbok-web:latest (och versionsspecifik tagg, t.ex. v0.3.1)
 
 Verifiera att image-taggarna finns publicerade.
 Vid behov, sätt `IMAGE_TAG=vX.Y.Z` i `.env.docker` för att pinna en specifik release.
