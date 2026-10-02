@@ -1,7 +1,7 @@
 # Build stage
 FROM node:26-alpine AS builder
 
-RUN npm install -g pnpm@11.11.0
+RUN npm install -g pnpm@12.8.1
 
 WORKDIR /app
 
@@ -10,6 +10,9 @@ COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/core/package.json ./packages/core/
 COPY packages/db/package.json ./packages/db/
 COPY apps/api/package.json ./apps/api/
+# All workspace manifests must exist: pnpm --frozen-lockfile validates every
+# importer in pnpm-lock.yaml (including apps/web, whose source is not copied)
+COPY apps/web/package.json ./apps/web/
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
@@ -34,7 +37,7 @@ RUN pnpm --filter @muninsbok/api build
 # Production stage
 FROM node:26-alpine AS runner
 
-RUN npm install -g pnpm@11.11.0
+RUN npm install -g pnpm@12.8.1
 RUN apk add --no-cache poppler-utils
 
 WORKDIR /app
@@ -54,9 +57,13 @@ COPY --from=builder /app/packages/db/prisma ./packages/db/prisma
 COPY --from=builder /app/packages/db/prisma.config.ts ./packages/db/
 COPY --from=builder /app/apps/api/package.json ./apps/api/
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
+# Manifest for apps/web must exist for the prod install's lockfile validation
+# (it is removed after the install and is not part of the runtime filesystem)
+COPY apps/web/package.json ./apps/web/
 
 # Install production dependencies only
 RUN pnpm install --frozen-lockfile --prod --ignore-scripts \
+    && rm -rf apps/web \
     && npm uninstall -g pnpm \
     && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 

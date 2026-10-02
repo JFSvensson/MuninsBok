@@ -1,7 +1,7 @@
 # Build stage
 FROM node:26-alpine AS builder
 
-RUN npm install -g pnpm@11.11.0
+RUN npm install -g pnpm@12.8.1
 
 WORKDIR /app
 
@@ -9,6 +9,10 @@ WORKDIR /app
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/core/package.json ./packages/core/
 COPY apps/web/package.json ./apps/web/
+# All workspace manifests must exist: pnpm --frozen-lockfile validates every
+# importer in pnpm-lock.yaml (including db/api, whose sources are not copied)
+COPY packages/db/package.json ./packages/db/
+COPY apps/api/package.json ./apps/api/
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
