@@ -222,13 +222,13 @@ jobs:
       - name: Run database migrations
         run: pnpm --filter @muninsbok/db exec prisma migrate deploy
 
+      - name: Build all packages
+        run: pnpm -r build
+
       - name: Verify concurrent voucher numbering
         run: pnpm --filter @muninsbok/db exec vitest run src/repositories/voucher.repository.integration.test.ts
         env:
           RUN_DB_INTEGRATION_TESTS: "true"
-
-      - name: Build all packages
-        run: pnpm -r build
 
       - name: Build API image for migration startup test
         run: docker build -f apps/api/Dockerfile -t muninsbok-api-startup-test .
