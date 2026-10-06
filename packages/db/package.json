@@ -26,14 +26,13 @@
     "studio": "prisma studio",
     "typecheck": "tsc --noEmit",
     "clean": "node -e \"fs.rmSync('dist',{recursive:true,force:true})\"",
-    "seed": "tsx prisma/seed.ts",
+    "seed": "node --env-file-if-exists=../../.env --import tsx prisma/seed.ts",
     "test": "vitest run",
     "verify:restore": "tsx src/verify-restore.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
-    "dotenv": "^18.0.5",
     "pg": "^8.23.1",
     "prisma": "^7.10.0"
   },

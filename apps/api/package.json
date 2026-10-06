@@ -8,7 +8,7 @@
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsc",
-    "dev": "tsx watch src/index.ts",
+    "dev": "node --env-file-if-exists=../../.env --import tsx --watch src/index.ts",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
     "clean": "node -e \"fs.rmSync('dist',{recursive:true,force:true})\"",
@@ -25,7 +25,6 @@
     "@fastify/swagger-ui": "^6.1.1",
     "@muninsbok/core": "workspace:*",
     "@muninsbok/db": "workspace:*",
-    "dotenv": "^18.0.5",
     "fastify": "^5.12.1",
     "fastify-plugin": "^6.0.0",
     "prom-client": "^15.1.3",

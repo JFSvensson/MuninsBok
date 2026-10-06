@@ -1,10 +1,31 @@
 import { defineConfig } from "@playwright/test";
-import { config as loadDotenv } from "dotenv";
-import { existsSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import { resolve } from "path";
 
+// Parse .env into a plain object (subset of dotenv syntax; does not touch process.env)
+function parseEnvFile(path: string): Record<string, string> {
+  const vars: Record<string, string> = {};
+  for (const line of readFileSync(path, "utf8").split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq <= 0) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    if (
+      value.length >= 2 &&
+      ((value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'")))
+    ) {
+      value = value.slice(1, -1);
+    }
+    vars[key] = value;
+  }
+  return vars;
+}
+
 const envFile = resolve(__dirname, ".env");
-const dotenvVars = existsSync(envFile) ? (loadDotenv({ path: envFile }).parsed ?? {}) : {};
+const dotenvVars = existsSync(envFile) ? parseEnvFile(envFile) : {};
 
 export default defineConfig({
   testDir: "./e2e",
