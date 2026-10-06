@@ -5,7 +5,6 @@
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from "fastify";
 import { randomUUID } from "node:crypto";
 import cookie from "@fastify/cookie";
-import rateLimit from "@fastify/rate-limit";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import type { IDocumentStorage } from "@muninsbok/core/types";
@@ -20,6 +19,7 @@ import jwtAuth from "./plugins/jwt-auth.js";
 import rbac from "./plugins/rbac.js";
 import securityHeaders from "./plugins/security-headers.js";
 import cors from "./plugins/cors.js";
+import rateLimit from "./plugins/rate-limit.js";
 import { organizationRoutes } from "./routes/organizations.js";
 import { voucherRoutes } from "./routes/vouchers.js";
 import { voucherTemplateRoutes } from "./routes/voucher-templates.js";
