@@ -68,6 +68,10 @@ web_modules/
 # Package manager is pnpm — ignore npm's lockfile
 package-lock.json
 
+# Compiled config artifacts (from tsc -b on composite configs)
+apps/web/vite.config.js
+apps/web/vite.config.d.ts
+
 # Yarn Integrity file
 .yarn-integrity
 
