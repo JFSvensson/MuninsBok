@@ -6,7 +6,6 @@ import Fastify, { type FastifyInstance, type FastifyServerOptions } from "fastif
 import { randomUUID } from "node:crypto";
 import cors from "@fastify/cors";
 import cookie from "@fastify/cookie";
-import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
@@ -20,6 +19,7 @@ import requestLogging from "./plugins/request-logging.js";
 import auditLogging from "./plugins/audit-logging.js";
 import jwtAuth from "./plugins/jwt-auth.js";
 import rbac from "./plugins/rbac.js";
+import securityHeaders from "./plugins/security-headers.js";
 import { organizationRoutes } from "./routes/organizations.js";
 import { voucherRoutes } from "./routes/vouchers.js";
 import { voucherTemplateRoutes } from "./routes/voucher-templates.js";
@@ -77,7 +77,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   // Plugins
-  await fastify.register(helmet, {
+  await fastify.register(securityHeaders, {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
