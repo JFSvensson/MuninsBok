@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
-import multipart from "@fastify/multipart";
+import multipart from "../plugins/multipart.js";
 import { isAllowedMimeType } from "@muninsbok/core/types";
 import { AppError } from "../utils/app-error.js";
 import { isPdfOcrEnabled } from "../services/receipt-ocr.js";
