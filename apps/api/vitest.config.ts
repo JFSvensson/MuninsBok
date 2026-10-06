@@ -1,19 +1,12 @@
 import { defineConfig } from "vitest/config";
+import { sharedTestConfig } from "../../vitest.shared.js";
 
 export default defineConfig({
   test: {
-    include: ["src/**/*.test.ts"],
+    ...sharedTestConfig({
+      thresholds: { statements: 80, branches: 70, functions: 75, lines: 80 },
+      extraCoverageExcludes: ["src/test/**"],
+    }),
     environment: "node",
-    coverage: {
-      provider: "v8",
-      include: ["src/**/*.ts"],
-      exclude: ["src/**/index.ts", "src/**/*.test.ts", "src/test/**"],
-      thresholds: {
-        statements: 80,
-        branches: 70,
-        functions: 75,
-        lines: 80,
-      },
-    },
   },
 });
