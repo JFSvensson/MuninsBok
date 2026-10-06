@@ -4,8 +4,6 @@
  */
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from "fastify";
 import { randomUUID } from "node:crypto";
-import swagger from "@fastify/swagger";
-import swaggerUi from "@fastify/swagger-ui";
 import type { IDocumentStorage } from "@muninsbok/core/types";
 import { AppError } from "./utils/app-error.js";
 import type { IReceiptOcrService } from "./services/receipt-ocr.js";
@@ -20,6 +18,7 @@ import securityHeaders from "./plugins/security-headers.js";
 import cors from "./plugins/cors.js";
 import rateLimit from "./plugins/rate-limit.js";
 import cookie from "./plugins/cookie.js";
+import openapiDocs from "./plugins/openapi-docs.js";
 import { organizationRoutes } from "./routes/organizations.js";
 import { voucherRoutes } from "./routes/vouchers.js";
 import { voucherTemplateRoutes } from "./routes/voucher-templates.js";
@@ -101,30 +100,27 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     credentials: true,
   });
 
-  // OpenAPI / Swagger documentation
-  await fastify.register(swagger, {
-    openapi: {
-      info: {
-        title: "Munins bok API",
-        description: "REST API för svensk bokföring",
-        version: process.env["npm_package_version"] ?? "0.1.0",
-      },
-      tags: [
-        { name: "auth", description: "Autentisering" },
-        { name: "organizations", description: "Organisationer (tenants)" },
-        { name: "accounts", description: "Kontoplan" },
-        { name: "fiscal-years", description: "Räkenskapsår" },
-        { name: "vouchers", description: "Verifikat" },
-        { name: "reports", description: "Rapporter" },
-        { name: "sie", description: "SIE-import / export" },
-        { name: "documents", description: "Dokument / bilagor" },
-        { name: "dashboard", description: "Översikt" },
-      ],
-    },
-  });
-
+  // OpenAPI / Swagger documentation (only when enabled; skipped in production by default)
   if (enableDocs) {
-    await fastify.register(swaggerUi, {
+    await fastify.register(openapiDocs, {
+      openapi: {
+        info: {
+          title: "Munins bok API",
+          description: "REST API för svensk bokföring",
+          version: process.env["npm_package_version"] ?? "0.1.0",
+        },
+        tags: [
+          { name: "auth", description: "Autentisering" },
+          { name: "organizations", description: "Organisationer (tenants)" },
+          { name: "accounts", description: "Kontoplan" },
+          { name: "fiscal-years", description: "Räkenskapsår" },
+          { name: "vouchers", description: "Verifikat" },
+          { name: "reports", description: "Rapporter" },
+          { name: "sie", description: "SIE-import / export" },
+          { name: "documents", description: "Dokument / bilagor" },
+          { name: "dashboard", description: "Översikt" },
+        ],
+      },
       routePrefix: "/docs",
     });
   }
