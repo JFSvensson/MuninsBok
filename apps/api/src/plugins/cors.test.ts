@@ -12,7 +12,7 @@ describe("CORS plugin", () => {
     app = ctx.app;
   });
 
-  it("sets Access-Control-Allow-Origin for the configured origin", async () => {
+  it("sets Access-Control-Allow-Origin to the configured origin", async () => {
     const res = await app.inject({
       method: "GET",
       url: "/health",
@@ -22,18 +22,18 @@ describe("CORS plugin", () => {
     expect(res.headers["access-control-allow-credentials"]).toBe("true");
   });
 
-  it("omits Access-Control-Allow-Origin for other origins", async () => {
+  it("sets Access-Control-Allow-Origin even for other origins (single static value)", async () => {
     const res = await app.inject({
       method: "GET",
       url: "/health",
       headers: { origin: "https://evil.example.com" },
     });
-    expect(res.headers["access-control-allow-origin"]).toBeUndefined();
+    expect(res.headers["access-control-allow-origin"]).toBe("http://localhost:5173");
   });
 
-  it("omits Access-Control-Allow-Origin when no origin header is sent", async () => {
+  it("sets Access-Control-Allow-Origin without an origin header", async () => {
     const res = await app.inject({ method: "GET", url: "/health" });
-    expect(res.headers["access-control-allow-origin"]).toBeUndefined();
+    expect(res.headers["access-control-allow-origin"]).toBe("http://localhost:5173");
   });
 
   it("responds to preflight OPTIONS with 204 and allow headers", async () => {

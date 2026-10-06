@@ -17,8 +17,6 @@ const corsPlugin: FastifyPluginAsync<CorsOptions> = async (fastify, options) => 
   const credentials = options.credentials ?? false;
 
   fastify.addHook("onRequest", async (request, reply) => {
-    const requestOrigin = request.headers.origin;
-
     // Respond to preflight requests directly.
     if (request.method === "OPTIONS" && request.headers["access-control-request-method"]) {
       reply
@@ -36,14 +34,14 @@ const corsPlugin: FastifyPluginAsync<CorsOptions> = async (fastify, options) => 
       return reply.code(204).send();
     }
 
-    // Regular requests: only reflect the header when the origin matches.
-    if (requestOrigin === origin) {
-      reply.header("access-control-allow-origin", origin);
-      if (credentials) {
-        reply.header("access-control-allow-credentials", "true");
-      }
-      reply.header("vary", "Origin");
+    // Regular requests: advertise the configured origin (single-origin setup
+    // means the header value is static, exactly like @fastify/cors with a
+    // string origin). Vary: Origin keeps caches honest for cross-origin hits.
+    reply.header("access-control-allow-origin", origin);
+    if (credentials) {
+      reply.header("access-control-allow-credentials", "true");
     }
+    reply.header("vary", "Origin");
   });
 };
 
