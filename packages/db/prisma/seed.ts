@@ -9,7 +9,7 @@
  * Usage:  pnpm db:seed
  *   or:   npx tsx prisma/seed.ts
  *
- * Requires DATABASE_URL to be set (loaded from ../../.env via the seed script).
+ * Requires DATABASE_URL to be set (loaded from ../../.env by the seed script).
  */
 import { PrismaClient } from "../src/generated/prisma/client.js";
 import { PrismaPg } from "@prisma/adapter-pg";

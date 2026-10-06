@@ -1,3 +1,12 @@
+// Load .env from monorepo root when it exists (Node built-in; does not
+// override existing env vars). Skipped in CI/Docker where env vars are set
+// by the environment and .env is absent.
+import { existsSync } from "node:fs";
+
+if (existsSync("../../.env")) {
+  process.loadEnvFile("../../.env");
+}
+
 import { prisma } from "@muninsbok/db";
 import { buildApp } from "./app.js";
 import { createRepositories } from "./repositories.js";
