@@ -176,10 +176,6 @@ overrides:
 importers:
 
   .:
-    dependencies:
-      '@prisma/client':
-        specifier: ^7.10.0
-        version: 7.10.0(prisma@7.10.0(@types/node@26.6.4)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(magicast@0.5.3)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@6.0.3))(typescript@6.0.3)
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
