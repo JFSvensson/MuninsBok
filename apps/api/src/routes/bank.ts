@@ -1,8 +1,15 @@
-import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import type { BankTransactionMatchStatus } from "@muninsbok/core/types";
 import { AppError } from "../utils/app-error.js";
 import { parseBody } from "../utils/parse-body.js";
+import {
+  hmacSha256Hex,
+  hmacSha256HexRaw,
+  normalizeSignature,
+  signaturesMatch,
+  resolveWebhookSecret,
+} from "../utils/webhook-crypto.js";
 import { BankAdapterError } from "../services/bank-adapter.js";
 import { createBankTransactionMatchingService } from "../services/bank-matching.js";
 import {
@@ -19,38 +26,6 @@ import {
   bankBulkConfirmSchema,
   bankBulkUnmatchSchema,
 } from "../schemas/index.js";
-
-function hmacSha256Hex(payload: unknown, secret: string): string {
-  return createHmac("sha256", secret).update(JSON.stringify(payload)).digest("hex");
-}
-
-function normalizeSignature(signature: string): string {
-  const trimmed = signature.trim();
-  return trimmed.startsWith("sha256=") ? trimmed.slice(7) : trimmed;
-}
-
-function signaturesMatch(provided: string, expected: string): boolean {
-  if (!/^[a-f0-9]+$/i.test(provided) || provided.length !== expected.length) {
-    return false;
-  }
-
-  const providedBuffer = Buffer.from(provided, "hex");
-  const expectedBuffer = Buffer.from(expected, "hex");
-
-  if (providedBuffer.length !== expectedBuffer.length) {
-    return false;
-  }
-
-  return timingSafeEqual(providedBuffer, expectedBuffer);
-}
-
-function resolveWebhookSecret(provider: string): string | undefined {
-  const normalizedProvider = provider.toUpperCase().replace(/[^A-Z0-9]+/g, "_");
-  return (
-    process.env[`BANK_WEBHOOK_${normalizedProvider}_HMAC_SECRET`] ??
-    process.env["BANK_WEBHOOK_HMAC_SECRET"]
-  );
-}
 
 function isBankingEnabledForOrganization(organizationId: string): boolean {
   const raw = process.env["BANK_ENABLED_ORG_IDS"];
@@ -112,7 +87,7 @@ function resolveAllowedRedirectUris(): Set<string> {
 
 function createSignedOauthState(payload: OauthStatePayload, secret: string): string {
   const encodedPayload = Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
-  const signature = createHmac("sha256", secret).update(encodedPayload).digest("hex");
+  const signature = hmacSha256HexRaw(encodedPayload, secret);
   return `${encodedPayload}.${signature}`;
 }
 
@@ -122,7 +97,7 @@ function parseSignedOauthState(state: string, secret: string): OauthStatePayload
     return;
   }
 
-  const expectedSignature = createHmac("sha256", secret).update(encodedPayload).digest("hex");
+  const expectedSignature = hmacSha256HexRaw(encodedPayload, secret);
   if (!signaturesMatch(signature, expectedSignature)) {
     return;
   }

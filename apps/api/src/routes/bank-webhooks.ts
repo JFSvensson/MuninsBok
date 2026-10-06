@@ -6,43 +6,16 @@
  *
  * Route: POST /api/webhooks/bank/:orgId
  */
-import { createHmac, timingSafeEqual } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import { AppError } from "../utils/app-error.js";
 import { parseBody } from "../utils/parse-body.js";
+import {
+  hmacSha256Hex,
+  normalizeSignature,
+  signaturesMatch,
+  resolveWebhookSecret,
+} from "../utils/webhook-crypto.js";
 import { bankWebhookCreateSchema } from "../schemas/index.js";
-
-function hmacSha256Hex(payload: unknown, secret: string): string {
-  return createHmac("sha256", secret).update(JSON.stringify(payload)).digest("hex");
-}
-
-function normalizeSignature(signature: string): string {
-  const trimmed = signature.trim();
-  return trimmed.startsWith("sha256=") ? trimmed.slice(7) : trimmed;
-}
-
-function signaturesMatch(provided: string, expected: string): boolean {
-  if (!/^[a-f0-9]+$/i.test(provided) || provided.length !== expected.length) {
-    return false;
-  }
-
-  const providedBuffer = Buffer.from(provided, "hex");
-  const expectedBuffer = Buffer.from(expected, "hex");
-
-  if (providedBuffer.length !== expectedBuffer.length) {
-    return false;
-  }
-
-  return timingSafeEqual(providedBuffer, expectedBuffer);
-}
-
-function resolveWebhookSecret(provider: string): string | undefined {
-  const normalizedProvider = provider.toUpperCase().replace(/[^A-Z0-9]+/g, "_");
-  return (
-    process.env[`BANK_WEBHOOK_${normalizedProvider}_HMAC_SECRET`] ??
-    process.env["BANK_WEBHOOK_HMAC_SECRET"]
-  );
-}
 
 export async function bankWebhookRoutes(fastify: FastifyInstance) {
   const bankSync = fastify.bankSync;
