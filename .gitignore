@@ -65,6 +65,9 @@ web_modules/
 # Output of 'npm pack'
 *.tgz
 
+# Package manager is pnpm — ignore npm's lockfile
+package-lock.json
+
 # Yarn Integrity file
 .yarn-integrity
 
