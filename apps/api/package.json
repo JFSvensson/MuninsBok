@@ -15,7 +15,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@fastify/jwt": "^10.2.4",
+    "@fastify/jwt": "^10.2.5",
     "@muninsbok/core": "workspace:*",
     "@muninsbok/db": "workspace:*",
     "fastify": "^5.12.7",
